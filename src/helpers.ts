@@ -188,6 +188,9 @@ export function createComponent<
     }
 
     connectedCallback() {
+      // Force-upgrade descendants so refs resolve to fully initialized component instances
+      // during SPA-style DOM swaps where parent elements upgrade before children (tree order).
+      customElements.upgrade(this);
       const result = setupFn(this);
       if (result) Object.assign(this, result);
     }
