@@ -129,42 +129,42 @@ export abstract class UIComponent<
     return value;
   }
 
-  /**
-   * Queries a single required element by CSS selector. Throws if not found.
-   * Results are cached per selector by default if custom `root` isn't specified or `cache: false` is not passed.
-   */
-  getElement<const E extends keyof HTMLElementTagNameMap>(
+  /** Queries a single required element by CSS selector. Throws if not found. */
+  getElement<E extends keyof HTMLElementTagNameMap>(selector: E | string): HTMLElementTagNameMap[E];
+  getElement<E extends keyof HTMLElementTagNameMap>(
+    root: DocumentFragment | HTMLElement,
     selector: E | string,
-    options?: { root?: DocumentFragment | HTMLElement; cache?: boolean },
+  ): HTMLElementTagNameMap[E];
+  getElement<E extends keyof HTMLElementTagNameMap>(
+    selectorOrRoot: E | string | DocumentFragment | HTMLElement,
+    maybeSelector?: E | string,
   ): HTMLElementTagNameMap[E] {
-    const opts = { root: this as HTMLElement, cache: true, ...options };
-    const get = () => {
-      const element = opts.root.querySelector<HTMLElementTagNameMap[E]>(selector);
-      invariant(element, `${this.constructor.name}: missing ${selector} element`);
-      return element;
-    };
-    const shouldCache = opts.cache && opts.root === this;
-    if (!shouldCache) return get();
-    return this.withCache<HTMLElementTagNameMap[E]>(`element:${selector}`, get);
+    const hasRoot = maybeSelector !== undefined;
+    const root = hasRoot ? (selectorOrRoot as DocumentFragment | HTMLElement) : this;
+    const selector = (hasRoot ? maybeSelector : selectorOrRoot) as string;
+    const element = root.querySelector<HTMLElementTagNameMap[E]>(selector);
+    invariant(element, `${this.constructor.name}: missing ${selector} element`);
+    return element;
   }
 
-  /**
-   * Queries all matching elements by CSS selector. Throws if none found.
-   * Results are cached per selector by default if custom `root` isn't specified or `cache: false` is not passed.
-   */
+  /** Queries all matching elements by CSS selector. Throws if none found. */
   getElements<E extends keyof HTMLElementTagNameMap>(
     selector: E | string,
-    options?: { root?: DocumentFragment | HTMLElement; cache?: boolean },
+  ): HTMLElementTagNameMap[E][];
+  getElements<E extends keyof HTMLElementTagNameMap>(
+    root: DocumentFragment | HTMLElement,
+    selector: E | string,
+  ): HTMLElementTagNameMap[E][];
+  getElements<E extends keyof HTMLElementTagNameMap>(
+    selectorOrRoot: E | string | DocumentFragment | HTMLElement,
+    maybeSelector?: E | string,
   ): HTMLElementTagNameMap[E][] {
-    const opts = { root: this as HTMLElement, cache: true, ...options };
-    const get = () => {
-      const elements = Array.from(opts.root.querySelectorAll<HTMLElementTagNameMap[E]>(selector));
-      invariant(elements.length > 0, `${this.constructor.name}: missing ${selector} elements`);
-      return elements;
-    };
-    const shouldCache = opts.cache && opts.root === this;
-    if (!shouldCache) return get();
-    return this.withCache<HTMLElementTagNameMap[E][]>(`elements:${selector}`, get);
+    const hasRoot = maybeSelector !== undefined;
+    const root = hasRoot ? (selectorOrRoot as DocumentFragment | HTMLElement) : this;
+    const selector = (hasRoot ? maybeSelector : selectorOrRoot) as string;
+    const elements = Array.from(root.querySelectorAll<HTMLElementTagNameMap[E]>(selector));
+    invariant(elements.length > 0, `${this.constructor.name}: missing ${selector} elements`);
+    return elements;
   }
 
   /**
