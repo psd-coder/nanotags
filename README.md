@@ -1,7 +1,7 @@
-# nanowc
+# nano-wc
 
-[![npm version](https://img.shields.io/npm/v/nanowc.svg)](https://www.npmjs.com/package/nanowc)
-[![Bundle size](https://img.shields.io/badge/Bundle_size-from_2906_B-brightgreen)](https://github.com/psdcoder/nanowc/blob/main/package.json)
+[![npm version](https://img.shields.io/npm/v/nano-wc.svg)](https://www.npmjs.com/package/nano-wc)
+[![Bundle size](https://img.shields.io/badge/Bundle_size-from_2906_B-brightgreen)](https://github.com/psdcoder/nano-wc/blob/main/package.json)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
 Thin, Web Components wrapper with [nanostores](https://github.com/nanostores/nanostores) reactivity. No Shadow DOM — your markup stays in the regular DOM, styled with normal CSS. Typesafe fluent builder, props/refs, automatic cleanup, and two-way store binding — all under 3 KB.
@@ -11,7 +11,7 @@ Shines with statically rendered markup — pair it with [Astro](https://astro.bu
 ## Install
 
 ```bash
-npm install nanowc nanostores
+npm install nano-wc nanostores
 ```
 
 ## Quick Start
@@ -24,7 +24,7 @@ npm install nanowc nanostores
 ```
 
 ```typescript
-import { define } from "nanowc";
+import { define } from "nano-wc";
 
 const Counter = define("x-counter")
   .withProps((p) => ({
@@ -207,7 +207,7 @@ ctx.emit(new CustomEvent("reset"));
 
 ### DOM Queries
 
-Typed wrappers around `querySelector`/`querySelectorAll` that **throw when nothing matches**. Since nanowc targets static/server-rendered markup, a missing element is always a bug — fail fast instead of silently returning `null`. Tag-name selectors narrow the return type automatically.
+Typed wrappers around `querySelector`/`querySelectorAll` that **throw when nothing matches**. Since nano-wc targets static/server-rendered markup, a missing element is always a bug — fail fast instead of silently returning `null`. Tag-name selectors narrow the return type automatically.
 
 If you prefer nullable results, use `querySelector`/`querySelectorAll` directly on `ctx.host`.
 
@@ -322,7 +322,7 @@ el.start(); // typed
 `TypedEvent<Target, Detail>` is a helper type for `CustomEvent` with typed `target` and `detail`. Combine it with `HTMLElementEventMap` augmentation to make custom events type-safe across the whole app:
 
 ```typescript
-import type { TypedEvent } from "nanowc";
+import type { TypedEvent } from "nano-wc";
 
 type TabsChangedEvent = TypedEvent<InstanceType<typeof XTabs>, { index: number }>;
 
