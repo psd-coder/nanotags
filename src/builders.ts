@@ -33,6 +33,9 @@ function one<const Tag extends keyof HTMLElementTagNameMap>(
   tag: Tag,
   options: RefOptions,
 ): SingleRefMarker<Tag>;
+function one<const Tag extends keyof HTMLElementTagNameMap>(
+  options: RefOptions,
+): SingleRefMarker<Tag>;
 function one(tagOrOptions?: string | RefOptions, options?: RefOptions): SingleRefMarker {
   const tag = typeof tagOrOptions === "string" ? tagOrOptions : undefined;
   const opts = typeof tagOrOptions === "object" ? tagOrOptions : options;
@@ -48,6 +51,9 @@ function many(options: RefOptions): ListRefMarker;
 function many<const Tag extends keyof HTMLElementTagNameMap>(tag: Tag): ListRefMarker<Tag>;
 function many<const Tag extends keyof HTMLElementTagNameMap>(
   tag: Tag,
+  options: RefOptions,
+): ListRefMarker<Tag>;
+function many<const Tag extends keyof HTMLElementTagNameMap>(
   options: RefOptions,
 ): ListRefMarker<Tag>;
 function many(tagOrOptions?: string | RefOptions, options?: RefOptions): ListRefMarker {
