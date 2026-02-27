@@ -10,6 +10,8 @@ import type {
   RefsSchema,
 } from "./types";
 
+export type ReservedKeys = keyof UIComponent<PropsSchema, RefsSchema>;
+
 type StoreValues<Stores extends ReadableAtom<any>[]> = {
   [Index in keyof Stores]: StoreValue<Stores[Index]>;
 };
@@ -43,11 +45,18 @@ export abstract class UIComponent<
   abstract get props(): ReactiveProps<Props>;
   abstract get host(): HTMLElement & ComponentProps<Props>;
 
-  /** Clears the element cache and runs all registered cleanup functions. */
   protected disconnectedCallback(): void {
     this.#cache.clear();
-    for (const cleanup of this.#cleanups) cleanup();
+    let err: unknown;
+    for (const fn of this.#cleanups) {
+      try {
+        fn();
+      } catch (e) {
+        err ??= e;
+      }
+    }
     this.#cleanups = [];
+    if (err) throw err;
   }
 
   /** Registers a cleanup function to be called when the component is disconnected. */
@@ -193,7 +202,8 @@ export abstract class UIComponent<
       set?: (value: Infer<Props[Prop]>) => Value;
     },
   ): void {
-    const propStore = this.props[`$${prop}`] as WritableAtom<Infer<Props[Prop]>>;
+    const propStore = this.props[`$${prop}`] as WritableAtom<Infer<Props[Prop]>> | undefined;
+    invariant(propStore, `unknown prop: ${prop}`);
     this.effect(store, (value) => {
       const next = options?.get ? options.get(value) : (value as unknown as Infer<Props[Prop]>);
       if (!Object.is(propStore.get(), next)) propStore.set(next);

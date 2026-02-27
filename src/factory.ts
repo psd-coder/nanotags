@@ -72,6 +72,7 @@ export function createReactiveProps<Schema extends PropsSchema>(
     (stores as Record<string, unknown>)[`$${key}`] = store;
     updaters[key] = updater;
 
+    invariant(!(key in host), `reserved prop: ${key}`);
     Object.defineProperty(host, key, {
       enumerable: true,
       get() {
@@ -164,7 +165,14 @@ export function createComponent<
     }
 
     get refs(): InferRefs<Refs> {
-      return this.withCache("refs", () => collectRefs(this, refsSchema));
+      return this.withCache("refs", () => {
+        // Lazily upgrade custom-element descendants so they resolve as fully
+        // initialized instances when refs are first accessed. Placed here
+        // (not in connectedCallback) so the parent's mixin is already assigned
+        // before children connect — child setup can consume() parent methods.
+        customElements.upgrade(this);
+        return collectRefs(this, refsSchema);
+      });
     }
 
     get props(): ReactiveProps<Props> {
@@ -191,11 +199,14 @@ export function createComponent<
     }
 
     connectedCallback() {
-      // Force-upgrade descendants so refs resolve to fully initialized component instances
-      // during SPA-style DOM swaps where parent elements upgrade before children (tree order).
-      customElements.upgrade(this);
       const result = setupFn(this);
-      if (result) Object.assign(this, result);
+      if (result) {
+        const proto = Object.getPrototypeOf(this);
+        for (const key of Object.keys(result)) {
+          invariant(!(key in proto), `reserved mixin: ${key}`);
+        }
+        Object.assign(this, result);
+      }
     }
   }
 

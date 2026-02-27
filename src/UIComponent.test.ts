@@ -59,6 +59,39 @@ describe("lifecycle cleanup", () => {
     expect(cb).toHaveBeenCalledOnce();
   });
 
+  it("runs all cleanups even if one throws, re-throws first error", () => {
+    const tag = uniqueTag("lc");
+    const cb1 = vi.fn();
+    const cb2 = vi.fn(() => {
+      throw new Error("boom");
+    });
+    const cb3 = vi.fn();
+    define(tag, (ctx) => {
+      ctx.onCleanup(cb1);
+      ctx.onCleanup(cb2);
+      ctx.onCleanup(cb3);
+    });
+    const el = mount(`<${tag}></${tag}>`);
+    expect(() => el.remove()).toThrow("boom");
+    expect(cb1).toHaveBeenCalledOnce();
+    expect(cb2).toHaveBeenCalledOnce();
+    expect(cb3).toHaveBeenCalledOnce();
+  });
+
+  it("re-throws first error when multiple cleanups throw", () => {
+    const tag = uniqueTag("lc");
+    define(tag, (ctx) => {
+      ctx.onCleanup(() => {
+        throw new Error("first");
+      });
+      ctx.onCleanup(() => {
+        throw new Error("second");
+      });
+    });
+    const el = mount(`<${tag}></${tag}>`);
+    expect(() => el.remove()).toThrow("first");
+  });
+
   it("reconnect: previous listeners gone, new ones from fresh setup", () => {
     const tag = uniqueTag("lc");
     const calls: string[] = [];
@@ -312,14 +345,14 @@ describe("consume", () => {
   it("finds nearest ancestor", () => {
     const parentTag = uniqueTag("parent");
     const childTag = uniqueTag("child");
-    const ParentComponent = define(parentTag, () => ({ role: "parent" }));
+    const ParentComponent = define(parentTag, () => ({ kind: "parent" }));
     let consumed: InstanceType<typeof ParentComponent> | undefined;
     define(childTag, (ctx) => {
       consumed = ctx.consume(ParentComponent);
     });
     mount(`<${parentTag}><${childTag}></${childTag}></${parentTag}>`);
     expect(consumed).toBeDefined();
-    expect(consumed!.role).toBe("parent");
+    expect(consumed!.kind).toBe("parent");
   });
 
   it("throws when no ancestor", () => {
@@ -447,6 +480,17 @@ describe("bind", () => {
     expect(el.props.$val.get()).toBe("42");
     el.props.$val.set("100");
     expect($ext.get()).toBe(100);
+  });
+
+  it("throws when binding unknown prop", () => {
+    const tag = uniqueTag("bind");
+    const $ext = atom("x");
+    define(tag)
+      .withProps((p) => ({ val: p.string() }))
+      .setup((ctx) => {
+        (ctx as any).bind("nope", $ext);
+      });
+    expect(() => mount(`<${tag}></${tag}>`)).toThrow(/unknown prop/);
   });
 
   it("same value: no extra propagation", () => {

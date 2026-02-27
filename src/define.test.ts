@@ -2,6 +2,7 @@ import type { WritableAtom } from "nanostores";
 import { afterEach, describe, expect, expectTypeOf, it } from "vitest";
 
 import { ComponentBuilder, define } from "./define";
+import type { ReservedKeys } from "./UIComponent";
 import { cleanup, mount, uniqueTag } from "../tests/utils";
 
 afterEach(() => cleanup());
@@ -84,6 +85,32 @@ describe("define", () => {
       const tag = uniqueTag("ty") as "x-ty-203";
       const Component = define(tag).setup(() => {});
       expectTypeOf(Component.elementName).toEqualTypeOf<"x-ty-203">();
+    });
+  });
+
+  describe("ReservedKeys type constraint", () => {
+    it("ReservedKeys includes UIComponent API members", () => {
+      expectTypeOf<"emit">().toMatchTypeOf<ReservedKeys>();
+      expectTypeOf<"on">().toMatchTypeOf<ReservedKeys>();
+      expectTypeOf<"effect">().toMatchTypeOf<ReservedKeys>();
+      expectTypeOf<"bind">().toMatchTypeOf<ReservedKeys>();
+      expectTypeOf<"refs">().toMatchTypeOf<ReservedKeys>();
+      expectTypeOf<"props">().toMatchTypeOf<ReservedKeys>();
+      expectTypeOf<"host">().toMatchTypeOf<ReservedKeys>();
+      expectTypeOf<"onCleanup">().toMatchTypeOf<ReservedKeys>();
+      expectTypeOf<"consume">().toMatchTypeOf<ReservedKeys>();
+      expectTypeOf<"withCache">().toMatchTypeOf<ReservedKeys>();
+    });
+
+    it("ReservedKeys includes HTMLElement members via prototype chain", () => {
+      expectTypeOf<"className">().toMatchTypeOf<ReservedKeys>();
+      expectTypeOf<"innerHTML">().toMatchTypeOf<ReservedKeys>();
+      expectTypeOf<"addEventListener">().toMatchTypeOf<ReservedKeys>();
+    });
+
+    it("arbitrary names are not reserved", () => {
+      expectTypeOf<"myCustomProp">().not.toMatchTypeOf<ReservedKeys>();
+      expectTypeOf<"greet">().not.toMatchTypeOf<ReservedKeys>();
     });
   });
 

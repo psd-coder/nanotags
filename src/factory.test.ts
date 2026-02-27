@@ -36,12 +36,28 @@ describe("parseWithSchema", () => {
   });
 });
 
+describe("createReactiveProps — reserved name guard", () => {
+  it("throws when prop name conflicts with HTMLElement property", () => {
+    const div = document.createElement("div");
+    expect(() => createReactiveProps(div, { className: propBuilders.string() })).toThrow(
+      /reserved/,
+    );
+  });
+
+  it("throws when prop name conflicts with prototype method", () => {
+    const tag = uniqueTag("rp");
+    const Component = createComponent(tag, {}, {}, () => {});
+    const el = new Component();
+    expect(() => createReactiveProps(el, { emit: propBuilders.string() })).toThrow(/reserved/);
+  });
+});
+
 describe("createReactiveProps", () => {
   it("creates $-prefixed atom stores for each prop", () => {
     const div = document.createElement("div");
-    const { stores } = createReactiveProps(div, { title: propBuilders.string() });
-    expect(stores.$title).toBeDefined();
-    expect(stores.$title.get()).toBe("");
+    const { stores } = createReactiveProps(div, { label: propBuilders.string() });
+    expect(stores.$label).toBeDefined();
+    expect(stores.$label.get()).toBe("");
   });
 
   it("initial store value from getAttribute", () => {
@@ -52,17 +68,17 @@ describe("createReactiveProps", () => {
   });
 
   it("getter reads from store", () => {
-    const div = document.createElement("div");
-    div.setAttribute("title", "hi");
-    createReactiveProps(div, { title: propBuilders.string() });
-    expect(div.title).toBe("hi");
+    const div = document.createElement("div") as unknown as HTMLElement & { label: string };
+    div.setAttribute("label", "hi");
+    createReactiveProps(div, { label: propBuilders.string() });
+    expect(div.label).toBe("hi");
   });
 
   it("setter with string calls setAttribute", () => {
-    const div = document.createElement("div");
-    createReactiveProps(div, { title: propBuilders.string() });
-    div.title = "new";
-    expect(div.getAttribute("title")).toBe("new");
+    const div = document.createElement("div") as unknown as HTMLElement & { label: string };
+    createReactiveProps(div, { label: propBuilders.string() });
+    div.label = "new";
+    expect(div.getAttribute("label")).toBe("new");
   });
 
   it("setter with null calls removeAttribute", () => {
@@ -280,6 +296,35 @@ describe("createComponent", () => {
       createComponent(tag, {}, {}, () => ({ greet: () => "hi" }));
       const el = mount(`<${tag}></${tag}>`);
       expect((el as any).greet()).toBe("hi");
+    });
+
+    it("throws when mixin key conflicts with prototype", () => {
+      const tag = uniqueTag("mixin-bad");
+      createComponent(tag, {}, {}, () => ({ emit: () => {} }));
+      expect(() => mount(`<${tag}></${tag}>`)).toThrow(/reserved/);
+    });
+  });
+
+  describe("consume() timing with mixin", () => {
+    it("child defined after mount can consume() parent mixin via upgrade", () => {
+      const parentTag = uniqueTag("par");
+      const childTag = uniqueTag("ch");
+
+      const Parent = createComponent(parentTag, {}, {}, () => ({ getInfo: () => "from-parent" }));
+
+      // Mount with child NOT yet defined — child stays as plain element
+      const el = mount(`<${parentTag}><${childTag}></${childTag}></${parentTag}>`);
+      expect((el as any).getInfo()).toBe("from-parent");
+
+      // Now define child — upgrade will connect it
+      let consumed: string | undefined;
+      createComponent(childTag, {}, {}, (ctx) => {
+        const parent = ctx.consume(Parent);
+        consumed = (parent as any).getInfo();
+      });
+
+      customElements.upgrade(el);
+      expect(consumed).toBe("from-parent");
     });
   });
 

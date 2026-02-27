@@ -53,7 +53,7 @@
   "size-limit": [
     {
       "path": "dist/index.mjs",
-      "limit": "2825 B"
+      "limit": "2906 B"
     }
   ],
   "nano-staged": {
