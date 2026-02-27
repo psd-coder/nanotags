@@ -14,17 +14,17 @@
   "scripts": {
     "build": "tsdown",
     "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "typecheck": "tsgo --noEmit",
     "lint": "pnpm run /^lint:/",
     "lint:oxlint": "oxlint .",
     "lint:types": "tsgo --noEmit",
+    "lint:size": "pnpm run build && size-limit",
     "format": "pnpm run /^format:/",
     "format:oxlint": "oxlint --fix --fix-suggestions .",
     "format:oxfmt": "oxfmt src/",
     "format:check": "oxfmt --check src/",
-    "prepare": "simple-git-hooks",
-    "size": "size-limit",
-    "size:check": "size-limit --json"
+    "prepare": "simple-git-hooks"
   },
   "dependencies": {
     "@standard-schema/spec": "^1.1.0",
@@ -36,6 +36,7 @@
   "devDependencies": {
     "@size-limit/file": "^12.0.0",
     "@typescript/native-preview": "^7.0.0-dev",
+    "@vitest/coverage-v8": "^4.0.18",
     "happy-dom": "^20.7.0",
     "nano-staged": "^0.9.0",
     "nanostores": "^1.1.1",
@@ -52,7 +53,7 @@
   "size-limit": [
     {
       "path": "dist/index.mjs",
-      "limit": "2905 B"
+      "limit": "2825 B"
     }
   ],
   "nano-staged": {
