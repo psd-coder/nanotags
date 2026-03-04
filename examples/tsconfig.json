@@ -1,0 +1,13 @@
+{
+  "extends": "astro/tsconfigs/strictest",
+  "include": [".astro/types.d.ts", "src/**/*"],
+  "exclude": ["node_modules", "public", "dist"],
+  "compilerOptions": {
+    "allowUnreachableCode": true,
+    "exactOptionalPropertyTypes": false,
+    "erasableSyntaxOnly": true,
+    "paths": {
+      "~/*": ["./src/*"]
+    }
+  }
+}
