@@ -25,5 +25,6 @@
     "isolatedDeclarations": true,
     "skipLibCheck": true
   },
-  "include": ["src", "tests"]
+  "include": ["src/**/*.ts"],
+  "exclude": ["src/**/*.test.ts", "tests/**/*.ts", "examples", "dist", "coverage"]
 }
