@@ -9,30 +9,63 @@ function getBaseSchema<V>(fallback?: V) {
 }
 
 export const propBuilders: {
-  string: (fallback?: string) => StandardSchemaV1<unknown, string>;
-  number: (fallback?: number) => StandardSchemaV1<unknown, number>;
-  boolean: (fallback?: boolean) => StandardSchemaV1<unknown, boolean>;
-  list: <const V extends string | number | bigint>(
-    options: readonly V[],
-    fallback?: V,
-  ) => StandardSchemaV1<unknown, V>;
+  string: {
+    (fallback: null): StandardSchemaV1<unknown, string | null>;
+    (fallback?: string): StandardSchemaV1<unknown, string>;
+  };
+  number: {
+    (fallback: null): StandardSchemaV1<unknown, number | null>;
+    (fallback?: number): StandardSchemaV1<unknown, number>;
+  };
+  boolean: {
+    (fallback: null): StandardSchemaV1<unknown, boolean | null>;
+    (fallback?: boolean): StandardSchemaV1<unknown, boolean>;
+  };
+  oneOf: {
+    <const V extends string | number | bigint>(
+      options: readonly V[],
+      fallback: null,
+    ): StandardSchemaV1<unknown, V | null>;
+    <const V extends string | number | bigint>(
+      options: readonly V[],
+      fallback?: V,
+    ): StandardSchemaV1<unknown, V>;
+  };
 } = {
-  string: (fallback?: string) =>
-    v.pipe(
+  string(fallback?: string | null) {
+    const n = fallback === null;
+    return v.pipe(
       getBaseSchema(fallback),
-      v.transform((val) => (val == null ? "" : val)),
-      v.toString(),
-    ),
-  number: (fallback?: number) => v.pipe(getBaseSchema(fallback), v.toNumber()),
-  boolean: (fallback?: boolean) =>
-    v.pipe(
+      v.transform((val) => (val == null ? (n ? null : "") : String(val))),
+    );
+  },
+  number(fallback?: number | null) {
+    if (fallback === null) {
+      return v.pipe(
+        getBaseSchema(fallback),
+        v.transform((val) => (val == null ? null : Number(val))),
+      );
+    }
+    return v.pipe(getBaseSchema(fallback), v.toNumber());
+  },
+  boolean(fallback?: boolean | null) {
+    const n = fallback === null;
+    return v.pipe(
       getBaseSchema(fallback),
       v.union([v.literal("true"), v.literal("false"), v.literal(""), v.null()]),
-      v.transform((str) => str === "true" || str === ""),
-    ),
-  list: <const V extends string | number | bigint>(options: readonly V[], fallback?: V) =>
-    v.pipe(getBaseSchema(fallback), v.picklist(options)),
-};
+      v.transform((s) => (n && s === null ? null : s === "true" || s === "")),
+    );
+  },
+  oneOf(
+    options: readonly (string | number | bigint)[],
+    fallback?: string | number | bigint | null,
+  ) {
+    if (fallback === null) {
+      return v.pipe(getBaseSchema(fallback), v.nullable(v.picklist(options)));
+    }
+    return v.pipe(getBaseSchema(fallback), v.picklist(options));
+  },
+} as never;
 
 function buildRefSchema(tag: string | undefined) {
   return tag

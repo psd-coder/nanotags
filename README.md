@@ -82,17 +82,30 @@ Declare validated, reactive attributes via `withProps`. Each prop becomes:
 - A nanostores `WritableAtom` at `ctx.props.$propName`
 - A typed getter/setter on the element instance
 
-Three built-in validators coerce raw attribute strings to typed values:
+Four built-in validators coerce raw attribute strings to typed values:
 
 - `p.string()` — coerces any value to string (`null` → `""`)
 - `p.number()` — parses to number (`null` → `0`, throws on non-numeric)
 - `p.boolean()` — `"true"` / `""` (bare attr) → `true`, `"false"` / `null` → `false`
+- `p.oneOf(options)` — picklist enum (`"a"` → `"a"`, throws on invalid)
 
 ```typescript
 .withProps((p) => ({
   title: p.string(),
   count: p.number(),
   open:  p.boolean(),
+  size:  p.oneOf(["s", "m", "l"]),
+}))
+```
+
+Each validator accepts an optional fallback value used when the attribute is absent. Pass `null` as fallback to make the prop nullable — the inferred type becomes `T | null`:
+
+```typescript
+.withProps((p) => ({
+  label: p.string(null),    // string | null — absent attr → null instead of ""
+  count: p.number(null),    // number | null
+  open:  p.boolean(null),   // boolean | null
+  size:  p.oneOf(["s", "m", "l"], null),  // "s" | "m" | "l" | null
 }))
 ```
 

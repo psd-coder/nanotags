@@ -460,5 +460,24 @@ describe("createComponent", () => {
       el.setAttribute("name", "same");
       expect(spy).not.toHaveBeenCalled();
     });
+
+    it("oneOf prop roundtrip: property setter → attribute → store", () => {
+      const tag = uniqueTag("rt-oneof");
+      const Component = createComponent(
+        tag,
+        { size: propBuilders.oneOf(["s", "m", "l"] as const, "m") },
+        {},
+        () => {},
+      );
+      const el = new Component();
+      expect(el.props.$size.get()).toBe("m");
+
+      el.setAttribute("size", "l");
+      expect(el.props.$size.get()).toBe("l");
+
+      (el as any).size = "s";
+      expect(el.getAttribute("size")).toBe("s");
+      expect(el.props.$size.get()).toBe("s");
+    });
   });
 });

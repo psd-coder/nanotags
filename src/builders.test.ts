@@ -2,7 +2,14 @@ import { describe, expect, expectTypeOf, it } from "vitest";
 
 import { propBuilders, refBuilders } from "./builders";
 import { parseWithSchema } from "./factory";
-import type { InferRef, InferRefs, ListRefMarker, SingleRefMarker, TypedEvent } from "./types";
+import type {
+  Infer,
+  InferRef,
+  InferRefs,
+  ListRefMarker,
+  SingleRefMarker,
+  TypedEvent,
+} from "./types";
 
 describe("propBuilders", () => {
   describe("string", () => {
@@ -62,6 +69,107 @@ describe("propBuilders", () => {
 
     it('rejects "1"', () => {
       expect(() => parseWithSchema(schema, "1", "test")).toThrow(TypeError);
+    });
+  });
+
+  describe("null fallback", () => {
+    describe("string(null)", () => {
+      const schema = propBuilders.string(null);
+
+      it("null → null", () => {
+        expect(parseWithSchema(schema, null, "test")).toBe(null);
+      });
+
+      it('"hello" → "hello"', () => {
+        expect(parseWithSchema(schema, "hello", "test")).toBe("hello");
+      });
+
+      it("infers string | null", () => {
+        expectTypeOf<Infer<typeof schema>>().toEqualTypeOf<string | null>();
+      });
+    });
+
+    describe("number(null)", () => {
+      const schema = propBuilders.number(null);
+
+      it("null → null", () => {
+        expect(parseWithSchema(schema, null, "test")).toBe(null);
+      });
+
+      it('"42" → 42', () => {
+        expect(parseWithSchema(schema, "42", "test")).toBe(42);
+      });
+
+      it("infers number | null", () => {
+        expectTypeOf<Infer<typeof schema>>().toEqualTypeOf<number | null>();
+      });
+    });
+
+    describe("boolean(null)", () => {
+      const schema = propBuilders.boolean(null);
+
+      it("null → null", () => {
+        expect(parseWithSchema(schema, null, "test")).toBe(null);
+      });
+
+      it('"true" → true', () => {
+        expect(parseWithSchema(schema, "true", "test")).toBe(true);
+      });
+
+      it('"" → true', () => {
+        expect(parseWithSchema(schema, "", "test")).toBe(true);
+      });
+
+      it('"false" → false', () => {
+        expect(parseWithSchema(schema, "false", "test")).toBe(false);
+      });
+
+      it("infers boolean | null", () => {
+        expectTypeOf<Infer<typeof schema>>().toEqualTypeOf<boolean | null>();
+      });
+    });
+
+    it("without null fallback types stay non-nullable", () => {
+      expectTypeOf<Infer<ReturnType<typeof propBuilders.string>>>().toEqualTypeOf<string>();
+      expectTypeOf<Infer<ReturnType<typeof propBuilders.number>>>().toEqualTypeOf<number>();
+      expectTypeOf<Infer<ReturnType<typeof propBuilders.boolean>>>().toEqualTypeOf<boolean>();
+    });
+  });
+
+  describe("oneOf", () => {
+    const schema = propBuilders.oneOf(["a", "b"] as const);
+
+    it("accepts valid option", () => {
+      expect(parseWithSchema(schema, "a", "test")).toBe("a");
+    });
+
+    it("rejects invalid value", () => {
+      expect(() => parseWithSchema(schema, "c", "test")).toThrow(TypeError);
+    });
+
+    it("with fallback: null → fallback", () => {
+      const s = propBuilders.oneOf(["a", "b"] as const, "a");
+      expect(parseWithSchema(s, null, "test")).toBe("a");
+    });
+
+    it("infers V", () => {
+      expectTypeOf<Infer<typeof schema>>().toEqualTypeOf<"a" | "b">();
+    });
+
+    describe("null fallback", () => {
+      const nullSchema = propBuilders.oneOf(["a", "b"] as const, null);
+
+      it("null → null", () => {
+        expect(parseWithSchema(nullSchema, null, "test")).toBe(null);
+      });
+
+      it("accepts valid option", () => {
+        expect(parseWithSchema(nullSchema, "a", "test")).toBe("a");
+      });
+
+      it("infers V | null", () => {
+        expectTypeOf<Infer<typeof nullSchema>>().toEqualTypeOf<"a" | "b" | null>();
+      });
     });
   });
 });
