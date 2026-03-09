@@ -10,5 +10,76 @@ const { class: className, lang, ...rest } = Astro.props;
   <slot />
 </x-code-editor>
 <script>
-  import "./components";
+  import { define } from "nano-wc";
+  import { EditorView, basicSetup } from "codemirror";
+  import { Annotation, Compartment, EditorSelection } from "@codemirror/state";
+  import { javascript } from "@codemirror/lang-javascript";
+  import { html } from "@codemirror/lang-html";
+  import { css } from "@codemirror/lang-css";
+  import { json } from "@codemirror/lang-json";
+
+  const SUPPORTED_LANGS = ["javascript", "html", "css", "importmap"] as const;
+  type SupportedLang = (typeof SUPPORTED_LANGS)[number];
+
+  const programmatic = Annotation.define<true>();
+
+  function getLang(lang: SupportedLang) {
+    if (lang === "javascript") return javascript();
+    if (lang === "html") return html();
+    if (lang === "css") return css();
+    if (lang === "importmap") return json();
+    return javascript();
+  }
+
+  declare global {
+    interface HTMLElementTagNameMap {
+      "x-code-editor": InstanceType<typeof XCodeEditor>;
+    }
+  }
+
+  const XCodeEditor = define("x-code-editor")
+    .withProps((p) => ({ lang: p.oneOf(SUPPORTED_LANGS) }))
+    .setup((ctx) => {
+      const initialDoc = (ctx.host.textContent ?? "").trim();
+      ctx.host.textContent = "";
+
+      const language = new Compartment();
+      const view = new EditorView({
+        doc: initialDoc,
+        extensions: [
+          basicSetup,
+          language.of(getLang(ctx.props.$lang.get())),
+          EditorView.updateListener.of((update) => {
+            if (!update.docChanged) return;
+            const isProgrammatic = update.transactions.some((tr) => tr.annotation(programmatic));
+            if (!isProgrammatic) ctx.emit("change");
+          }),
+          EditorView.theme({
+            "&": { height: "100%" },
+            ".cm-scroller": { overflow: "auto" },
+          }),
+        ],
+        parent: ctx.host,
+      });
+
+      ctx.effect(ctx.props.$lang, (lang) => {
+        view.dispatch({
+          effects: language.reconfigure(getLang(lang)),
+        });
+      });
+      ctx.onCleanup(() => view.destroy());
+
+      return {
+        get value() {
+          return view.state.doc.toString();
+        },
+        set value(val: string) {
+          view.dispatch({
+            changes: { from: 0, to: view.state.doc.length, insert: val },
+            selection: EditorSelection.cursor(Math.min(view.state.selection.main.head, val.length)),
+            annotations: programmatic.of(true),
+          });
+        },
+      };
+    });
 </script>
