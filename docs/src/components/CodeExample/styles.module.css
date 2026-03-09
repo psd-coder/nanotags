@@ -1,5 +1,6 @@
 .host {
   display: block;
+  margin-top: 24px;
   height: 520px;
 
   border: 1px solid #333;

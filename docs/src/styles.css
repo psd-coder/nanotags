@@ -27,8 +27,25 @@
     background: var(--color-surface-1);
   }
 
+  .header {
+    padding: 12px 24px;
+    background: var(--color-surface-2);
+    border-bottom: 1px solid var(--color-border);
+
+    a {
+      font-weight: 700;
+      font-family: var(--font-mono);
+      color: var(--color-text-primary);
+      text-decoration: none;
+    }
+  }
+
   main {
     max-width: 968px;
     margin: 0 auto;
+
+    h1 {
+      margin-top: 64px;
+    }
   }
 }

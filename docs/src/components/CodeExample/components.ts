@@ -68,10 +68,12 @@ define("x-code-example")
       },
     });
 
-    ctx.effect($currentFileEntry, (currentFileEntry) => {
-      if (!currentFileEntry) return;
-      ctx.refs.editor.value = currentFileEntry.content;
-      ctx.refs.editor.setAttribute("lang", currentFileEntry.lang);
+    ctx.effect($currentTab, (currentTab) => {
+      if (!currentTab) return;
+      const entry = $files.get().find((e) => e.name === currentTab);
+      if (!entry) return;
+      ctx.refs.editor.value = entry.content;
+      ctx.refs.editor.setAttribute("lang", entry.lang);
     });
     ctx.effect($debouncedFiles, (files) => {
       ctx.refs.preview.render(files, {

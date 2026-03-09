@@ -1,0 +1,48 @@
+name: Deploy docs to GitHub Pages
+
+on:
+  push:
+    branches: [main, docs]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/prepare-runner
+
+      - name: Install docs deps
+        working-directory: docs
+        run: pnpm install --frozen-lockfile
+
+      - name: Build nano-wc
+        run: pnpm build
+
+      - name: Build docs
+        working-directory: docs
+        run: pnpm build
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

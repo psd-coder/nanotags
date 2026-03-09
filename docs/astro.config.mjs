@@ -6,6 +6,8 @@ const nanoWcPath = new URL("../dist/index.mjs", import.meta.url).pathname;
 
 // https://astro.build/config
 export default defineConfig({
+  site: "https://psd-coder.github.io",
+  base: process.env.CI ? "/nano-wc/" : "/",
   vite: {
     resolve: {
       alias: {
