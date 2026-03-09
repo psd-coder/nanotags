@@ -6,6 +6,10 @@
     "allowUnreachableCode": true,
     "exactOptionalPropertyTypes": false,
     "erasableSyntaxOnly": true,
+    "plugins": [
+      { "name": "@astrojs/ts-plugin" },
+      { "name": "@css-modules-kit/ts-plugin" }
+    ],
     "paths": {
       "~/*": ["./src/*"],
       "nano-wc": ["../src"],

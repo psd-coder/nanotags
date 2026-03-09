@@ -37,8 +37,8 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "typecheck": "pnpm run /^typecheck:/",
-    "typecheck:src": "tsgo -p tsconfig.json --noEmit",
-    "typecheck:test": "tsgo -p tsconfig.test.json --noEmit",
+    "typecheck:src": "tsc -p tsconfig.json --noEmit",
+    "typecheck:test": "tsc -p tsconfig.test.json --noEmit",
     "lint": "pnpm run /^lint:/",
     "lint:oxlint": "oxlint .",
     "lint:types": "pnpm run typecheck",
@@ -56,7 +56,6 @@
   },
   "devDependencies": {
     "@size-limit/file": "^12.0.0",
-    "@typescript/native-preview": "^7.0.0-dev",
     "@vitest/coverage-v8": "^4.0.18",
     "happy-dom": "^20.7.0",
     "nano-staged": "^0.9.0",
@@ -66,6 +65,7 @@
     "simple-git-hooks": "^2.13.1",
     "size-limit": "^12.0.0",
     "tsdown": "0.21.0-beta.2",
+    "typescript": "^5.9.3",
     "vitest": "^4.0.18"
   },
   "peerDependencies": {
