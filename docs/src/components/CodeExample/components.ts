@@ -8,6 +8,14 @@ import { debouncedComputed } from "~/utils/debouncedComputed";
 import { type LogLevel, fileEntrySchema } from "../LivePreview";
 import styles from "./styles.module.css";
 
+const importOverrides = {
+  imports: {
+    "nano-wc": nanoWcUrl,
+    "nano-wc/render": nanoWcRenderUrl,
+    valibot: "https://esm.sh/valibot@latest",
+  },
+};
+
 define("x-code-example")
   .withProps(({ number, json }) => ({
     files: json(v.array(fileEntrySchema), []),
@@ -76,15 +84,7 @@ define("x-code-example")
       ctx.refs.editor.value = entry.content;
       ctx.refs.editor.setAttribute("lang", entry.lang);
     });
-    ctx.effect($debouncedFiles, (files) => {
-      ctx.refs.preview.render(files, {
-        imports: {
-          "nano-wc": nanoWcUrl,
-          "nano-wc/render": nanoWcRenderUrl,
-          valibot: "https://esm.sh/valibot@latest",
-        },
-      });
-    });
+    ctx.effect($debouncedFiles, (files) => ctx.refs.preview.render({ files, importOverrides }));
     ctx.effect($logs, (logs) => {
       const scroll = ctx.refs.logsContainer;
       const isAtBottom = scroll.scrollTop + scroll.clientHeight >= scroll.scrollHeight - 5;

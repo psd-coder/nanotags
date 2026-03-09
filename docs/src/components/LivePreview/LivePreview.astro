@@ -7,7 +7,7 @@ type Props = HTMLAttributes<"div">
 const { class: className, ...rest } = Astro.props;
 ---
 <x-live-preview class:list={[styles.host, className]} {...rest}>
-  <iframe data-ref="frame" class={styles.frame} sandbox="allow-scripts" title="Live preview" />
+  <iframe data-ref="frame" class={styles.frame} sandbox="allow-scripts allow-same-origin" title="Live preview" />
 </x-live-preview>
 <script>
   import "./components";

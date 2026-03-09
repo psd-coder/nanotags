@@ -1,4 +1,5 @@
 import { define, type TypedEvent } from "nano-wc";
+import { atom, computed, onMount } from "nanostores";
 import * as v from "valibot";
 import { type FileEntry, type ImportMap, type LogMessage, logMessageSchema } from "./types";
 import { buildHtml } from "./utils";
@@ -18,37 +19,30 @@ const XLivePreview = define("x-live-preview")
     frame: one("iframe"),
   }))
   .setup((ctx) => {
-    let blobUrl: string | undefined;
+    const $data = atom<{ files: readonly FileEntry[]; importOverrides?: ImportMap }>({ files: [] });
+    const $html = computed($data, ({ files, importOverrides }) =>
+      buildHtml(files, importOverrides),
+    );
+    const $blobUrl = computed($html, (html) =>
+      URL.createObjectURL(new Blob([html], { type: "text/html" })),
+    );
 
-    function buildBlob(html: string) {
-      cleanupBlobUrl();
-      blobUrl = URL.createObjectURL(new Blob([html], { type: "text/html" }));
-      return blobUrl;
-    }
-
-    function cleanupBlobUrl() {
-      if (blobUrl) {
-        URL.revokeObjectURL(blobUrl);
-        blobUrl = undefined;
-      }
-    }
-
-    function render(files: readonly FileEntry[], importMapOverrides?: ImportMap) {
-      cleanupBlobUrl();
-      const html = buildHtml(files, importMapOverrides);
-
-      ctx.refs.frame.src = buildBlob(html);
-    }
+    // Cleanup old objectUrl after each changed, or on unmount
+    onMount($blobUrl, () => {
+      return $blobUrl.listen((_value, oldValue) => {
+        return URL.revokeObjectURL(oldValue);
+      });
+    });
 
     ctx.on(window, "message", (ev) => {
       const parsed = v.safeParse(logMessageSchema, ev.data);
-
       if (parsed.success) {
         ctx.emit("log", parsed.output);
       }
     });
+    ctx.effect($blobUrl, (blobUrl) => {
+      ctx.refs.frame.src = blobUrl;
+    });
 
-    ctx.onCleanup(cleanupBlobUrl);
-
-    return { render };
+    return { render: $data.set };
   });
