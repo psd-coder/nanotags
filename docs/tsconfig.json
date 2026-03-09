@@ -10,10 +10,14 @@
       { "name": "@astrojs/ts-plugin" },
       { "name": "@css-modules-kit/ts-plugin" }
     ],
+    "rootDirs": [".", "./generated"],
     "paths": {
       "~/*": ["./src/*"],
       "nano-wc": ["../src"],
       "nano-wc/*": ["../src/*"]
     }
+  },
+  "cmkOptions": {
+    "enabled": true
   }
 }

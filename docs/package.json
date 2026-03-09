@@ -7,7 +7,7 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "typecheck": "astro check"
+    "typecheck": "cmk && astro check"
   },
   "dependencies": {
     "@codemirror/lang-css": "^6.3.1",
@@ -26,6 +26,7 @@
   "devDependencies": {
     "@astrojs/check": "^0.9.6",
     "@astrojs/ts-plugin": "^1.10.6",
+    "@css-modules-kit/codegen": "^0.10.0",
     "@css-modules-kit/ts-plugin": "^0.10.0",
     "@types/node": "^25.3.5",
     "typescript": "^5.9.3"
