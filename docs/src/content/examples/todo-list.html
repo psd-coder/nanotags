@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Todo List</title>
+  <meta name="description" content="Todo list with nested components and keyed list reconciliation via renderList.">
+  <script type="importmap">
+    {
+      "imports": {
+        "nano-wc": "https://esm.sh/nano-wc@latest",
+        "nano-wc/render": "https://esm.sh/nano-wc@latest/render",
+        "nanostores": "https://esm.sh/nanostores@latest"
+      }
+    }
+  </script>
+</head>
+
+<body>
+  <div data-type="html">
+    <x-todo-list>
+      <div class="addForm">
+        <input data-ref="input" type="text" placeholder="Add a todo..." />
+        <button data-ref="addBtn">Add</button>
+      </div>
+      <ul data-ref="list">
+        <template data-ref="itemTpl">
+          <x-todo-item>
+            <input data-ref="checkbox" type="checkbox" />
+            <span data-ref="text" class="text"></span>
+            <button data-ref="deleteBtn" class="delete">✕</button>
+          </x-todo-item>
+        </template>
+      </ul>
+      <p data-ref="stats"></p>
+    </x-todo-list>
+  </div>
+
+  <script type="module" data-type="javascript">
+    import { define } from "nano-wc";
+    import { renderList } from "nano-wc/render";
+    import { atom, computed } from "nanostores";
+    import * as v from 'valibot';
+
+    const XTodoList = define("x-todo-list")
+      .withRefs(({ one }) => ({
+        input: one("input"),
+        addBtn: one("button"),
+        list: one("ul"),
+        itemTpl: one("template"),
+        stats: one("p"),
+      }))
+      .setup((ctx) => {
+        const $todos = atom([
+          { id: 1, text: "Try nano-wc", done: false },
+          { id: 2, text: "Build something cool", done: false },
+        ]);
+        const $total = computed($todos, (todos) => todos.length);
+        const $completed = computed($todos, (todos) => todos.filter((t) => t.done).length);
+
+        function addTodo(text) {
+          $todos.set([...$todos.get(), { id: Date.now(), text, done: false }]);
+        }
+
+        function handleAdd() {
+          const text = ctx.refs.input.value.trim();
+          if (!text) return;
+          addTodo(text);
+          ctx.refs.input.value = "";
+        }
+
+        ctx.on(ctx.refs.addBtn, "click", handleAdd);
+        ctx.on(ctx.refs.input, "keydown", (e) => {
+          if (e.key === "Enter") handleAdd();
+        });
+
+        ctx.effect($todos, (todos) => {
+          renderList(ctx.refs.list, ctx.refs.itemTpl, {
+            data: todos,
+            key: (t) => t.id,
+            update: (el, todo) => el.setAttribute("data", JSON.stringify(todo)),
+          });
+        });
+        ctx.effect([$total, $completed], (total, completed) => {
+          ctx.refs.stats.textContent = `${completed}/${total} completed`;
+        })
+
+
+        return {
+          toggle: (id) => $todos.set($todos.get().map((t) => (t.id === id ? { ...t, done: !t.done } : t))),
+          delete: (id) => $todos.set($todos.get().filter((t) => t.id !== id))
+        }
+      });
+
+    define("x-todo-item")
+      .withProps((p) => ({
+        data: p.json(v.object({ id: v.number(), text: v.string(), done: v.boolean() })),
+      }))
+      .withRefs(({ one }) => ({
+        checkbox: one("input"),
+        text: one("span"),
+        deleteBtn: one("button"),
+      }))
+      .setup((ctx) => {
+        const parent = ctx.consume(XTodoList);
+
+        ctx.on(ctx.refs.checkbox, "change", () => parent.toggle(ctx.props.$data.get().id));
+        ctx.on(ctx.refs.deleteBtn, "click", () => parent.delete(ctx.props.$data.get().id));
+
+        ctx.effect(ctx.props.$data, (data) => {
+          const { done, text } = data;
+          ctx.refs.checkbox.checked = done;
+          ctx.refs.text.classList.toggle("done", done);
+          ctx.refs.text.textContent = text;
+        });
+      });
+  </script>
+
+  <style data-type="css">
+    x-todo-list ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    x-todo-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 0;
+    }
+
+    x-todo-item .text {
+      flex: 1;
+    }
+
+    x-todo-item .done {
+      text-decoration: line-through;
+      color: #999;
+    }
+
+    x-todo-item .delete {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #c44;
+      font-weight: bold;
+    }
+
+    x-todo-list .addForm {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    x-todo-list input[type="text"] {
+      flex: 1;
+      padding: 6px;
+    }
+
+    x-todo-list p {
+      color: #888;
+      font-size: 14px;
+    }
+  </style>
+</body>
+
+</html>
