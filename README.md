@@ -435,53 +435,74 @@ const raf = requestAnimationFrame(tick);
 ctx.onCleanup(() => cancelAnimationFrame(raf));
 ```
 
-## Dynamic Templates
+## Rendering
 
-Template-cloning utilities for dynamic content. Import from the separate `nano-wc/render` entry — only pay for them when you use them.
-
-```typescript
-import { clone, cloneList } from "nano-wc/render";
-```
-
-### `clone(template, data?, fill?)`
-
-Clone an `HTMLTemplateElement` and optionally populate it with `data` via `fill`. Returns the `DocumentFragment`.
+Keyed reconciliation utilities for dynamic content. Import from the separate `nano-wc/render` entry — only pay for them when you use them.
 
 ```typescript
-const fragment = clone(ctx.refs.cardTpl, { title: "Hi" }, (tpl, d) => {
-  tpl.querySelector(".title")!.textContent = d.title;
-});
+import { renderList, render } from "nano-wc/render";
 ```
 
-### `cloneList(template, items, fill)`
+### `renderList(container, options)`
 
-Clone a template once per item, fill each clone, and return a single `DocumentFragment`. Hold a ref to the template element via `withRefs`.
+Reconcile a data array against existing DOM elements by key. Creates new elements from a template, updates existing ones, removes stale ones, and reorders as needed — without destroying/recreating the whole list. Skips `update` when the item reference hasn't changed (`===`).
 
 ```html
 <x-user-list>
-  <ul data-ref="list"></ul>
-  <template data-ref="rowTpl">
-    <li><span class="name"></span></li>
-  </template>
+  <ul data-ref="list">
+    <template data-ref="rowTpl">
+      <li><span class="name"></span></li>
+    </template>
+  </ul>
 </x-user-list>
 ```
 
 ```typescript
-import { cloneList } from "nano-wc/render";
+import { renderList } from "nano-wc/render";
 
 const UserList = define("x-user-list")
   .withRefs((r) => ({ list: r.one("ul"), rowTpl: r.one("template") }))
   .setup((ctx) => {
     ctx.effect($users, (users) => {
-      const fragment = cloneList(ctx.refs.rowTpl, users, (tpl, user) => {
-        ctx.getElement(tpl, ".name").textContent = user.name;
+      renderList(ctx.refs.list, {
+        template: ctx.refs.rowTpl,
+        data: users,
+        getKey: (user) => user.id,
+        update: (el, user) => {
+          ctx.getElement(el, ".name").textContent = user.name;
+        },
       });
-      ctx.refs.list.replaceChildren(fragment);
     });
   });
 ```
 
-For cases where `replaceChildren` causes flickering, consider DOM-diffing libraries like [micromorph](https://github.com/natemoo-re/micromorph), [morphdom](https://github.com/patrick-steele-idem/morphdom), or [nanomorph](https://github.com/choojs/nanomorph).
+Options:
+- `template` — `HTMLTemplateElement` to clone for new items
+- `data` — `readonly T[]` of items to render
+- `getKey(item, index)` — returns a unique `string | number` key per item
+- `update(el, item)` — called on create and on subsequent renders when the item reference changes
+
+Non-managed children (static headers, slots) in the container are preserved.
+
+### `render(container, options)`
+
+Conditional single-item rendering. Pass `data` to show, `null` to remove.
+
+```typescript
+import { render } from "nano-wc/render";
+
+ctx.effect($user, (user) => {
+  render(ctx.refs.profile, {
+    template: ctx.refs.profileTpl,
+    data: user, // T | null
+    update: (el, u) => {
+      el.setAttribute("name", u.name);
+    },
+  });
+});
+```
+
+Internally delegates to `renderList` with a 0-or-1 element array.
 
 ## Setup Return Value (Mixin)
 
