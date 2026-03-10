@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Modal</title>
+  <meta name="description"
+    content="Modal dialog with focus trap attachment demonstrating the multi-file attachment pattern.">
+  <script type="importmap">
+    {
+      "imports": {
+        "nano-wc": "https://esm.sh/nano-wc@latest",
+        "nanostores": "https://esm.sh/nanostores@latest"
+      }
+    }
+  </script>
+</head>
+
+<body>
+  <div data-type="html">
+
+    <x-dialog>
+      <button data-ref="trigger">Open Dialog</button>
+      <dialog data-ref="dialog">
+        <h3>Confirm Action</h3>
+        <p>This dialog traps focus using an attachment pattern. Try pressing Tab to cycle through focusable elements.
+        </p>
+        <div class="actions">
+          <button data-ref="cancel">Cancel</button>
+          <button data-ref="confirm" class="primary">Confirm</button>
+        </div>
+      </dialog>
+    </x-dialog>
+  </div>
+
+  <script type="module" data-type="javascript">
+    import { define } from "nano-wc";
+    import { atom } from "nanostores";
+    import { attachFocusTrap } from "attachFocusTrap.js";
+
+    define("x-dialog")
+      .withRefs(({ one }) => ({
+        trigger: one("button"),
+        dialog: one("dialog"),
+        cancel: one("button"),
+        confirm: one("button"),
+      }))
+      .setup((ctx) => {
+        const $open = atom(false);
+
+        function open() {
+          $open.set(true);
+        }
+
+        function close() {
+          $open.set(false);
+        }
+
+        attachFocusTrap(ctx, ctx.refs.dialog);
+
+        ctx.on(ctx.refs.trigger, "click", open);
+        ctx.on(ctx.refs.cancel, "click", close);
+        ctx.on(ctx.refs.confirm, "click", () => {
+          console.log("Confirmed!");
+          close();
+        });
+        ctx.on(ctx.refs.dialog, "cancel", (e) => {
+          e.preventDefault();
+          close();
+        });
+
+
+        ctx.effect($open, (open) => {
+          if (open) {
+            ctx.refs.dialog.showModal();
+          } else {
+            ctx.refs.dialog.close();
+          }
+        });
+
+        return { open, close };
+      });
+  </script>
+
+  <script type="module" data-type="javascript" data-name="attachFocusTrap.js">
+    const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+    export function attachFocusTrap(ctx, container) {
+      ctx.on(container, "keydown", (e) => {
+        if (e.key !== "Tab") return;
+
+        const focusable = [...container.querySelectorAll(FOCUSABLE)];
+        if (focusable.length === 0) return;
+
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      });
+    }
+  </script>
+
+  <style data-type="css">
+    button[data-ref="trigger"] {
+      padding: 8px 20px;
+      font-size: 14px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      background: white;
+      cursor: pointer;
+    }
+
+    button[data-ref="trigger"]:hover {
+      background: #f3f4f6;
+    }
+
+    dialog {
+      border: none;
+      border-radius: 12px;
+      padding: 24px;
+      max-width: 400px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    dialog::backdrop {
+      background: rgba(0, 0, 0, 0.4);
+    }
+
+    dialog h3 {
+      margin: 0 0 12px;
+    }
+
+    dialog p {
+      color: #4b5563;
+      font-size: 14px;
+      line-height: 1.5;
+      margin: 0 0 20px;
+    }
+
+    dialog .actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    dialog button {
+      padding: 8px 16px;
+      border-radius: 6px;
+      border: 1px solid #d1d5db;
+      background: white;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    dialog button:hover {
+      background: #f3f4f6;
+    }
+
+    dialog button.primary {
+      background: #2563eb;
+      color: white;
+      border-color: #2563eb;
+    }
+
+    dialog button.primary:hover {
+      background: #1d4ed8;
+    }
+
+    dialog button:focus-visible {
+      outline: 2px solid #2563eb;
+      outline-offset: 2px;
+    }
+  </style>
+</body>
+
+</html>
