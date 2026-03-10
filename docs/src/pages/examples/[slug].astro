@@ -1,0 +1,20 @@
+---
+import Layout from "../../components/Layout/Layout.astro";
+import { CodeExample } from "../../components/CodeExample";
+import { getCollection, getEntry } from "astro:content";
+
+export async function getStaticPaths() {
+  const examples = await getCollection("examples");
+  return examples.map((example) => ({ params: { slug: example.id } }));
+}
+
+const example = await getEntry("examples", Astro.params.slug);
+if (!example) throw new Error(`Example '${Astro.params.slug}' not found`);
+const { title, description, files } = example.data;
+---
+
+<Layout title={title}>
+  <h1>{title}</h1>
+  <p>{description}</p>
+  <CodeExample files={files} />
+</Layout>

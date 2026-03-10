@@ -1,18 +1,19 @@
 ---
 import Layout from '../components/Layout/Layout.astro';
+import { getCollection } from "astro:content";
+
+const examples = await getCollection("examples");
 ---
 
 <Layout title="Home">
   <h1>nano-wc docs</h1>
   <p class="subtitle">Live playground — edit code and switch to Preview to see it run.</p>
   <div class="grid">
-    <a class="card" href="examples/counter/">
-      <h2>Counter</h2>
-      <p>Minimal counter using nano-wc with nanostores reactivity.</p>
-    </a>
-    <a class="card" href="examples/todo-list/">
-      <h2>Todo List</h2>
-      <p>Composable todo list with parent-child communication via ctx.consume.</p>
-    </a>
+    {examples.map((example) => (
+      <a class="card" href={`examples/${example.id}/`}>
+        <h2>{example.data.title}</h2>
+        <p>{example.data.description}</p>
+      </a>
+    ))}
   </div>
 </Layout>
