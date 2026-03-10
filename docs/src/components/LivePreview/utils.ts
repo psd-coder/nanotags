@@ -55,17 +55,42 @@ export function renderMarkup(markups: readonly string[]): string {
 }
 
 export function buildHtml(files: readonly FileEntry[], importMapOverrides?: ImportMap): string {
+  const jsFiles = files.filter((f) => f.type === "javascript");
+  const mainJs = jsFiles.filter((f) => f.name === "app.js");
+  const moduleJs = jsFiles.filter((f) => f.name !== "app.js");
+
+  const moduleImports: ImportMap | undefined = moduleJs.length
+    ? {
+        imports: Object.fromEntries(
+          moduleJs.map((f) => [
+            f.name,
+            `data:text/javascript;charset=utf-8,${encodeURIComponent(f.content)}`,
+          ]),
+        ),
+      }
+    : undefined;
+
+  const combinedOverrides: ImportMap | undefined =
+    importMapOverrides || moduleImports
+      ? {
+          imports: {
+            ...moduleImports?.imports,
+            ...importMapOverrides?.imports,
+          },
+        }
+      : undefined;
+
   return `<!DOCTYPE html>
   <html>
     <head>
       <meta charset="UTF-8">
-      ${renderImportMap(getContentType(files, "importmap"), importMapOverrides)}
+      ${renderImportMap(getContentType(files, "importmap"), combinedOverrides)}
       ${renderStyles(getContentType(files, "css"))}
       ${renderScripts([METHOD_OVERRIDES])}
     </head>
     <body>
       ${renderMarkup(getContentType(files, "html"))}
-      ${renderScripts(getContentType(files, "javascript"))}
+      ${renderScripts(mainJs.map((f) => f.content))}
     </body>
   </html>`;
 }
