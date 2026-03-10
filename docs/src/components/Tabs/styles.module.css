@@ -10,6 +10,45 @@
   }
 }
 
+.arrow {
+  position: sticky;
+  z-index: 1;
+  width: 28px;
+  flex-shrink: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  color: #6b7280;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  background: var(--color-surface-2);
+  align-self: stretch;
+
+  &[data-visible] {
+    display: flex;
+  }
+
+  &:hover {
+    color: var(--color-text);
+    background: var(--color-surface-1);
+  }
+}
+
+.arrowLeft {
+  left: 0;
+  margin-right: -28px;
+  border-right: 1px solid var(--color-border);
+}
+
+.arrowRight {
+  right: 0;
+  margin-left: -28px;
+  border-left: 1px solid var(--color-border);
+}
+
 .tab {
   border: none;
   background: transparent;

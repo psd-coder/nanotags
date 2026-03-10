@@ -10,7 +10,9 @@ const { active, class: className, ...rest } = Astro.props;
 ---
 
 <x-tabs class:list={[styles.tabs, className]} role="tablist" active={active} {...rest}>
+  <button data-ref="arrowLeft" class:list={[styles.arrow, styles.arrowLeft]} tabindex="-1">‹</button>
   <slot />
+  <button data-ref="arrowRight" class:list={[styles.arrow, styles.arrowRight]} tabindex="-1">›</button>
 </x-tabs>
 <script>
   import { define, type TypedEvent } from "nano-wc";
@@ -25,11 +27,52 @@ const { active, class: className, ...rest } = Astro.props;
     }
   }
 
+  const SCROLL_SPEED = 150; // px per frame at 60fps
+
   const XTabs = define("x-tabs")
     .withProps((p) => ({ active: p.string(null) }))
-    .withRefs((r) => ({ tabs: r.many("button") }))
+    .withRefs((r) => ({
+      tabs: r.many("button[role=tab]"),
+      arrowLeft: r.one("button"),
+      arrowRight: r.one("button"),
+    }))
     .setup((ctx) => {
       const { $active } = ctx.props;
+      const host = ctx.host;
+      let scrollRafId = 0;
+
+      function updateArrows() {
+        const canScrollLeft = host.scrollLeft > 0;
+        const canScrollRight = host.scrollLeft + host.clientWidth < host.scrollWidth - 1;
+        ctx.refs.arrowLeft.toggleAttribute("data-visible", canScrollLeft);
+        ctx.refs.arrowRight.toggleAttribute("data-visible", canScrollRight);
+      }
+
+      function startAutoScroll(direction: number) {
+        stopAutoScroll();
+        let last = 0;
+        function step(ts: number) {
+          if (last) {
+            const dt = ts - last;
+            host.scrollLeft += direction * SCROLL_SPEED * (dt / 1000);
+          }
+          last = ts;
+          updateArrows();
+          scrollRafId = requestAnimationFrame(step);
+        }
+        scrollRafId = requestAnimationFrame(step);
+      }
+
+      function stopAutoScroll() {
+        if (scrollRafId) {
+          cancelAnimationFrame(scrollRafId);
+          scrollRafId = 0;
+        }
+      }
+
+      const ro = new ResizeObserver(updateArrows);
+      ro.observe(host);
+      ctx.onCleanup(() => ro.disconnect());
 
       const rover = attachRovingFocus(ctx, () => ctx.refs.tabs, {
         onActivate(item) {
@@ -38,7 +81,23 @@ const { active, class: className, ...rest } = Astro.props;
             $active.set(value);
             ctx.emit("change", { value });
           }
+          item.scrollIntoView({ block: "nearest", inline: "nearest" });
         },
+      });
+
+      ctx.on(host, "scroll", updateArrows, { passive: true });
+      ctx.on(ctx.refs.arrowLeft, "pointerenter", () => startAutoScroll(-1));
+      ctx.on(ctx.refs.arrowLeft, "pointerleave", stopAutoScroll);
+      ctx.on(ctx.refs.arrowLeft, "click", () => {
+        stopAutoScroll()
+        host.scrollTo({ left: 0, behavior: "smooth" });
+      });
+
+      ctx.on(ctx.refs.arrowRight, "pointerenter", () => startAutoScroll(1));
+      ctx.on(ctx.refs.arrowRight, "pointerleave", stopAutoScroll);
+      ctx.on(ctx.refs.arrowRight, "click", () => {
+        stopAutoScroll()
+        host.scrollTo({ left: host.scrollWidth, behavior: "smooth" });
       });
 
       ctx.effect(ctx.props.$active, (value) => {
