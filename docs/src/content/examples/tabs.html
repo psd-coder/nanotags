@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Tabs</title>
+  <meta name="description" content="Tab navigation with parent-child context and keyboard support.">
+  <script type="importmap">
+    {
+      "imports": {
+        "nano-wc": "https://esm.sh/nano-wc@latest",
+        "nanostores": "https://esm.sh/nanostores@latest"
+      }
+    }
+  </script>
+</head>
+
+<body>
+  <div data-type="html">
+    <x-tabs active="overview">
+      <div role="tablist" data-ref="tablist">
+        <button role="tab" data-value="overview">Overview</button>
+        <button role="tab" data-value="features">Features</button>
+        <button role="tab" data-value="setup">Setup</button>
+      </div>
+      <x-tab-panel value="overview">
+        <h3>Overview</h3>
+        <p>nano-wc is a lightweight web components framework powered by nanostores.</p>
+      </x-tab-panel>
+      <x-tab-panel value="features">
+        <h3>Features</h3>
+        <ul>
+          <li>Reactive props via nanostores</li>
+          <li>Declarative refs</li>
+          <li>Context-based parent-child communication</li>
+        </ul>
+      </x-tab-panel>
+      <x-tab-panel value="setup">
+        <h3>Setup</h3>
+        <pre><code>npm install nano-wc nanostores</code></pre>
+      </x-tab-panel>
+    </x-tabs>
+  </div>
+
+  <script type="module" data-type="javascript">
+    import { define } from "nano-wc";
+    import { atom } from "nanostores";
+    import { attachRovingFocus } from "attachRovingFocus.js";
+
+    const XTabs = define("x-tabs")
+      .withProps((p) => ({ active: p.string("") }))
+      .withRefs((r) => ({
+        tablist: r.one("div"),
+        tabs: r.many("[role=tab]")
+      }))
+      .setup((ctx) => {
+        const $active = atom(ctx.props.$active.get());
+
+        attachRovingFocus(ctx, ctx.refs.tablist, ctx.refs.tabs, {
+          onFocus: (el) => $active.set(el.dataset.value),
+        });
+
+        ctx.on(ctx.refs.tabs, "click", (e) => $active.set(e.target.dataset.value));
+        ctx.effect($active, (active) => {
+          ctx.refs.tabs.forEach((tab) => {
+            const selected = tab.dataset.value === active;
+            tab.setAttribute("aria-selected", String(selected));
+            tab.setAttribute("tabindex", selected ? "0" : "-1");
+          });
+        });
+
+        return { $active };
+      });
+
+    define("x-tab-panel")
+      .withProps((p) => ({ value: p.string("") }))
+      .setup((ctx) => {
+        const parent = ctx.consume(XTabs);
+
+        ctx.effect(parent.$active, (active) => {
+          const visible = active === ctx.props.$value.get();
+          ctx.host.style.display = visible ? "" : "none";
+          ctx.host.setAttribute("role", "tabpanel");
+          ctx.host.hidden = !visible;
+        });
+      });
+  </script>
+
+  <script type="module" data-type="javascript" data-name="attachRovingFocus.js">
+    export function attachRovingFocus(ctx, container, items, options = {}) {
+      function setActive(index) {
+        items.forEach((item, i) => {
+          item.setAttribute("tabindex", i === index ? "0" : "-1");
+        });
+      }
+
+      setActive(0);
+
+      ctx.on(container, "keydown", (e) => {
+        const current = items.indexOf(document.activeElement);
+        if (current === -1) return;
+        let next = -1;
+        if (e.key === "ArrowRight") next = (current + 1) % items.length;
+        if (e.key === "ArrowLeft") next = (current - 1 + items.length) % items.length;
+        if (e.key === "Home") next = 0;
+        if (e.key === "End") next = items.length - 1;
+        if (next !== -1) {
+          e.preventDefault();
+          setActive(next);
+          items[next].focus();
+          options.onFocus?.(items[next]);
+        }
+      });
+
+      ctx.on(container, "focusin", (e) => {
+        const index = items.indexOf(e.target);
+        if (index !== -1) setActive(index);
+      });
+    }
+  </script>
+
+  <style data-type="css">
+    x-tabs [role="tablist"] {
+      display: flex;
+      gap: 0;
+      border-bottom: 2px solid #e2e2e2;
+      margin-bottom: 16px;
+    }
+
+    x-tabs [role="tab"] {
+      padding: 8px 16px;
+      border: none;
+      background: none;
+      cursor: pointer;
+      font-size: 14px;
+      color: #666;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      transition: color 0.15s, border-color 0.15s;
+    }
+
+    x-tabs [role="tab"]:hover {
+      color: #333;
+    }
+
+    x-tabs [role="tab"][aria-selected="true"] {
+      color: #2563eb;
+      border-bottom-color: #2563eb;
+      font-weight: 600;
+    }
+
+    x-tabs [role="tab"]:focus-visible {
+      outline: 2px solid #2563eb;
+      outline-offset: -2px;
+      border-radius: 4px 4px 0 0;
+    }
+
+    x-tab-panel {
+      padding: 0 4px;
+    }
+
+    x-tab-panel h3 {
+      margin-top: 0;
+    }
+  </style>
+</body>
+
+</html>
