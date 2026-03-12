@@ -1,0 +1,17 @@
+{
+  "extends": ["stylelint-config-standard", "stylelint-config-clean-order"],
+  "rules": {
+    "property-disallowed-list": ["composes"],
+    "declaration-property-value-no-unknown": null,
+    "at-rule-no-unknown": [
+      true,
+      { "ignoreAtRules": ["define-mixin", "mixin"] }
+    ],
+    "color-function-notation": ["modern", { "ignore": ["with-var-inside"] }],
+    "selector-pseudo-class-no-unknown": [
+      true,
+      { "ignorePseudoClasses": ["global", "local"] }
+    ],
+    "selector-class-pattern": null
+  }
+}

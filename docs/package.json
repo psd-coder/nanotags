@@ -1,19 +1,24 @@
 {
-  "name": "",
-  "type": "module",
-  "version": "0.0.1",
+  "name": "nano-wc-docs",
+  "private": true,
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "typecheck": "cmk && astro check"
+    "typecheck": "cmk && astro check",
+    "lint": "pnpm run /^lint:/",
+    "lint:styles": "stylelint \"src/**/*.css\"",
+    "format": "pnpm run /^format:/",
+    "format:styles": "stylelint \"src/**/*.css\" --fix"
   },
   "dependencies": {
+    "@catppuccin/codemirror": "^1.0.3",
     "@codemirror/lang-css": "^6.3.1",
     "@codemirror/lang-html": "^6.4.9",
     "@codemirror/lang-javascript": "^6.2.2",
     "@codemirror/lang-json": "^6.0.1",
+    "@codemirror/language": "^6.12.2",
     "@codemirror/state": "^6.5.4",
     "astro": "^5.17.1",
     "codemirror": "^6.0.1",
@@ -29,6 +34,11 @@
     "@css-modules-kit/codegen": "^0.10.0",
     "@css-modules-kit/ts-plugin": "^0.10.0",
     "@types/node": "^25.3.5",
+    "postcss-preset-env": "^11.2.0",
+    "stylelint": "^17.4.0",
+    "stylelint-config-clean-order": "^8.0.1",
+    "stylelint-config-standard": "^40.0.0",
+    "stylelint-order": "^8.0.0",
     "typescript": "^5.9.3"
   }
 }
