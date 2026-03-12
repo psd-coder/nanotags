@@ -1,5 +1,5 @@
 // @ts-check
-import { defineConfig } from "astro/config";
+import { defineConfig, fontProviders } from "astro/config";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import path from "node:path";
@@ -30,6 +30,43 @@ function moduleReferencePlugin(moduleName, srcEntry, distEntry) {
 export default defineConfig({
   site: "https://psd-coder.github.io",
   base: process.env.CI ? "/nano-wc/" : "/",
+  markdown: {
+    shikiConfig: {
+      theme: "catppuccin-latte",
+    },
+  },
+  experimental: {
+    fonts: [
+      {
+        provider: fontProviders.local(),
+        name: "Martian Grotesk",
+        cssVariable: "--font-sans",
+        options: {
+          variants: [
+            {
+              weight: "100 900",
+              style: "normal",
+              src: ["./src/assets/fonts/MartianGrotesk-VF.woff2"],
+            },
+          ],
+        },
+      },
+      {
+        provider: fontProviders.local(),
+        name: "Martian Mono",
+        cssVariable: "--font-mono",
+        options: {
+          variants: [
+            {
+              weight: 400,
+              style: "normal",
+              src: ["./src/assets/fonts/MartianMono-Regular.woff2"],
+            },
+          ],
+        },
+      },
+    ],
+  },
   vite: {
     css: {
       modules: {
