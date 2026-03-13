@@ -1,4 +1,5 @@
 import { defineCollection, z } from "astro:content";
+import { glob } from "astro/loaders";
 import { examplesLoader } from "./loaders/examples-loader";
 
 const examples = defineCollection({
@@ -17,4 +18,13 @@ const examples = defineCollection({
   }),
 });
 
-export const collections = { examples };
+const docs = defineCollection({
+  loader: glob({ pattern: "**/*.md", base: "src/content/docs" }),
+  schema: z.object({
+    title: z.string(),
+    description: z.string(),
+    order: z.number(),
+  }),
+});
+
+export const collections = { examples, docs };
