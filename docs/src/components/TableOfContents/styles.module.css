@@ -1,4 +1,6 @@
-.container {
+@import url("~/styles/media.css");
+
+.sidebar {
   position: sticky;
   top: var(--layout-header-offset);
 
@@ -8,6 +10,10 @@
   max-height: calc(
     100dvh - var(--layout-header-offset)
   );
+
+  @media (--tablets) {
+    display: none;
+  }
 }
 
 .title {
@@ -54,4 +60,59 @@
 .nested {
   padding: calc(var(--spacing) / 2) 0 calc(var(--spacing) / 2) calc(var(--spacing) * 4);
   font-size: var(--text-xs);
+}
+
+/* Mobile version */
+.popoverTrigger.popoverTrigger {
+  position: fixed;
+  z-index: 10;
+  top: var(--layout-header-offset);
+  right: var(--layout-gap-x);
+
+  margin-left: auto;
+
+  @media (--min-tablets) {
+    display: none;
+  }
+}
+
+.popover {
+  position: fixed;
+  z-index: 10;
+  inset: 0;
+
+  overflow-y: auto;
+  overscroll-behavior: contain;
+
+  width: 100vw;
+  height: 100vh;
+  border: none;
+
+  background: none;
+
+  &::backdrop {
+    opacity: 0.8;
+    background: var(--color-surface-3);
+  }
+
+  &:not(:popover-open) {
+    display: none;
+  }
+}
+
+.popoverPanel {
+  position: absolute;
+  inset: 0 0 0 auto;
+
+  overflow-y: auto;
+
+  width: 280px;
+  max-height: 100dvh;
+  margin: 0;
+  padding: calc(var(--spacing) * 5);
+  border: none;
+  border-left: 1px solid var(--color-border);
+
+  background: var(--color-surface-1);
+  box-shadow: 0 4px 24px oklch(from var(--color-accent) l c h / 10%);
 }

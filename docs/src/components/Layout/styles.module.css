@@ -12,6 +12,10 @@
   gap: var(--layout-gap-y) var(--layout-gap-x);
 
   min-height: 100dvh;
+
+  @media (--mobiles) {
+    --layout-header-offset: calc(var(--spacing) * 28);
+  }
 }
 
 /* Header */
@@ -131,6 +135,10 @@ x-sticky-header {
 
   & :is(h1, h2, h3, h4, h5, h6)[id] {
     scroll-margin-top: var(--layout-header-offset);
+
+    @media (--mobiles) {
+      margin-right: calc(var(--spacing) * 12);
+    }
   }
 
   .container:has(> .sidebar) & {

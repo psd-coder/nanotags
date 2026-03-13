@@ -1,0 +1,49 @@
+---
+import { Fragment } from 'astro/jsx-runtime';
+import { Button } from '~/components/Button';
+import { Icon } from "~/components/Icon";
+import List from './List.astro';
+import styles from "./styles.module.css";
+import { type Heading } from './utils';
+
+type Props = {
+  headings: Heading[];
+}
+
+const { headings } = Astro.props;
+---
+
+<Button
+  class={styles.popoverTrigger}
+  square
+  popovertarget="mobile-toc"
+  aria-label="Table of contents"
+>
+  <Icon name="list" size={20} />
+</Button>
+<x-mobile-toc id="mobile-toc" class={styles.popover} popover="auto">
+  <List headings={headings} class={styles.popoverPanel} />
+</x-mobile-toc>
+<script>
+import { define } from "nano-wc";
+
+  define("x-mobile-toc")
+    .withRefs((r) => ({
+      links: r.many<HTMLAnchorElement>("a[href*='#']"),
+    }))
+    .setup((ctx) => {
+      ctx.on(ctx.host, 'click', (e) => {
+        if (e.target === ctx.host) {
+          ctx.host.hidePopover()
+        }
+      });
+
+      ctx.on(ctx.refs.links, 'click', (e) => {
+        e.preventDefault();
+        const hash = (e.currentTarget as HTMLAnchorElement).getAttribute("href")?.split("#")[1];
+        const target = hash ? document.getElementById(hash) : null;
+        target?.scrollIntoView({ block: "start", behavior: "smooth" });
+        ctx.host.hidePopover();
+      });
+    });
+</script>

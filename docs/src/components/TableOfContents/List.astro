@@ -1,0 +1,28 @@
+---
+import styles from "./styles.module.css";
+import { type Heading } from "./utils";
+
+type Props = {
+  class?: string;
+  headings: Heading[];
+}
+
+const { class: className, headings } = Astro.props;
+const filtered = headings.filter((h) => h.depth === 2 || h.depth === 3);
+const currentPath = Astro.url.pathname;
+---
+<div class={className}>
+  <span class={styles.title}>On this page</span>
+  <ul class={styles.list}>
+    {filtered.map((heading) => (
+      <li>
+        <a
+          href={`${currentPath}#${heading.slug}`}
+          class:list={[styles.link, heading.depth === 3 && styles.nested]}
+        >
+          {heading.text}
+        </a>
+      </li>
+    ))}
+  </ul>
+</div>

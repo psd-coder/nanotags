@@ -1,38 +1,20 @@
 ---
 import styles from "./styles.module.css";
-
-type Heading = {
-  depth: number;
-  slug: string;
-  text: string;
-};
+import List from "./List.astro";
+import { type Heading } from "./utils";
 
 type Props = {
   headings: Heading[];
   itemsSelector: string;
-};
+}
 
 const { headings, itemsSelector } = Astro.props;
-const filtered = headings.filter((h) => h.depth === 2 || h.depth === 3);
-const currentPath = Astro.url.pathname;
 ---
 
 
-<x-scroll-spy items-selector={itemsSelector} class={styles.container}>
-  <span class={styles.title}>On this page</span>
-  <ul class={styles.list}>
-    {filtered.map((heading) => (
-      <li>
-        <a
-          href={`${currentPath}#${heading.slug}`}
-          class:list={[styles.link, heading.depth === 3 && styles.nested]}
-        >
-          {heading.text}
-        </a>
-      </li>
-    ))}
-  </ul>
-</x-scroll-spy>
+<x-toc items-selector={itemsSelector} class={styles.sidebar}>
+  <List headings={headings} />
+</x-toc>
 
 <script>
   import { define } from "nano-wc";
@@ -40,7 +22,7 @@ const currentPath = Astro.url.pathname;
   import styles from "./styles.module.css";
   import { throttle } from "es-toolkit";
 
-  define("x-scroll-spy")
+  define("x-toc")
     .withProps(({ string }) => ({
       itemsSelector: string(),
     }))

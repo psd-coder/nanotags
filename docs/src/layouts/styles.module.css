@@ -1,0 +1,5 @@
+.headingRow {
+  display: flex;
+  gap: calc(var(--spacing) * 2);
+  align-items: start;
+}

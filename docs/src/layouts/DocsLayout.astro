@@ -1,6 +1,7 @@
 ---
-import {Layout} from "~/components/Layout";
-import { TableOfContents } from "~/components/TableOfContents";
+import { Layout } from "~/components/Layout";
+import { MobileTableOfContents, TableOfContents } from "~/components/TableOfContents";
+import styles from "./styles.module.css";
 
 type Heading = {
   depth: number;
@@ -25,7 +26,10 @@ const { title, headings } = Astro.props;
     />
   )}
   <article class="prose" data-docs-content>
-    <h1>{title}</h1>
+    <div class={styles.headingRow}>
+      <h1>{title}</h1>
+      <MobileTableOfContents headings={headings} />
+    </div>
     <slot />
   </article>
 </Layout>

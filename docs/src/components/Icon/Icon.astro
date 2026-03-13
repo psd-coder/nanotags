@@ -1,6 +1,6 @@
 ---
 type Props = {
-  name: "chevron-left" | "github" | "x";
+  name: "chevron-left" | "github" | "list" | "x";
   size?: number;
 };
 
@@ -9,6 +9,11 @@ const { name, size = 20 } = Astro.props;
 {name === 'chevron-left' && (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 32 32" fill="none">
     <path fill="currentColor" d="M13.5 17 21 4h-5L8.5 17 16 29h5z"/>
+  </svg>
+)}
+{name === "list" && (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" />
   </svg>
 )}
 {name === "github" && (

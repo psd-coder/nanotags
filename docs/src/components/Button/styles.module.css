@@ -1,0 +1,29 @@
+.button {
+  cursor: pointer;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: calc(var(--spacing) * 2) calc(var(--spacing) * 6);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+
+  color: var(--color-text-secondary);
+
+  background: var(--color-surface-1);
+
+  transition:
+    color 0.15s,
+    border-color 0.15s;
+
+  &:hover {
+    border-color: var(--color-border-hover);
+    color: var(--color-text-primary);
+  }
+
+  &.square {
+    padding: calc(var(--spacing) * 2);
+  }
+}
+
