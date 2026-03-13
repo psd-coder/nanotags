@@ -1,12 +1,13 @@
 ---
-import { ResizablePanes, ResizablePane } from "../ResizablePanes";
-import { CollapsiblePane } from "../CollapsiblePane";
-import { Tabs, Tab } from "../Tabs";
-import { CodeEditor } from "../CodeEditor";
-import { LivePreview } from "../LivePreview";
-import styles from "./styles.module.css";
-import type { FileEntry } from "../LivePreview/types";
+import { CodeEditor } from "~/components/CodeEditor";
+import { CollapsiblePane } from "~/components/CollapsiblePane";
+import { LivePreview } from "~/components/LivePreview";
+import type { FileEntry } from "~/components/LivePreview/types";
+import { Logo } from "~/components/Logo";
+import { ResizablePane, ResizablePanes } from "~/components/ResizablePanes";
+import { Tab, Tabs } from "~/components/Tabs";
 import { invariant } from "~/utils/invariant";
+import styles from "./styles.module.css";
 
 type Props = {
   files: FileEntry[];
@@ -19,6 +20,9 @@ invariant(firstFile, "No files provided");
 ---
 
 <x-code-example class={styles.host}>
+  <div class={styles.loader}>
+    <Logo class={styles.loaderIcon} size={40} />
+  </div>
   <script type="application/json" data-prop="files" set:html={JSON.stringify(files).replaceAll("</", "<\\/")} is:inline />
   <ResizablePanes direction="horizontal" class={styles.panes}>
     <ResizablePane class:list={styles.pane}>

@@ -3,46 +3,43 @@
   z-index: 1;
   background: var(--color-border);
 
+  &::after {
+    content: "";
+
+    position: absolute;
+
+    display: block;
+
+    opacity: 0;
+    background: var(--color-accent);
+  }
+
   &:hover,
   &[data-dragging="true"] {
     background: var(--color-border-hover);
   }
 
   &[data-direction="vertical"] {
-    height: 1px;
     cursor: row-resize;
+    height: 1px;
   }
 
   &[data-direction="horizontal"] {
-    width: 1px;
     cursor: col-resize;
-  }
-
-  &::after {
-    content: "";
-    position: absolute;
-    display: block;
-    opacity: 0;
-    background: var(--color-accent);
+    width: 1px;
   }
 
   &:hover::after,
   &[data-dragging="true"]::after {
-    transition: opacity 0.3s ease-out 0.2s;
     opacity: 0.6;
+    transition: opacity 0.3s ease-out 0.2s;
   }
 
   &[data-direction="horizontal"]::after {
-    top: 0;
-    bottom: 0;
-    left: -2px;
-    right: -2px;
+    inset: 0 -2px;
   }
 
   &[data-direction="vertical"]::after {
-    left: 0;
-    right: 0;
-    top: -2px;
-    bottom: -2px;
+    inset: -2px 0;
   }
 }

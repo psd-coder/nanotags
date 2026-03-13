@@ -1,74 +1,88 @@
 .host {
-  display: block;
-  margin-top: 24px;
-  height: 520px;
+  position: relative;
 
-  border: 1px solid #333;
-  border-radius: 6px;
   overflow: hidden;
+  display: block;
+
+  height: 520px;
+  margin-top: calc(var(--spacing) * 6);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.loader {
+  position: absolute;
+  z-index: 3;
+  inset: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background-color: var(--color-surface-3);
+}
+
+.host:defined .loader {
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease 0.2s;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loaderIcon {
+  width: calc(var(--spacing) * 10);
+  height: calc(var(--spacing) * 10);
+  color: var(--color-border-hover);
+  animation: spin 1.5s linear infinite;
 }
 
 .panes {
-  height: 100%;
   width: 100%;
+  height: 100%;
 }
 
 .pane {
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
   background-color: var(--color-surface-1);
 }
 
 .fileTabs {
-  background-color: var(--color-surface-2);
   border-bottom: 1px solid var(--color-border);
+  background-color: var(--color-surface-3);
 }
 
 .tab {
-  padding: 0.35rem 0.75rem;
-  color: #6b7280;
-  font-family: monospace;
-  font-size: 0.78rem;
-
-  &:focus {
-    outline: none;
-  }
-
-  &:focus-visible {
-    outline: 2px solid #89b4fa;
-    outline-offset: -2px;
-    border-radius: 2px;
-  }
+  padding: calc(var(--spacing) * 1.5) calc(var(--spacing) * 3);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
 
   &[aria-selected="true"] {
-    color: var(--color-text);
-    font-weight: 600;
+    font-weight: 700;
+    color: var(--color-text-primary);
     background-color: var(--color-surface-1);
-  }
-}
-
-.logsClear {
-  &:focus {
-    outline: none;
-  }
-
-  &:focus-visible {
-    outline: 2px solid #89b4fa;
-    outline-offset: -2px;
-    border-radius: 3px;
   }
 }
 
 .logsLabel {
   flex: 1;
-  padding: 0.2rem 0.75rem;
-  color: #555;
-  font-family: monospace;
-  font-size: 0.78rem;
+
+  padding: calc(var(--spacing) * 0.5) calc(var(--spacing) * 3);
+
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
 
   &::before {
     content: "▶ ";
+    font-size: 0.6em;
   }
 
   [aria-expanded="true"] & {
@@ -79,18 +93,21 @@
 }
 
 .logsClear {
-  padding: 0.2rem 0.5rem;
-  margin-right: 0.4rem;
-  border: 1px solid #d1d5db;
-  border-radius: 3px;
-  background: transparent;
-  color: #6b7280;
   cursor: pointer;
-  font-size: 0.72rem;
+
+  margin-right: var(--spacing);
+  padding: calc(var(--spacing) * 0.5) calc(var(--spacing) * 2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+
+  background: transparent;
 
   &:hover {
-    background: #e5e7eb;
-    color: #374151;
+    color: var(--color-text-primary);
+    background: var(--color-surface-3);
   }
 
   [aria-expanded="false"] & {
@@ -99,18 +116,20 @@
 }
 
 .logsList {
+  overflow-y: auto;
   display: block;
   flex: 1;
-  overflow-y: auto;
-  padding: 0.4rem 0.75rem;
-  font-family: var(--font-mono);
-  font-size: 0.78rem;
+
   min-height: 0;
   max-height: 100%;
+  padding: var(--spacing) calc(var(--spacing) * 3);
+
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
 }
 
 .logType_log {
-  color: #374151;
+  color: var(--color-text-primary);
 }
 
 .logType_info {
@@ -118,7 +137,7 @@
 }
 
 .logType_debug {
-  color: #6b7280;
+  color: var(--color-text-secondary);
 }
 
 .logType_warn {
