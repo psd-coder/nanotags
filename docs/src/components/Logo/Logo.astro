@@ -1,0 +1,13 @@
+---
+type Props = {
+  class?: string;
+  size: number;
+}
+
+const { class: className, size } = Astro.props;
+---
+<svg class={className} viewBox="0 0 500 500" width={size} height={size} fill="none">
+  <path fill="currentColor" d="M466.507 125v250L250 500 33.4941 375V125L250 0zM81.4941 152.713v194.573L250 444.574l168.507-97.288V152.713L250 55.4248z"/>
+  <path fill="currentColor" fill-rule="evenodd" d="M269.463 385 122 281.746l86.384-33.697 126.397 88.503zm-38.427-270 147.463 103.254-86.384 33.697-126.397-88.503z" clip-rule="evenodd"/>
+</svg>
+
