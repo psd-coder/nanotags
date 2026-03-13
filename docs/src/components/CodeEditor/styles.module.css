@@ -2,3 +2,11 @@
   display: block;
   height: 100%;
 }
+
+.host :global(.cm-editor) {
+  background-color: var(--color-surface-2) !important;
+}
+
+.host :global(.cm-gutters) {
+  background-color: var(--color-surface-2) !important;
+}
