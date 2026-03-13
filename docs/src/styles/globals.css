@@ -32,3 +32,9 @@ a {
   outline: 2px solid var(--color-accent-focus);
   outline-offset: -2px;
 }
+
+[data-theme="dark"] .astro-code,
+[data-theme="dark"] .astro-code span {
+  color: var(--shiki-dark) !important;
+
+}

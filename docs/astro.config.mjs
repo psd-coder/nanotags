@@ -32,7 +32,7 @@ export default defineConfig({
   base: process.env.CI ? "/nano-wc/" : "/",
   markdown: {
     shikiConfig: {
-      theme: "catppuccin-latte",
+      themes: { light: "catppuccin-latte", dark: "catppuccin-mocha" },
     },
   },
   experimental: {

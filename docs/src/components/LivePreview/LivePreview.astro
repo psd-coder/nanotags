@@ -12,6 +12,7 @@ const { class: className, ...rest } = Astro.props;
 <script>
   import { define, type TypedEvent } from "nano-wc";
   import { atom, computed, onMount } from "nanostores";
+  import { $resolvedTheme } from "~/stores/theme";
   import * as v from "valibot";
   import { type FileEntry, type ImportMap, type LogMessage, logMessageSchema } from "./types";
   import { buildHtml } from "./utils";
@@ -32,8 +33,8 @@ const { class: className, ...rest } = Astro.props;
     }))
     .setup((ctx) => {
       const $data = atom<{ files: readonly FileEntry[]; importOverrides?: ImportMap }>({ files: [] });
-      const $html = computed($data, ({ files, importOverrides }) =>
-        buildHtml(files, importOverrides),
+      const $html = computed([$data, $resolvedTheme], ({ files, importOverrides }, theme) =>
+        buildHtml(files, importOverrides, theme),
       );
       const $blobUrl = computed($html, (html) =>
         URL.createObjectURL(new Blob([html], { type: "text/html" })),

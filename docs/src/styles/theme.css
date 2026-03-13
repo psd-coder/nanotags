@@ -1,8 +1,8 @@
 :root {
   --theme-hue: 135;
-  --color-surface-1: oklch(99% 0.005 var(--theme-hue));
-  --color-surface-2: oklch(98% 0.005 var(--theme-hue));
-  --color-surface-3: oklch(96% 0.005 var(--theme-hue));
+  --color-surface-1: oklch(99% 0.01 var(--theme-hue));
+  --color-surface-2: oklch(98% 0.01 var(--theme-hue));
+  --color-surface-3: oklch(96% 0.01 var(--theme-hue));
   --color-text-primary: oklch(20% 0.02 var(--theme-hue));
   --color-text-secondary: oklch(50% 0.02 var(--theme-hue));
   --color-text-tertiary: oklch(75% 0.02 var(--theme-hue));
@@ -24,4 +24,20 @@
   --leading-loose: 2;
   --radius-sm: var(--spacing);
   --radius-md: calc(var(--spacing) * 2);
+}
+
+[data-theme="dark"] {
+  --color-surface-1: oklch(12% 0.02 var(--theme-hue));
+  --color-surface-2: oklch(18% 0.02 var(--theme-hue));
+  --color-surface-3: oklch(21% 0.02 var(--theme-hue));
+  --color-text-primary: oklch(90% 0.02 var(--theme-hue));
+  --color-text-secondary: oklch(65% 0.02 var(--theme-hue));
+  --color-text-tertiary: oklch(45% 0.02 var(--theme-hue));
+  --color-accent: oklch(65% 0.15 var(--theme-hue));
+  --color-accent-dark: oklch(60% 0.15 var(--theme-hue));
+  --color-accent-focus: oklch(from var(--color-accent) l c h / 50%);
+  --color-border: oklch(25% 0.02 var(--theme-hue));
+  --color-border-hover: oklch(35% 0.02 var(--theme-hue));
+
+  color-scheme: dark;
 }

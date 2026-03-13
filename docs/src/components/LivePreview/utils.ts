@@ -54,7 +54,11 @@ export function renderMarkup(markups: readonly string[]): string {
   return markups.join("\n");
 }
 
-export function buildHtml(files: readonly FileEntry[], importMapOverrides?: ImportMap): string {
+export function buildHtml(
+  files: readonly FileEntry[],
+  importMapOverrides?: ImportMap,
+  theme?: string,
+): string {
   const jsFiles = files.filter((f) => f.type === "javascript");
   const mainJs = jsFiles.filter((f) => f.name === "app.js");
   const moduleJs = jsFiles.filter((f) => f.name !== "app.js");
@@ -81,7 +85,7 @@ export function buildHtml(files: readonly FileEntry[], importMapOverrides?: Impo
       : undefined;
 
   return `<!DOCTYPE html>
-  <html>
+  <html style="color-scheme: ${theme ?? ""}">
     <head>
       <meta charset="UTF-8">
       ${renderImportMap(getContentType(files, "importmap"), combinedOverrides)}

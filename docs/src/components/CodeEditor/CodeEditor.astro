@@ -17,7 +17,8 @@ const { class: className, lang, ...rest } = Astro.props;
   import { html } from "@codemirror/lang-html";
   import { css } from "@codemirror/lang-css";
   import { json } from "@codemirror/lang-json";
-  import { catppuccinLatte } from "@catppuccin/codemirror";
+  import { catppuccinLatte, catppuccinMocha } from "@catppuccin/codemirror";
+  import { $resolvedTheme } from "~/stores/theme";
 
   const SUPPORTED_LANGS = ["javascript", "html", "css", "importmap"] as const;
   type SupportedLang = (typeof SUPPORTED_LANGS)[number];
@@ -45,11 +46,12 @@ const { class: className, lang, ...rest } = Astro.props;
       ctx.host.textContent = "";
 
       const language = new Compartment();
+      const themeComp = new Compartment();
       const view = new EditorView({
         doc: initialDoc,
         extensions: [
           basicSetup,
-          catppuccinLatte,
+          themeComp.of($resolvedTheme.get() === "dark" ? catppuccinMocha : catppuccinLatte),
           language.of(getLang(ctx.props.$lang.get())),
           EditorView.updateListener.of((update) => {
             if (!update.docChanged) return;
@@ -67,6 +69,11 @@ const { class: className, lang, ...rest } = Astro.props;
       ctx.effect(ctx.props.$lang, (lang) => {
         view.dispatch({
           effects: language.reconfigure(getLang(lang)),
+        });
+      });
+      ctx.effect($resolvedTheme, (theme) => {
+        view.dispatch({
+          effects: themeComp.reconfigure(theme === "dark" ? catppuccinMocha : catppuccinLatte),
         });
       });
       ctx.onCleanup(() => view.destroy());
