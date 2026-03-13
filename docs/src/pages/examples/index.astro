@@ -1,0 +1,21 @@
+---
+import { getCollection } from "astro:content";
+import MainLayout from "~/layouts/MainLayout.astro";
+import styles from './styles.module.css';
+import { getHref } from "~/utils/urls";
+
+const examples = await getCollection("examples");
+---
+
+<MainLayout title="Examples">
+  <h1>Examples</h1>
+  <p class={styles.subtitle}>Live playground — edit code and switch to Preview to see it run.</p>
+  <div class={styles.grid}>
+    {examples.map((example) => (
+      <a class={styles.card} href={getHref(`examples/${example.id}`)}>
+        <h2 class={styles.cardTitle}>{example.data.title}</h2>
+        <p class={styles.cardDescription}>{example.data.description}</p>
+      </a>
+    ))}
+  </div>
+</MainLayout>

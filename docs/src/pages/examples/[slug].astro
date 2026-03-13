@@ -1,7 +1,10 @@
 ---
-import Layout from "../../components/Layout/Layout.astro";
-import { CodeExample } from "../../components/CodeExample";
 import { getCollection, getEntry } from "astro:content";
+import { CodeExample } from "~/components/CodeExample";
+import Icon from "~/components/Icon/Icon.astro";
+import MainLayout from "~/layouts/MainLayout.astro";
+import { getHref } from "~/utils/urls";
+import styles from './styles.module.css';
 
 export async function getStaticPaths() {
   const examples = await getCollection("examples");
@@ -13,8 +16,20 @@ if (!example) throw new Error(`Example '${Astro.params.slug}' not found`);
 const { title, description, files } = example.data;
 ---
 
-<Layout title={title}>
-  <h1>{title}</h1>
-  <p>{description}</p>
-  <CodeExample files={files} />
-</Layout>
+<MainLayout title={title}>
+  <div class="prose">
+    <h1 class={styles.title}>
+      <a class={styles.backLink} href={getHref('examples')} aria-label="All Examples">
+        <Icon name="chevron-left" size={28} />
+      </a>
+      {title}
+    </h1>
+    <p class={styles.subtitle}>{description}</p>
+    <CodeExample files={files} />
+    <p class={styles.footerNote}>
+      Btw, this playground is written using nano-wc 😉.
+      You can get familiar with the code and approaches
+      <a href="https://github.com/psdcoder/nano-wc/tree/main/docs/src/components">here</a>.
+    </p>
+  </div>
+</MainLayout>
