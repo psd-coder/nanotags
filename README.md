@@ -1,10 +1,10 @@
 # nano-wc
 
 [![npm version](https://img.shields.io/npm/v/nano-wc.svg)](https://www.npmjs.com/package/nano-wc)
-[![Bundle size](https://img.shields.io/badge/Bundle_size-from_2906_B-brightgreen)](https://github.com/psdcoder/nano-wc/blob/main/package.json)
+[![Bundle size](https://img.shields.io/badge/Bundle_size-from_3513_B-brightgreen)](https://github.com/psdcoder/nano-wc/blob/main/package.json)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
-Thin, Web Components wrapper with [nanostores](https://github.com/nanostores/nanostores) reactivity. No Shadow DOM — your markup stays in the regular DOM, styled with normal CSS. Typesafe fluent builder, props/refs, automatic cleanup, store sync, and DOM binding — all under 3 KB.
+Thin, Web Components wrapper with [nanostores](https://github.com/nanostores/nanostores) reactivity. No Shadow DOM — your markup stays in the regular DOM, styled with normal CSS. Typesafe fluent builder, props/refs, automatic cleanup, store sync, and DOM binding — all in 3.5 KB.
 
 Shines with statically rendered markup — pair it with [Astro](https://astro.build/), server-rendered HTML, or any static-first setup to hydrate lightweight interactive islands.
 
