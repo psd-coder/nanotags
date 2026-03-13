@@ -1,10 +1,28 @@
 ---
-import "../../styles.css";
-import { titleSuffix } from '../../constants';
+import { Font } from "astro:assets";
+import Footer from "~/components/Footer/Footer.astro";
+import Icon from "~/components/Icon/Icon.astro";
+import { siteConfig } from "~/config";
+import "~/styles/index.css";
+import { getHref, isActiveHref } from "~/utils/urls";
+import styles from "./styles.module.css";
+import { LogoWithLabel } from "~/components/Logo";
+
+type NavItem = {
+  href: string;
+  label: string;
+};
+
+const items: NavItem[] = [
+  { href: "", label: "Getting Started" },
+  { href: "api", label: "API" },
+  { href: "recipes", label: "Recipes" },
+  { href: "examples", label: "Examples" },
+];
 
 type Props = {
   title: string;
-}
+};
 
 const { title } = Astro.props;
 ---
@@ -14,15 +32,62 @@ const { title } = Astro.props;
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <base href={import.meta.env.BASE_URL} />
-  <title>{title} | {titleSuffix}</title>
+  <base href={getHref("")} />
+  <link rel="icon" type="image/png" href={getHref("favicon-96x96.png")} sizes="96x96" />
+  <link rel="icon" type="image/svg+xml" href={getHref("favicon.svg")} />
+  <link rel="shortcut icon" href={getHref("favicon.ico")} />
+  <link rel="apple-touch-icon" sizes="180x180" href={getHref("apple-touch-icon.png")} />
+  <link rel="manifest" href={getHref("site.webmanifest")} />
+  <Font cssVariable="--font-sans" preload />
+  <Font cssVariable="--font-mono" preload />
+  <title>{title} | {siteConfig.name}</title>
 </head>
-<body>
-  <header class="header">
-    <a href="./">nano-wc</a>
-  </header>
-  <main class="container">
+<body class={styles.container}>
+  <x-sticky-header role='header'>
+    <nav class:list={styles.nav}>
+      <a href={getHref("")} class={styles.logo}>
+        <LogoWithLabel height={24} />
+      </a>
+      <div class:list={[styles.links, styles.primaryNav]}>
+        {items.map((item) => (
+          <a
+            href={getHref(item.href)}
+            class:list={[styles.link, isActiveHref(Astro, item.href) && styles.active]}
+          >
+            {item.label}
+          </a>
+        ))}
+      </div>
+      <div class:list={[styles.links, styles.extraNav]}>
+        <a href={siteConfig.author.twitter} class:list={[styles.link, styles.square]} aria-label="Twitter">
+          <Icon name="x" />
+        </a>
+        <a href={siteConfig.github} class:list={[styles.link, styles.square]} aria-label="GitHub">
+          <Icon name="github" />
+        </a>
+      </div>
+    </nav>
+  </x-sticky-header>
+  {Astro.slots.has('sidebar') && (<aside class={styles.sidebar}>
+    <slot name="sidebar" />
+  </aside>)}
+  <main class={styles.main}>
     <slot />
   </main>
+  <Footer class={styles.footer}/>
 </body>
 </html>
+<script>
+  import { define } from "nano-wc";
+  import { atom } from "nanostores";
+  import styles from "./styles.module.css";
+
+  define("x-sticky-header", (ctx) => {
+    const $scrolled = atom(window.scrollY > 0);
+
+    ctx.on(window, "scroll", () => $scrolled.set(window.scrollY > 0), { passive: true });
+    ctx.effect($scrolled, (scrolled) => {
+      ctx.host.classList.toggle(styles.scrolled, scrolled);
+    });
+  })
+</script>

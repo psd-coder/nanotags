@@ -1,0 +1,105 @@
+---
+import styles from "./styles.module.css";
+
+type Heading = {
+  depth: number;
+  slug: string;
+  text: string;
+};
+
+type Props = {
+  headings: Heading[];
+  itemsSelector: string;
+};
+
+const { headings, itemsSelector } = Astro.props;
+const filtered = headings.filter((h) => h.depth === 2 || h.depth === 3);
+const currentPath = Astro.url.pathname;
+---
+
+
+<x-scroll-spy items-selector={itemsSelector} class={styles.container}>
+  <span class={styles.title}>On this page</span>
+  <ul class={styles.list}>
+    {filtered.map((heading) => (
+      <li>
+        <a
+          href={`${currentPath}#${heading.slug}`}
+          class:list={[styles.link, heading.depth === 3 && styles.nested]}
+        >
+          {heading.text}
+        </a>
+      </li>
+    ))}
+  </ul>
+</x-scroll-spy>
+
+<script>
+  import { define } from "nano-wc";
+  import { atom } from "nanostores";
+  import styles from "./styles.module.css";
+  import { throttle } from "es-toolkit";
+
+  define("x-scroll-spy")
+    .withProps(({ string }) => ({
+      itemsSelector: string(),
+    }))
+    .withRefs((r) => ({
+      links: r.many<HTMLAnchorElement>("a[href*='#']"),
+    }))
+    .setup((ctx) => {
+      const $activeSlug = atom<string | null>(null);
+
+      function updateActive() {
+        const headings = [...document.querySelectorAll<HTMLElement>(ctx.props.$itemsSelector.get())];
+        if (!headings.length) return;
+
+        const scrollY = window.scrollY;
+        const maxScroll = document.body.scrollHeight - window.innerHeight;
+        const threshold = 100;
+        const offsets = headings.map((h) => h.getBoundingClientRect().top + scrollY);
+        const lastReachable = maxScroll + threshold;
+        const firstUnreachable = offsets.findIndex((o) => o > lastReachable);
+
+        const activations: number[] = [];
+        for (let i = 0; i < headings.length; i++) {
+          if (firstUnreachable === -1 || i < firstUnreachable) {
+            activations.push(offsets[i]! - threshold);
+          } else {
+            const rangeStart = firstUnreachable > 0 ? activations[firstUnreachable - 1]! : 0;
+            const count = headings.length - firstUnreachable;
+            const t = (i - firstUnreachable + 1) / count;
+            activations.push(rangeStart + t * (maxScroll - rangeStart));
+          }
+        }
+
+        let current: string | null = null;
+        for (let i = 0; i < headings.length; i++) {
+          if (scrollY >= activations[i]!) current = headings[i]!.id;
+        }
+        current ??= headings[0]?.id ?? null;
+        $activeSlug.set(current);
+      }
+
+      function getLinkSlug(link: Element) {
+        return link.getAttribute("href")?.split("#")[1] ?? null;
+      }
+
+      function activateLink(hashOrLink: string | Element) {
+        const slug = typeof hashOrLink === "string" ? hashOrLink : getLinkSlug(hashOrLink);
+
+        for (const link of ctx.refs.links) {
+          link.classList.toggle(styles.active, getLinkSlug(link) === slug);
+        }
+      }
+
+      ctx.on(window, "scroll", throttle(updateActive, 50), { passive: true });
+      ctx.on(ctx.refs.links, 'click', (e) => {
+        const link = e.currentTarget as Element;
+        requestAnimationFrame(() => activateLink(link));
+      });
+      ctx.effect($activeSlug, (slug) => slug && activateLink(slug))
+
+      updateActive();
+    });
+</script>

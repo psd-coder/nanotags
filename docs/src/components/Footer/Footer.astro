@@ -1,0 +1,24 @@
+---
+import { siteConfig } from "~/config";
+import styles from "./styles.module.css";
+
+type Props = {
+  class?: string;
+};
+
+const { class: className } = Astro.props;
+---
+
+<footer class:list={[className, styles.container]}>
+  <div class={styles.block}>
+    <a class={styles.link} href={siteConfig.license.url}>{siteConfig.license.name} License</a>
+    <span class={styles.dimmed}>&middot;</span>
+    <a class={styles.link} href={siteConfig.github}>GitHub</a>
+  </div>
+  <div class={styles.block}>
+    <span class={styles.dimmed}>by</span> <a class={styles.link} href={siteConfig.author.twitter}>{siteConfig.author.name}</a>
+    <span class={styles.dimmed}>&amp;</span> <a class={styles.link} href={siteConfig.evilMartians.url}>{siteConfig.evilMartians.name}</a>
+  </div>
+</footer>
+
+

@@ -1,0 +1,34 @@
+@import url("~/styles/media.css");
+
+.container {
+  display: flex;
+  gap: calc(var(--spacing) * 4);
+  align-items: center;
+  justify-content: space-between;
+
+  @media (--mobiles) {
+    flex-direction: column;
+    align-items: start;
+  }
+}
+
+.block {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing);
+  align-items: center;
+}
+
+.link {
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  transition: color 0.15s;
+
+  &:hover {
+    color: var(--color-text-primary);
+  }
+}
+
+.dimmed {
+  color: var(--color-text-tertiary);
+}

@@ -1,0 +1,31 @@
+---
+import {Layout} from "~/components/Layout";
+import { TableOfContents } from "~/components/TableOfContents";
+
+type Heading = {
+  depth: number;
+  slug: string;
+  text: string;
+};
+
+type Props = {
+  title: string;
+  headings: Heading[];
+};
+
+const { title, headings } = Astro.props;
+---
+
+<Layout title={title}>
+  {headings.length > 0 && (
+    <TableOfContents
+      slot="sidebar"
+      headings={headings}
+      itemsSelector="[data-docs-content] :is(h2, h3)[id]"
+    />
+  )}
+  <article class="prose" data-docs-content>
+    <h1>{title}</h1>
+    <slot />
+  </article>
+</Layout>
