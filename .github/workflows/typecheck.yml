@@ -15,4 +15,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - uses: ./.github/actions/prepare-runner
+      - name: Install docs deps
+        working-directory: docs
+        run: pnpm install --frozen-lockfile
       - run: pnpm typecheck

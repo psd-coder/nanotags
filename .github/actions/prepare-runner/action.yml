@@ -4,25 +4,19 @@ runs:
   using: composite
   steps:
     - name: Install Node.js
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v6
       with:
         node-version: 24
-    - run: corepack enable
-      shell: bash
-    - name: Get pnpm store directory
-      id: pnpm-cache
+    - name: Enable Corepack and pnpm
       shell: bash
       run: |
-        echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
-
-    - uses: actions/cache@v4
-      name: Setup pnpm cache
+        corepack enable
+        corepack install
+    - name: Enable pnpm cache
+      uses: actions/setup-node@v6
       with:
-        path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
-        key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-        restore-keys: |
-          ${{ runner.os }}-pnpm-store-
-
+        node-version: 24
+        cache: pnpm
     - name: Install dependencies
       shell: bash
       run: pnpm install --frozen-lockfile
