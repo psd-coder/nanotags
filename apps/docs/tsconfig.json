@@ -12,9 +12,7 @@
     ],
     "rootDirs": [".", "./generated"],
     "paths": {
-      "~/*": ["./src/*"],
-      "nano-wc": ["../src"],
-      "nano-wc/*": ["../src/*"]
+      "~/*": ["./src/*"]
     }
   },
   "cmkOptions": {

@@ -22,20 +22,12 @@ jobs:
 
       - uses: ./.github/actions/prepare-runner
 
-      - name: Install docs deps
-        working-directory: docs
-        run: pnpm install --frozen-lockfile
-
-      - name: Build nano-wc
-        run: pnpm build
-
       - name: Build docs
-        working-directory: docs
-        run: pnpm build
+        run: pnpm --filter nano-wc-docs build
 
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: docs/dist
+          path: apps/docs/dist
 
   deploy:
     needs: build

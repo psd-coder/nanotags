@@ -514,8 +514,7 @@ export function attachRovingFocus(
     if (current === -1) return;
     let next = -1;
     if (e.key === "ArrowRight") next = (current + 1) % items.length;
-    if (e.key === "ArrowLeft")
-      next = (current - 1 + items.length) % items.length;
+    if (e.key === "ArrowLeft") next = (current - 1 + items.length) % items.length;
     if (next !== -1) {
       e.preventDefault();
       setActive(next);
@@ -551,10 +550,7 @@ Since attachments receive `ctx`, any listeners or effects they register are auto
 ```typescript
 import type { TypedEvent } from "nano-wc";
 
-type TabsChangedEvent = TypedEvent<
-  InstanceType<typeof XTabs>,
-  { index: number }
->;
+type TabsChangedEvent = TypedEvent<InstanceType<typeof XTabs>, { index: number }>;
 
 declare global {
   interface HTMLElementEventMap {

@@ -69,6 +69,7 @@ define("x-settings")
 ```
 
 Control types are auto-detected:
+
 - `input[type=checkbox]` syncs `.checked` (listens to `change`)
 - `input[type=number|range]` reads `.valueAsNumber` (listens to `input`)
 - `input[type=text]` / `textarea` syncs `.value` (listens to `input`)
@@ -230,10 +231,7 @@ Make events type-safe across components:
 ```typescript
 import type { TypedEvent } from "nano-wc";
 
-type SelectionChangeEvent = TypedEvent<
-  InstanceType<typeof XListBox>,
-  { selected: string[] }
->;
+type SelectionChangeEvent = TypedEvent<InstanceType<typeof XListBox>, { selected: string[] }>;
 
 declare global {
   interface HTMLElementEventMap {
@@ -273,6 +271,6 @@ With transforms:
 ```typescript
 ctx.sync("count", $offset, {
   get: (offset) => offset * 2, // store → prop
-  set: (count) => count / 2,   // prop → store
+  set: (count) => count / 2, // prop → store
 });
 ```

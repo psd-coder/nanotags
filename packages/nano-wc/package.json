@@ -1,0 +1,81 @@
+{
+  "name": "nano-wc",
+  "version": "0.10.0",
+  "description": "Tiny Web Components wrapper with nanostores reactivity. No Shadow DOM, typesafe builder, props/refs, automatic cleanup — all under 3 KB.",
+  "keywords": [
+    "astro",
+    "custom-elements",
+    "lightweight",
+    "nanostores",
+    "reactive",
+    "typescript",
+    "web-components"
+  ],
+  "license": "MIT",
+  "author": "Pavel Grinchenko <psdcoder@gmail.com>",
+  "repository": "psd-coder/nano-wc",
+  "files": [
+    "dist/*",
+    "package.json",
+    "README.md",
+    "LICENSE.md"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.mts",
+      "import": "./dist/index.mjs"
+    },
+    "./render": {
+      "types": "./dist/render.d.mts",
+      "import": "./dist/render.mjs"
+    }
+  },
+  "scripts": {
+    "dev": "tsdown --watch",
+    "build": "tsdown",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "typecheck": "pnpm run /^typecheck:/",
+    "typecheck:src": "tsc -p tsconfig.json --noEmit",
+    "typecheck:test": "tsc -p tsconfig.test.json --noEmit",
+    "lint": "pnpm run /^lint:/",
+    "lint:oxlint": "oxlint .",
+    "lint:types": "pnpm run typecheck",
+    "lint:size": "pnpm run build && size-limit",
+    "format": "pnpm run /^format:/",
+    "format:oxlint": "oxlint --fix --fix-suggestions .",
+    "format:oxfmt": "oxfmt src/",
+    "format:check": "oxfmt --check src/"
+  },
+  "dependencies": {
+    "@standard-schema/spec": "^1.1.0",
+    "valibot": "^1.2.0"
+  },
+  "devDependencies": {
+    "@size-limit/file": "^12.0.0",
+    "@vitest/coverage-v8": "^4.0.18",
+    "happy-dom": "^20.7.0",
+    "nanostores": "^1.1.1",
+    "oxfmt": "^0.35.0",
+    "oxlint": "^1.50.0",
+    "size-limit": "^12.0.0",
+    "tsdown": "0.21.0-beta.2",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.18"
+  },
+  "peerDependencies": {
+    "nanostores": "^1.1.1"
+  },
+  "size-limit": [
+    {
+      "path": "dist/index.mjs",
+      "limit": "3513 B"
+    },
+    {
+      "path": "dist/render.mjs",
+      "limit": "611 B"
+    }
+  ]
+}

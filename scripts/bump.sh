@@ -7,11 +7,11 @@ fi
 
 VERSION_TYPE=$1
 
-npm --no-git-tag-version version $VERSION_TYPE
+npm --no-git-tag-version version $VERSION_TYPE --prefix packages/nano-wc
 
-NEW_VERSION=$(node -p "require('./package.json').version")
+NEW_VERSION=$(node -p "require('./packages/nano-wc/package.json').version")
 
-git add package.json
+git add packages/nano-wc/package.json
 git commit -m "Bump version to: $NEW_VERSION"
 git tag -a "$NEW_VERSION" -m "Release $NEW_VERSION"
 

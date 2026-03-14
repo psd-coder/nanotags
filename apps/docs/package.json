@@ -2,11 +2,11 @@
   "name": "nano-wc-docs",
   "private": true,
   "scripts": {
-    "dev": "astro dev",
-    "build": "astro build",
+    "dev": "pnpm --filter nano-wc dev & astro dev",
+    "build": "pnpm --filter nano-wc build && astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "typecheck": "cmk && astro check",
+    "typecheck": "pnpm --filter nano-wc build && cmk && astro check",
     "lint": "pnpm run /^lint:/",
     "lint:styles": "stylelint \"src/**/*.css\"",
     "format": "pnpm run /^format:/",
@@ -30,6 +30,7 @@
     "nanostores": "^1.1.1",
     "rehype-autolink-headings": "^7.1.0",
     "rehype-slug": "^6.0.0",
+    "nano-wc": "workspace:*",
     "valibot": "^1.2.0"
   },
   "devDependencies": {
@@ -44,6 +45,5 @@
     "stylelint-config-standard": "^40.0.0",
     "stylelint-order": "^8.1.0",
     "typescript": "^5.9.3"
-  },
-  "packageManager": "pnpm@10.30.3+sha512.c961d1e0a2d8e354ecaa5166b822516668b7f44cb5bd95122d590dd81922f606f5473b6d23ec4a5be05e7fcd18e8488d47d978bbe981872f1145d06e9a740017"
+  }
 }

@@ -7,7 +7,7 @@
       "name": "Debug Vitest Tests",
       "autoAttachChildProcesses": true,
       "skipFiles": ["<node_internals>/**", "**/node_modules/**"],
-      "program": "${workspaceFolder}/node_modules/vitest/vitest.mjs",
+      "program": "${workspaceFolder}/packages/nano-wc/node_modules/vitest/vitest.mjs",
       "args": ["run", "${file}"],
       "smartStep": true,
       "console": "integratedTerminal"

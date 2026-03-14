@@ -7,9 +7,7 @@
   overflow-y: auto;
   display: block;
 
-  max-height: calc(
-    100dvh - var(--layout-header-offset)
-  );
+  max-height: calc(100dvh - var(--layout-header-offset));
 
   @media (--tablets) {
     display: none;
@@ -46,7 +44,6 @@
   text-decoration: none;
 
   transition: color 0.15s;
-
 
   &.active.active {
     color: var(--color-accent);

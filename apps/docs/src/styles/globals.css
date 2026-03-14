@@ -36,5 +36,4 @@ a {
 [data-theme="dark"] .astro-code,
 [data-theme="dark"] .astro-code span {
   color: var(--shiki-dark) !important;
-
 }

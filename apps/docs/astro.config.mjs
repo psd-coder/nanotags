@@ -1,33 +1,13 @@
 // @ts-check
 import { defineConfig, fontProviders } from "astro/config";
 import { createHash } from "node:crypto";
-import { readFileSync } from "node:fs";
 import path from "node:path";
 import sitemap from "@astrojs/sitemap";
 import postcssPresetEnv from "postcss-preset-env";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
 import rehypeSlug from "rehype-slug";
 
-const srcPath = new URL("../src", import.meta.url).pathname;
-
-function moduleReferencePlugin(moduleName, srcEntry, distEntry) {
-  return {
-    name: `nano-wc-${moduleName}`,
-    enforce: "pre",
-    resolveId(id) {
-      if (id === `${moduleName}?url`) return `\0${moduleName}-url`;
-      if (id === moduleName) return srcEntry;
-    },
-    load(id) {
-      if (id !== `\0${moduleName}-url`) return;
-      // Embed as data URI so the srcdoc iframe can load it
-      // without cross-origin or filesystem constraints.
-      const src = readFileSync(distEntry, "utf-8");
-      const dataUri = `data:text/javascript;charset=utf-8,${encodeURIComponent(src)}`;
-      return `export default ${JSON.stringify(dataUri)};`;
-    },
-  };
-}
+const nanoWcRoot = new URL("../../packages/nano-wc", import.meta.url).pathname;
 
 // https://astro.build/config
 export default defineConfig({
@@ -107,17 +87,14 @@ export default defineConfig({
         ]
       }
     },
-    plugins: [
-      moduleReferencePlugin(
-        "nano-wc",
-        `${srcPath}/index.ts`,
-        "../dist/index.mjs",
-      ),
-      moduleReferencePlugin(
-        "nano-wc/render",
-        `${srcPath}/render.ts`,
-        "../dist/render.mjs",
-      ),
-    ],
+    plugins: [{
+      name: "nano-wc-source",
+      enforce: "pre",
+      resolveId(id) {
+        if (id === "nano-wc") return `${nanoWcRoot}/src/index.ts`;
+        if (id.startsWith("nano-wc/")) return `${nanoWcRoot}/src/${id.slice("nano-wc/".length)}.ts`;
+        if (id.startsWith("nano-wc:dist/")) return `${nanoWcRoot}/dist/${id.slice("nano-wc:dist/".length)}`;
+      },
+    }],
   },
 });

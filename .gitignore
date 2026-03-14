@@ -19,6 +19,7 @@ dist
 *.njsproj
 *.sln
 *.sw?
+.claude
 
 # Build cache manifests
 *.tsbuildinfo

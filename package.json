@@ -1,95 +1,32 @@
 {
-  "name": "nano-wc",
-  "version": "0.11.0",
-  "description": "Tiny Web Components wrapper with nanostores reactivity. No Shadow DOM, typesafe builder, props/refs, automatic cleanup — all under 3 KB.",
-  "keywords": [
-    "astro",
-    "custom-elements",
-    "lightweight",
-    "nanostores",
-    "reactive",
-    "typescript",
-    "web-components"
-  ],
-  "license": "MIT",
-  "author": "Pavel Grinchenko <psdcoder@gmail.com>",
-  "repository": "psd-coder/nano-wc",
-  "files": [
-    "dist/*",
-    "package.json",
-    "README.md",
-    "LICENSE.md"
-  ],
-  "type": "module",
-  "sideEffects": false,
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.mts",
-      "import": "./dist/index.mjs"
-    },
-    "./render": {
-      "types": "./dist/render.d.mts",
-      "import": "./dist/render.mjs"
-    }
-  },
+  "private": true,
   "scripts": {
-    "build": "tsdown",
-    "test": "vitest run",
-    "test:coverage": "vitest run --coverage",
-    "typecheck": "pnpm run /^typecheck:/",
-    "typecheck:src": "tsc -p tsconfig.json --noEmit",
-    "typecheck:test": "tsc -p tsconfig.test.json --noEmit",
-    "typecheck:docs": "cd docs && pnpm typecheck",
-    "lint": "pnpm run /^lint:/",
-    "lint:oxlint": "oxlint .",
-    "lint:types": "pnpm run typecheck",
-    "lint:size": "pnpm run build && size-limit",
-    "format": "pnpm run /^format:/",
-    "format:oxlint": "oxlint --fix --fix-suggestions .",
-    "format:oxfmt": "oxfmt src/",
-    "format:check": "oxfmt --check src/",
+    "core": "pnpm --filter nano-wc",
+    "astro": "pnpm --filter nano-wc-docs",
+    "typecheck": "pnpm -r run typecheck",
+    "lint": "pnpm -r run lint",
+    "format": "pnpm -r run format",
+    "test": "pnpm -r run test",
     "prepare": "simple-git-hooks",
     "bump": "./scripts/bump.sh"
   },
-  "dependencies": {
-    "@standard-schema/spec": "^1.1.0",
-    "valibot": "^1.2.0"
-  },
   "devDependencies": {
-    "@size-limit/file": "^12.0.0",
-    "@vitest/coverage-v8": "^4.0.18",
-    "happy-dom": "^20.7.0",
     "nano-staged": "^0.9.0",
-    "nanostores": "^1.1.1",
     "oxfmt": "^0.35.0",
     "oxlint": "^1.50.0",
-    "simple-git-hooks": "^2.13.1",
-    "size-limit": "^12.0.0",
-    "tsdown": "0.21.0-beta.2",
-    "typescript": "^5.9.3",
-    "vitest": "^4.0.18"
-  },
-  "peerDependencies": {
-    "nanostores": "^1.1.1"
+    "simple-git-hooks": "^2.13.1"
   },
   "simple-git-hooks": {
-    "pre-commit": "npx nano-staged"
+    "pre-commit": "./node_modules/.bin/nano-staged",
+    "pre-push": "pnpm typecheck"
   },
   "nano-staged": {
-    "*.{ts,tsx}": [
-      "oxlint",
+    "*.{js,cjs,mjs,jsx,ts,mts,tsx,json}": [
+      "oxlint --fix --fix-suggestions"
+    ],
+    "*.{css,astro,md,mdx}": [
       "oxfmt"
     ]
   },
-  "size-limit": [
-    {
-      "path": "dist/index.mjs",
-      "limit": "3513 B"
-    },
-    {
-      "path": "dist/render.mjs",
-      "limit": "611 B"
-    }
-  ],
-  "packageManager": "pnpm@10.30.3+sha512.c961d1e0a2d8e354ecaa5166b822516668b7f44cb5bd95122d590dd81922f606f5473b6d23ec4a5be05e7fcd18e8488d47d978bbe981872f1145d06e9a740017"
+  "packageManager": "pnpm@10.32.1+sha512.a706938f0e89ac1456b6563eab4edf1d1faf3368d1191fc5c59790e96dc918e4456ab2e67d613de1043d2e8c81f87303e6b40d4ffeca9df15ef1ad567348f2be"
 }
