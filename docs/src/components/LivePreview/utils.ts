@@ -1,4 +1,5 @@
 import { merge } from "es-toolkit/object";
+import baseStyles from "./base.css?raw";
 import type { FileEntry, FileEntryType, ImportMap } from "./types";
 
 const METHOD_OVERRIDES = `
@@ -89,6 +90,7 @@ export function buildHtml(
     <head>
       <meta charset="UTF-8">
       ${renderImportMap(getContentType(files, "importmap"), combinedOverrides)}
+      <style>${baseStyles}</style>
       ${renderStyles(getContentType(files, "css"))}
       ${renderScripts([METHOD_OVERRIDES])}
     </head>

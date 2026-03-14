@@ -106,29 +106,17 @@
   </script>
 
   <style data-type="css">
-    button[data-ref="trigger"] {
-      padding: 8px 20px;
-      font-size: 14px;
-      border: 1px solid #d1d5db;
-      border-radius: 6px;
-      background: white;
-      cursor: pointer;
-    }
-
-    button[data-ref="trigger"]:hover {
-      background: #f3f4f6;
-    }
-
     dialog {
       border: none;
       border-radius: 12px;
       padding: 24px;
       max-width: 400px;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      background: var(--surface-hover);
+      box-shadow: 0 20px 60px light-dark(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.6));
     }
 
     dialog::backdrop {
-      background: rgba(0, 0, 0, 0.4);
+      background: light-dark(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.6));
     }
 
     dialog h3 {
@@ -136,9 +124,7 @@
     }
 
     dialog p {
-      color: #4b5563;
-      font-size: 14px;
-      line-height: 1.5;
+      color: var(--text-muted);
       margin: 0 0 20px;
     }
 
@@ -148,32 +134,14 @@
       gap: 8px;
     }
 
-    dialog button {
-      padding: 8px 16px;
-      border-radius: 6px;
-      border: 1px solid #d1d5db;
-      background: white;
-      cursor: pointer;
-      font-size: 14px;
-    }
-
-    dialog button:hover {
-      background: #f3f4f6;
-    }
-
     dialog button.primary {
-      background: #2563eb;
+      background: var(--accent);
       color: white;
-      border-color: #2563eb;
+      border-color: var(--accent);
     }
 
     dialog button.primary:hover {
-      background: #1d4ed8;
-    }
-
-    dialog button:focus-visible {
-      outline: 2px solid #2563eb;
-      outline-offset: 2px;
+      background: var(--accent-hover);
     }
   </style>
 </body>
