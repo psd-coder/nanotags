@@ -1,5 +1,8 @@
 # nano-wc
 
+<img align="right" width="92" height="92" title="nano-wc logo"
+     src="./logo.svg">
+
 [![npm version](https://img.shields.io/npm/v/nano-wc.svg)](https://www.npmjs.com/package/nano-wc)
 [![Bundle size](https://img.shields.io/badge/Bundle_size-from_3513_B-brightgreen)](https://github.com/psdcoder/nano-wc/blob/main/package.json)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
@@ -468,6 +471,7 @@ const UserList = define("x-user-list")
 ```
 
 Options:
+
 - `data` — `readonly T[]` of items to render
 - `key(item, index)` — returns a unique `string | number` key per item
 - `update(el, item)` — called on create and on subsequent renders when the item reference changes
@@ -504,7 +508,9 @@ ctx.effect($state, (state) => {
   } else {
     render(container, itemTpl, {
       data: state.data,
-      update: (el, d) => { /* ... */ },
+      update: (el, d) => {
+        /* ... */
+      },
     });
   }
 });
@@ -596,10 +602,7 @@ Since attachments receive `ctx`, any listeners or effects they register are auto
 ```typescript
 import type { TypedEvent } from "nano-wc";
 
-type TabsChangedEvent = TypedEvent<
-  InstanceType<typeof XTabs>,
-  { index: number }
->;
+type TabsChangedEvent = TypedEvent<InstanceType<typeof XTabs>, { index: number }>;
 
 declare global {
   interface HTMLElementEventMap {
