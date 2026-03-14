@@ -1,3 +1,5 @@
+@import url("~/styles/media.css");
+
 .host {
   position: relative;
 
@@ -8,6 +10,10 @@
   margin-top: calc(var(--spacing) * 6);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
+
+  @media (--mobiles) {
+    height: auto;
+  }
 }
 
 .loader {
@@ -44,6 +50,15 @@
 .panes {
   width: 100%;
   height: 100%;
+
+  @media (--mobiles) {
+    flex-direction: column !important;
+    height: auto;
+
+    [role="separator"] {
+      display: none;
+    }
+  }
 }
 
 .pane {
@@ -51,6 +66,24 @@
   display: flex;
   flex-direction: column;
   background-color: var(--color-surface-1);
+
+  @media (--mobiles) {
+    flex: 0 0 auto !important;
+  }
+}
+
+.codePane {
+  @media (--mobiles) {
+    height: 320px;
+    border-bottom: 1px solid var(--color-border);
+  }
+}
+
+.previewPane {
+  @media (--mobiles) {
+    height: 320px;
+    border-top: 1px solid var(--color-border);
+  }
 }
 
 .fileTabs {
@@ -131,6 +164,10 @@
 
   font-family: var(--font-mono);
   font-size: var(--text-xs);
+
+  @media (--mobiles) {
+    height: 100px !important;
+  }
 }
 
 .logType_log {
