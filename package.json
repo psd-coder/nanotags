@@ -1,6 +1,6 @@
 {
   "name": "nano-wc",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "description": "Tiny Web Components wrapper with nanostores reactivity. No Shadow DOM, typesafe builder, props/refs, automatic cleanup — all under 3 KB.",
   "keywords": [
     "astro",

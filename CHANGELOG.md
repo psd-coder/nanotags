@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.11.0
+
+### Breaking Changes
+
+- Redesign `render`/`renderList` API: template is now a separate argument instead of options property
+- Rename `getKey` to `key` in `renderList` options
+- `render`/`renderList` now own entire container — unmanaged children are removed
+- `render` replaces previous content instead of appending, returns the rendered element
+- `render` accepts either `HTMLTemplateElement` or callback returning `Element`
+- Remove `withCache` from public API
+
+### Refactoring
+
+- Replace internal `withCache` usage with private `#refs` field for refs caching
+
 ## 0.10.0
 
 ### Breaking Changes
