@@ -43,6 +43,7 @@ const { title } = Astro.props;
   <Font cssVariable="--font-mono" preload />
   <title>{title} | {siteConfig.name}</title>
   <ThemeScript />
+  <script is:inline defer src="https://cloud.umami.is/script.js" data-website-id="30c6d559-1673-4ce4-a217-e8c40ecaf0c3" data-domains="psd-coder.github.io"></script>
 </head>
 <body class={styles.container}>
   <x-sticky-header role='header'>
