@@ -1,5 +1,13 @@
 .headingRow {
   display: flex;
-  gap: calc(var(--spacing) * 2);
-  align-items: start;
+  gap: calc(var(--spacing) * 4);
+  align-items: center;
+
+  h1 {
+    margin: 0;
+  }
+}
+
+.mdLink {
+  flex-shrink: 0;
 }

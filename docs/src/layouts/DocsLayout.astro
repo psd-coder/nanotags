@@ -1,6 +1,8 @@
 ---
 import { Layout } from "~/components/Layout";
+import { Icon } from "~/components/Icon";
 import { MobileTableOfContents, TableOfContents } from "~/components/TableOfContents";
+import { getHref } from "~/utils/urls";
 import styles from "./styles.module.css";
 
 type Heading = {
@@ -11,10 +13,11 @@ type Heading = {
 
 type Props = {
   title: string;
+  slug: string;
   headings: Heading[];
 };
 
-const { title, headings } = Astro.props;
+const { title, slug, headings } = Astro.props;
 ---
 
 <Layout title={title}>
@@ -28,6 +31,15 @@ const { title, headings } = Astro.props;
   <article class="prose" data-docs-content>
     <div class={styles.headingRow}>
       <h1>{title}</h1>
+      <a
+        href={getHref(`${slug}.md`)}
+        target="_blank"
+        rel="noreferrer"
+        class={styles.mdLink}
+        aria-label="View as Markdown"
+      >
+        <Icon name="markdown" size={32} />
+      </a>
       <MobileTableOfContents headings={headings} />
     </div>
     <slot />
