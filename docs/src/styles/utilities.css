@@ -2,6 +2,37 @@
   min-width: 0;
     line-height: var(--leading-loose);
 
+  & :is(h1, h2, h3, h4, h5, h6) {
+    position: relative;
+  }
+
+  & :is(h2, h3, h4, h5, h6) > a.anchor {
+    position: absolute;
+    right: 100%;
+
+    padding-right: calc(var(--spacing) / 2);
+
+    font-weight: 500;
+    text-decoration: none;
+
+    opacity: 0;
+
+    transition: opacity 0.15s;
+
+    &::before {
+      content: "#";
+    }
+
+    @media (--mobiles) {
+      display: none;
+    }
+  }
+
+  & :is(h2, h3, h4, h5, h6):hover > a.anchor {
+    opacity: 1;
+  }
+
+
   & h1 {
     margin-bottom: calc(var(--spacing) * 4);
     font-size: var(--text-2xl);

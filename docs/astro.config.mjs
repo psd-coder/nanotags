@@ -4,6 +4,8 @@ import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import postcssPresetEnv from "postcss-preset-env";
+import rehypeAutolinkHeadings from "rehype-autolink-headings";
+import rehypeSlug from "rehype-slug";
 
 const srcPath = new URL("../src", import.meta.url).pathname;
 
@@ -34,6 +36,14 @@ export default defineConfig({
     shikiConfig: {
       themes: { light: "catppuccin-latte", dark: "catppuccin-mocha" },
     },
+    rehypePlugins: [
+      rehypeSlug,
+      [rehypeAutolinkHeadings, {
+        behavior: "prepend",
+        properties: { className: ["anchor"], ariaHidden: true, tabIndex: -1 },
+        content: [],
+      }],
+    ]
   },
   experimental: {
     fonts: [

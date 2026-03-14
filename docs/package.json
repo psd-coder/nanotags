@@ -27,6 +27,8 @@
     "linkedom": "^0.18.12",
     "nanoid": "^5.1.6",
     "nanostores": "^1.1.1",
+    "rehype-autolink-headings": "^7.1.0",
+    "rehype-slug": "^6.0.0",
     "valibot": "^1.2.0"
   },
   "devDependencies": {
