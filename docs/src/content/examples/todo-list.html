@@ -134,14 +134,13 @@
 
     x-todo-item .done {
       text-decoration: line-through;
-      color: #999;
+      color: var(--text-muted);
     }
 
     x-todo-item .delete {
       background: none;
       border: none;
-      cursor: pointer;
-      color: #c44;
+      color: light-dark(#c44, #f87171);
       font-weight: bold;
     }
 
@@ -153,12 +152,10 @@
 
     x-todo-list input[type="text"] {
       flex: 1;
-      padding: 6px;
     }
 
     x-todo-list p {
-      color: #888;
-      font-size: 14px;
+      color: var(--text-muted);
     }
   </style>
 </body>

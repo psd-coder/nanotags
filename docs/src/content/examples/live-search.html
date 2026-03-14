@@ -102,21 +102,10 @@
 
     x-live-search input {
       width: 100%;
-      padding: 8px 12px;
-      font-size: 14px;
-      border: 1px solid #d1d5db;
-      border-radius: 6px;
-      box-sizing: border-box;
-    }
-
-    x-live-search input:focus {
-      outline: 2px solid #2563eb;
-      outline-offset: -1px;
-      border-color: #2563eb;
     }
 
     x-live-search p {
-      color: #6b7280;
+      color: var(--text-muted);
       font-size: 13px;
       margin: 8px 0;
     }
@@ -133,16 +122,16 @@
       display: flex;
       gap: 12px;
       padding: 6px 8px;
-      border-bottom: 1px solid #f3f4f6;
+      border-bottom: 1px solid var(--border);
     }
 
     x-live-search li:hover {
-      background: #f9fafb;
+      background: var(--surface-hover);
     }
 
     x-live-search [data-code] {
       font-family: monospace;
-      color: #6b7280;
+      color: var(--text-muted);
       min-width: 2.5em;
     }
   </style>

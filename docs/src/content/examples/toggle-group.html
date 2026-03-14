@@ -127,7 +127,7 @@
   <style data-type="css">
     x-toggle-group {
       display: inline-flex;
-      border: 1px solid #d1d5db;
+      border: 1px solid var(--border);
       border-radius: 6px;
       overflow: hidden;
     }
@@ -136,10 +136,9 @@
       padding: 8px 16px;
       cursor: pointer;
       user-select: none;
-      font-size: 14px;
-      background: white;
+      background: var(--surface);
       border: none;
-      border-right: 1px solid #d1d5db;
+      border-right: 1px solid var(--border);
       transition: background 0.15s, color 0.15s;
     }
 
@@ -148,27 +147,26 @@
     }
 
     x-toggle:hover {
-      background: #f3f4f6;
+      background: var(--surface-hover);
     }
 
     x-toggle[aria-pressed="true"] {
-      background: #2563eb;
+      background: var(--accent);
       color: white;
     }
 
     x-toggle[aria-pressed="true"]:hover {
-      background: #1d4ed8;
+      background: var(--accent-hover);
     }
 
     x-toggle:focus-visible {
-      outline: 2px solid #2563eb;
+      outline: 2px solid var(--accent);
       outline-offset: -2px;
       z-index: 1;
     }
 
     h4 {
       margin: 16px 0 8px;
-      color: #374151;
     }
 
     h4:first-child {
