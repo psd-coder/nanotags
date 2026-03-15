@@ -4,18 +4,13 @@
   display: grid;
   grid-template-columns:
     [page-start] minmax(0, 1fr)
-    [container-start sidebar-start] minmax(0, var(--layout-sidebar-width))
-    [sidebar-end content-start] minmax(0, var(--layout-content-width))
-    [content-end container-end] minmax(0, 1fr)
+    [container-start] minmax(0, var(--layout-width))
+    [container-end] minmax(0, 1fr)
     [page-end];
   grid-template-rows: auto 1fr auto;
-  gap: var(--layout-gap-y) var(--layout-gap-x);
+  column-gap: var(--layout-gap-x);
 
   min-height: 100dvh;
-
-  @media (--mobiles) {
-    --layout-header-offset: calc(var(--spacing) * 28);
-  }
 }
 
 /* Header */
@@ -29,6 +24,8 @@ x-sticky-header {
   grid-row: 1;
   grid-template-columns: subgrid;
 
+  min-height: var(--layout-header-height);
+  margin-block-end: var(--layout-gap-y);
   padding-block: calc(var(--spacing) * 3);
   border-bottom: 1px solid transparent;
 
@@ -130,33 +127,43 @@ x-sticky-header {
 }
 
 .main {
+  display: flex;
   grid-column: container-start / container-end;
   grid-row: 2;
+  gap: calc(var(--layout-gap-x) * 2);
+  align-items: start;
+}
+
+.sidebar {
+  position: sticky;
+  top: var(--layout-header-offset);
+  flex-shrink: 0;
+  width: var(--layout-sidebar-width);
+
+  @media (--tablets) {
+    display: none;
+  }
+}
+
+
+.content {
+  flex: 1;
+  min-width: 0;
 
   & :is(h1, h2, h3, h4, h5, h6)[id] {
-    scroll-margin-top: var(--layout-header-offset);
+    scroll-margin-top: calc(var(--spacing) * 4);
 
     @media (--mobiles) {
       margin-right: calc(var(--spacing) * 12);
     }
   }
 
-  .container:has(> .sidebar) & {
+  .container:has(> .sidebar) > & {
     grid-column: content-start / container-end;
 
     @media (--tablets) {
       grid-column: container-start / container-end;
-      grid-row: 3;
     }
-  }
-}
-
-.container > .sidebar {
-  grid-column: container-start / content-start;
-  grid-row: 2;
-
-  @media (--tablets) {
-    grid-column: container-start / container-end;
   }
 }
 
@@ -164,12 +171,9 @@ x-sticky-header {
   grid-column: container-start / container-end;
   grid-row: 3;
 
+  margin-block-start: var(--layout-gap-y);
   padding: calc(var(--spacing) * 6) 0;
 
   font-size: var(--text-sm);
   color: var(--color-text-secondary);
-
-  @media (--tablets) {
-    grid-row: 4;
-  }
 }

@@ -12,8 +12,8 @@ const { headings, itemsSelector } = Astro.props;
 ---
 
 
-<x-toc items-selector={itemsSelector} class={styles.sidebar}>
-  <List headings={headings} />
+<x-toc items-selector={itemsSelector} class={styles.component}>
+  <List headings={headings} class={styles.sidebar}/>
 </x-toc>
 
 <script>

@@ -3,18 +3,19 @@
 :root {
   --layout-width: 1280px;
   --layout-sidebar-width: 248px;
+  --layout-header-height: calc(var(--spacing) * 14);
   --layout-gap-y: calc(var(--spacing) * 12);
   --layout-gap-x: calc(var(--spacing) * 6);
-  --layout-content-width: calc(
-    var(--layout-width) - var(--layout-sidebar-width) - var(--layout-gap-x) * 3
-  );
-  --layout-header-offset: calc(var(--spacing) * 20);
-  --layout-footer-offset: calc(var(--spacing) * 25);
+  --layout-header-offset: calc(var(--layout-header-height) + var(--layout-gap-y));
 
   @media (--laptops) {
     --layout-gap-y: calc(var(--spacing) * 8);
     --layout-gap-x: calc(var(--spacing) * 4);
   }
+}
+
+* {
+  scrollbar-color: var(--color-accent-dark) transparent;
 }
 
 body,
@@ -37,3 +38,4 @@ a {
 [data-theme="dark"] .astro-code span {
   color: var(--shiki-dark) !important;
 }
+

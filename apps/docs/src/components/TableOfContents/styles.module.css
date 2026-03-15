@@ -1,13 +1,19 @@
 @import url("~/styles/media.css");
 
+.component {
+  display: contents;
+}
+
 .sidebar {
   position: sticky;
-  top: var(--layout-header-offset);
+  top: 0;
 
-  overflow-y: auto;
-  display: block;
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--spacing) * 4);
 
-  max-height: calc(100dvh - var(--layout-header-offset));
+  max-height: calc(100vh - var(--layout-header-offset) - var(--layout-gap-y));
+
 
   @media (--tablets) {
     display: none;
@@ -16,8 +22,7 @@
 
 .title {
   display: block;
-
-  margin-bottom: calc(var(--spacing) * 4);
+  flex-shrink: 0;
 
   font-size: var(--text-xxs);
   font-weight: 800;
@@ -27,16 +32,21 @@
 }
 
 .list {
+  overflow-y: auto;
   display: flex;
+  flex: 1;
   flex-direction: column;
   gap: var(--spacing);
+
+  min-height: 0;
+
   list-style: none;
 }
 
 .link {
   display: block;
 
-  padding: var(--spacing) 0;
+  padding: var(--spacing) calc(var(--spacing) * 3) var(--spacing) 0;
 
   font-size: var(--text-sm);
   font-weight: 500;
@@ -55,7 +65,7 @@
 }
 
 .nested {
-  padding: calc(var(--spacing) / 2) 0 calc(var(--spacing) / 2) calc(var(--spacing) * 4);
+  padding-left: calc(var(--spacing) * 4);
   font-size: var(--text-xs);
 }
 
@@ -70,6 +80,10 @@
 
   @media (--min-tablets) {
     display: none;
+  }
+
+  @media (--mobiles) {
+    top: calc(var(--layout-header-offset) + var(--spacing) * 6);
   }
 }
 
