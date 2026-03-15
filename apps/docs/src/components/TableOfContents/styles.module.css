@@ -69,17 +69,17 @@
 .popoverTrigger.popoverTrigger {
   position: fixed;
   z-index: 10;
-  top: var(--layout-header-offset);
   right: var(--layout-gap-x);
+  bottom: var(--layout-gap-x);
 
   margin-left: auto;
 
-  @media (--min-tablets) {
-    display: none;
+  @media (--min-mobiles) {
+    bottom: calc(var(--layout-gap-x) + var(--spacing) * 10);
   }
 
-  @media (--mobiles) {
-    top: calc(var(--layout-header-offset) + var(--spacing) * 6);
+  @media (--min-tablets) {
+    display: none;
   }
 }
 

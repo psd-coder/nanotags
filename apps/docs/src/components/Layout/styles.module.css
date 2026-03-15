@@ -156,10 +156,10 @@ x-sticky-header {
   min-width: 0;
 
   & :is(h1, h2, h3, h4, h5, h6)[id] {
-    scroll-margin-top: calc(var(--spacing) * 4);
+    scroll-margin-top: var(--layout-header-offset);
 
     @media (--mobiles) {
-      margin-right: calc(var(--spacing) * 12);
+      margin-right: var(--layout-header-offset);
     }
   }
 
