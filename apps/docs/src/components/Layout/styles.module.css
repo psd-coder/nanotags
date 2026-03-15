@@ -137,8 +137,13 @@ x-sticky-header {
 .sidebar {
   position: sticky;
   top: var(--layout-header-offset);
+
+  display: flex;
+  flex-direction: column;
   flex-shrink: 0;
+
   width: var(--layout-sidebar-width);
+  max-height: calc(100dvh - var(--layout-header-offset) - var(--layout-gap-y));
 
   @media (--tablets) {
     display: none;

@@ -28,6 +28,7 @@ const { title, slug, headings } = Astro.props;
       itemsSelector="[data-docs-content] :is(h2, h3)[id]"
     />
   )}
+  <MobileTableOfContents headings={headings} />
   <article class="prose" data-docs-content>
     <div class={styles.headingRow}>
       <h1>{title}</h1>
@@ -40,7 +41,6 @@ const { title, slug, headings } = Astro.props;
       >
         <Icon name="markdown" size={32} />
       </a>
-      <MobileTableOfContents headings={headings} />
     </div>
     <slot />
   </article>
