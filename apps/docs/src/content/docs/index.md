@@ -6,7 +6,7 @@ order: 1
 
 ## Why nano-wc?
 
-Thin Web Components wrapper with [nanostores](https://github.com/nanostores/nanostores) reactivity. No Shadow DOM — your markup stays in the regular DOM, styled with normal CSS. Typesafe fluent builder, props/refs, automatic cleanup, store sync, and DOM binding — all in 3.5 KB.
+Thin Web Components wrapper with [nanostores](https://github.com/nanostores/nanostores) reactivity. No Shadow DOM — your markup stays in the regular DOM, styled with normal CSS. Typesafe fluent builder, props/refs, automatic cleanup, controls binding — all in 3.5 KB.
 
 Shines with statically rendered markup — pair it with [Astro](https://astro.build/), server-rendered HTML, or any static-first setup to hydrate lightweight interactive islands.
 
@@ -15,7 +15,7 @@ Shines with statically rendered markup — pair it with [Astro](https://astro.bu
 - **No Shadow DOM** — elements live in the regular DOM, styled with normal CSS
 - **Reactive props** — each prop is a nanostores atom, auto-synced with attributes
 - **Typed refs** — query scoped DOM elements with runtime validation
-- **Automatic cleanup** — listeners, effects, syncs, bindings — all disposed on disconnect
+- **Automatic cleanup** — listeners, effects, bindings — all disposed on disconnect
 - **Fluent builder** — immutable chain accumulates type information step by step
 - **Tiny** — core in 3.5 KB, rendering utilities in a separate entry
 
@@ -87,7 +87,7 @@ nano-wc is intentionally minimal. It doesn't ship a template engine, virtual DOM
 
 ### Can I use it without nanostores?
 
-The reactivity methods (`effect`, `sync`, `bind`) use structural store types — any object with `get()`, `set()`, and `subscribe()` works. You're not locked into nanostores, but it's the recommended companion.
+The reactivity methods (`effect`, `bind`) use structural store types — any object with `get()`, `set()`, and `subscribe()` works. You're not locked into nanostores, but it's the recommended companion.
 
 ### Does it work with SSR frameworks?
 

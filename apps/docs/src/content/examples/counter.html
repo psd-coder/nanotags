@@ -43,7 +43,7 @@
       .setup((ctx) => {
         const $count = atom(ctx.props.$initial.get());
 
-        ctx.bind(ctx.refs.stepInput, ctx.props.$step);
+        ctx.bind(ctx.props.$step, ctx.refs.stepInput);
         ctx.on(ctx.refs.increment, 'click', () => $count.set($count.get() + ctx.props.$step.get()));
         ctx.on(ctx.refs.decrement, 'click', () => $count.set($count.get() - ctx.props.$step.get()));
         ctx.effect($count, (val) => {

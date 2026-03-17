@@ -7,7 +7,7 @@
 [![Bundle size](https://img.shields.io/badge/Bundle_size-from_3513_B-brightgreen)](https://github.com/psdcoder/nano-wc/blob/main/package.json)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
-Thin, Web Components wrapper with [nanostores](https://github.com/nanostores/nanostores) reactivity. No Shadow DOM — your markup stays in the regular DOM, styled with normal CSS. Typesafe fluent builder, props/refs, automatic cleanup, store sync, and DOM binding — all in 3.5 KB.
+Thin, Web Components wrapper with [nanostores](https://github.com/nanostores/nanostores) reactivity. No Shadow DOM — your markup stays in the regular DOM, styled with normal CSS. Typesafe fluent builder, props/refs, automatic cleanup, and DOM binding — all in 3.5 KB.
 
 Shines with statically rendered markup — pair it with [Astro](https://astro.build/), server-rendered HTML, or any static-first setup to hydrate lightweight interactive islands.
 
@@ -308,7 +308,7 @@ The `setup` function receives a context object with the following properties and
 
 ### Reactivity
 
-All reactive methods (`effect`, `sync`, `bind`) use structural store types instead of nanostores-specific imports. This is intentional — it avoids coupling to nanostores internal API and makes the methods work with any store that matches the shape:
+All reactive methods (`effect`, `bind`) use structural store types instead of nanostores-specific imports. This is intentional — it avoids coupling to nanostores internal API and makes the methods work with any store that matches the shape:
 
 ```typescript
 type ReadableStore<V> = {
@@ -334,43 +334,40 @@ ctx.effect([storeA, storeB], (a, b) => {
 });
 ```
 
-#### `sync(prop, store, options?)`
+#### `bind(store, element, options?)`
 
-Two-way sync between a writable store and a component prop. Changes propagate in both directions with `Object.is` equality guard to prevent loops.
+Binds a writable store to a DOM element property. The store is the source of truth — the element is set from the store on bind.
 
-```typescript
-const $name = atom("initial");
-ctx.sync("title", $name);
-
-// With transforms across the boundary
-ctx.sync("count", $offset, {
-  get: (offset) => offset * 2, // store → prop
-  set: (count) => count / 2, // prop → store
-});
-```
-
-#### `bind(control, store)`
-
-Two-way binds a DOM control to a writable store. The store is the source of truth — the control is set from the store on bind. Works with native form controls and any custom element that exposes a `.value` property and emits `change` events.
-
-**Native controls** (auto-detected):
+**No options** — full auto-detect, two-way binding. Works with native form controls and any custom element that exposes a `.value` property and emits `change` events:
 
 - `input[type=checkbox]` — syncs `.checked` with a boolean store (listens to `change`)
 - `input[type=number]` / `input[type=range]` — reads `.valueAsNumber` automatically (listens to `input`)
 - `input[type=text|email|...]` / `textarea` — syncs `.value` with a string store (listens to `input`)
 - `select` — syncs `.value` with a string store (listens to `change`)
-
-**Custom elements** — any element with a `.value` property works. Default event is `change`:
+- Custom elements with `.value` — syncs `.value` (listens to `change`)
 
 ```typescript
 const $name = atom("Ada");
-ctx.bind(ctx.refs.name, $name);
+ctx.bind($name, ctx.refs.name);
 
 const $agreed = atom(false);
-ctx.bind(ctx.refs.agree, $agreed);
+ctx.bind($agreed, ctx.refs.agree);
 
 // Custom element with .value + change event
-ctx.bind(ctx.refs.colorPicker, $color);
+ctx.bind($color, ctx.refs.colorPicker);
+```
+
+**With options** — bind to any element property. `prop` defaults to the auto-detected value; `event` undefined means one-way (store → element only):
+
+```typescript
+// One-way: store → element property
+ctx.bind($theme, el, { prop: "theme" });
+
+// Two-way: store ↔ element via custom prop + event
+ctx.bind($val, el, { prop: "value", event: "change" });
+
+// Override native defaults (e.g. listen to "change" instead of "input")
+ctx.bind($val, input, { prop: "value", event: "change" });
 ```
 
 ### Events
@@ -664,7 +661,7 @@ const MyEl = define("x-my-el").withProps(/* ... */).setup(/* ... */);
 1. **Constructor** — reactive prop stores created, getters/setters defined (attribute-backed props read their initial value; JSON props start as `undefined`)
 2. **connectedCallback** — all props hydrated (each prop's `get` is called → parsed through schema → atom set), descendants upgraded, `setup` runs, mixin applied
 3. **attributeChangedCallback** — attribute change validated and pushed to prop store (attribute-backed props only)
-4. **disconnectedCallback** — cache cleared, all cleanups run (listeners, effects, syncs, bindings)
+4. **disconnectedCallback** — cache cleared, all cleanups run (listeners, effects, bindings)
 
 Re-connecting a component runs `setup` again with a fresh cache and new cleanup scope.
 

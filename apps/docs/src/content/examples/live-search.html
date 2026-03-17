@@ -78,7 +78,7 @@
           );
         });
 
-        ctx.bind(ctx.refs.input, $query);
+        ctx.bind($query, ctx.refs.input);
 
         ctx.effect($filtered, (filtered) => {
           const total = ctx.props.$countries.get().length;

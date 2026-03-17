@@ -17,4 +17,5 @@ export type {
   RefsSchema,
   InferRef,
   InferRefs,
+  BindOptions,
 } from "./types";

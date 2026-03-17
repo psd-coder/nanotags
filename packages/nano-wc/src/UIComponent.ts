@@ -2,8 +2,8 @@ import { effect, type StoreValue } from "nanostores";
 import { invariant } from "./utils.ts";
 
 import type {
+  BindOptions,
   ComponentProps,
-  Infer,
   InferRefs,
   Prettify,
   PropsSchema,
@@ -192,74 +192,50 @@ export abstract class UIComponent<
   }
 
   /**
-   * Two-way syncs an external `store` with a component prop.
-   * Changes to `store` update the prop; changes to the prop update `store`.
-   * Use `options.get` / `options.set` to transform values across the boundary.
-   */
-  sync<Prop extends keyof Props & string, Value>(
-    prop: Prop,
-    store: WritableStore<Value>,
-    options?: {
-      get?: (value: Value) => Infer<Props[Prop]>;
-      set?: (value: Infer<Props[Prop]>) => Value;
-    },
-  ): void {
-    const propStore = this.props[`$${prop}`] as WritableStore<Infer<Props[Prop]>> | undefined;
-    invariant(propStore, "unknown prop");
-    this.effect(store, (value) => {
-      const next = options?.get ? options.get(value) : (value as unknown as Infer<Props[Prop]>);
-      if (!Object.is(propStore.get(), next)) propStore.set(next);
-    });
-    this.effect(propStore, (value) => {
-      const next = options?.set ? options.set(value) : (value as unknown as Value);
-      if (!Object.is(store.get(), next)) store.set(next);
-    });
-  }
-
-  /**
-   * Two-way binds a DOM control to a nanostores atom.
-   * Store is the source of truth — control is set from the store on bind.
+   * Binds a writable store to a DOM element property.
+   * Store is the source of truth — element is set from the store on bind.
+   *
+   * No options → full auto-detect (native controls + custom `.value`/`change`), two-way.
+   * Options present → `prop` defaults to auto-detected, `event` undefined = one-way.
    *
    * Native controls: auto-detects checkbox (`.checked`, `change`), number/range (`.valueAsNumber`, `input`),
    * text/textarea (`.value`, `input`), select (`.value`, `change`).
    *
    * Custom elements: any element with a `.value` property and `change` event works out of the box.
-   * For nano-wc components, expose `value` as a **prop** (not a mixin) so it's available
-   * at construction time — before setup runs. This avoids ordering issues when a parent
-   * binds to a child CE whose setup hasn't executed yet (e.g. with client-side routing).
+   * Pass `{ prop }` for one-way binding to any element property, or `{ prop, event }` for two-way.
    */
   bind(
-    control: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement,
     store: WritableStore<any>,
+    control: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement,
+    opts?: BindOptions,
   ): void;
-  bind<V>(control: HTMLElement & { value: NoInfer<V> }, store: WritableStore<V>): void;
-  bind(control: HTMLElement, store: WritableStore<unknown>): void {
-    const inp = control instanceof HTMLInputElement ? control : undefined;
-    const isCheckbox = inp?.type === "checkbox";
-    const isNumber = inp?.type === "number" || inp?.type === "range";
-    const isNative =
-      inp !== undefined ||
-      control instanceof HTMLSelectElement ||
-      control instanceof HTMLTextAreaElement;
-    if (!isNative) {
-      invariant("value" in control, "has no .value property");
-    }
-    const isTextLike = (inp !== undefined && !isCheckbox) || control instanceof HTMLTextAreaElement;
-    const event = isTextLike ? "input" : "change";
-    const ctrl = control as HTMLElement & { value: unknown };
-    const get = () => (isCheckbox ? inp!.checked : isNumber ? inp!.valueAsNumber : ctrl.value);
-    const set = (v: unknown) => {
-      if (isCheckbox) inp!.checked = v as boolean;
-      else ctrl.value = v;
-    };
+  bind<V>(
+    store: WritableStore<V>,
+    control: HTMLElement & { value: NoInfer<V> },
+    opts?: BindOptions,
+  ): void;
+  bind(store: WritableStore<unknown>, control: HTMLElement, opts: BindOptions): void;
+  bind(store: WritableStore<unknown>, control: HTMLElement, opts?: BindOptions): void {
+    const input = control instanceof HTMLInputElement ? control : undefined;
+    let propEvent: [string, string] = ["value", "change"];
 
-    set(store.get());
-    this.on(control, event, () => {
-      const next = get();
-      if (!Object.is(store.get(), next)) store.set(next);
-    });
+    if (input?.type === "checkbox") {
+      propEvent = ["checked", "change"];
+    } else if (input?.type === "number" || input?.type === "range") {
+      propEvent = ["valueAsNumber", "input"];
+    } else if (input || control instanceof HTMLTextAreaElement) {
+      propEvent = ["value", "input"];
+    }
+
+    const prop = opts?.prop ?? propEvent[0];
+    const event = opts ? opts?.event : propEvent[1];
+    const el = control as any;
+    invariant(prop in control, `has no .${prop} property`);
+
+    el[prop] = store.get();
+    event && this.on(control, event, () => store.set(el[prop]));
     this.effect(store, (value) => {
-      if (!Object.is(get(), value)) set(value);
+      el[prop] = value;
     });
   }
 }

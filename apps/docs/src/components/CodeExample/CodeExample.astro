@@ -115,8 +115,8 @@ invariant(firstFile, "No files provided");
         $logs.set([]);
       });
 
-      ctx.bind(ctx.refs.tabs, $currentTab);
-      ctx.bind(ctx.refs.editor, {
+      ctx.bind($currentTab, ctx.refs.tabs);
+      ctx.bind({
         ...$currentFileEntryContent,
         set: (value: string) => {
           const currentTab = $currentTab.get();
@@ -129,7 +129,7 @@ invariant(firstFile, "No files provided");
             }),
           );
         },
-      });
+      }, ctx.refs.editor);
 
       ctx.effect($currentTab, (currentTab) => {
         if (!currentTab) return;

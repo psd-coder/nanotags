@@ -102,7 +102,7 @@ describe("lifecycle cleanup", () => {
     const el = mount(`<${tag}></${tag}>`);
     el.remove();
     expect(calls).toEqual(["cleanup-0"]);
-    document.body.appendChild(el);
+    document.body.append(el);
     el.remove();
     expect(calls).toEqual(["cleanup-0", "cleanup-1"]);
   });
@@ -116,7 +116,6 @@ describe("lifecycle cleanup", () => {
     expectTypeOf<Ctx>().toHaveProperty("on");
     expectTypeOf<Ctx>().toHaveProperty("emit");
     expectTypeOf<Ctx>().toHaveProperty("effect");
-    expectTypeOf<Ctx>().toHaveProperty("sync");
     expectTypeOf<Ctx>().toHaveProperty("bind");
     expectTypeOf<Ctx>().toHaveProperty("onCleanup");
     expectTypeOf<Ctx>().toHaveProperty("consume");
@@ -373,99 +372,13 @@ describe("effect", () => {
   });
 });
 
-describe("sync", () => {
-  it("external store → prop store", () => {
-    const tag = uniqueTag("sync");
-    const $ext = atom("hello");
-    const Component = define(tag)
-      .withProps((p) => ({ val: p.string() }))
-      .setup((ctx) => {
-        ctx.sync("val", $ext);
-      });
-    const el = mount<InstanceType<typeof Component>>(`<${tag}></${tag}>`);
-    expect(el.props.$val.get()).toBe("hello");
-  });
-
-  it("prop store → external store", () => {
-    const tag = uniqueTag("sync");
-    const $ext = atom("init");
-    define(tag)
-      .withProps((p) => ({ val: p.string() }))
-      .setup((ctx) => {
-        ctx.sync("val", $ext);
-      });
-    const el = mount(`<${tag}></${tag}>`);
-    el.setAttribute("val", "changed");
-    expect($ext.get()).toBe("changed");
-  });
-
-  it("Object.is guard prevents infinite loop", () => {
-    const tag = uniqueTag("sync");
-    const $ext = atom("same");
-    const spy = vi.fn();
-    define(tag)
-      .withProps((p) => ({ val: p.string() }))
-      .setup((ctx) => {
-        ctx.sync("val", $ext);
-        ctx.effect(ctx.props.$val, spy);
-      });
-    mount(`<${tag} val="same"></${tag}>`);
-    const callCount = spy.mock.calls.length;
-    $ext.set("same");
-    expect(spy.mock.calls.length).toBe(callCount);
-  });
-
-  it("get/set transforms applied", () => {
-    const tag = uniqueTag("sync");
-    const $ext = atom(42);
-    const Component = define(tag)
-      .withProps((p) => ({ val: p.string() }))
-      .setup((ctx) => {
-        ctx.sync("val", $ext, {
-          get: (n) => String(n),
-          set: (s) => Number(s),
-        });
-      });
-    const el = mount<InstanceType<typeof Component>>(`<${tag}></${tag}>`);
-    expect(el.props.$val.get()).toBe("42");
-    el.props.$val.set("100");
-    expect($ext.get()).toBe(100);
-  });
-
-  it("throws when syncing unknown prop", () => {
-    const tag = uniqueTag("sync");
-    const $ext = atom("x");
-    define(tag)
-      .withProps((p) => ({ val: p.string() }))
-      .setup((ctx) => {
-        (ctx as any).sync("nope", $ext);
-      });
-    expect(() => mount(`<${tag}></${tag}>`)).toThrow(/unknown prop/);
-  });
-
-  it("same value: no extra propagation", () => {
-    const tag = uniqueTag("sync");
-    const $ext = atom("v");
-    const extSpy = vi.fn();
-    define(tag)
-      .withProps((p) => ({ val: p.string() }))
-      .setup((ctx) => {
-        ctx.sync("val", $ext);
-      });
-    mount(`<${tag} val="v"></${tag}>`);
-    $ext.listen(extSpy);
-    $ext.set("v");
-    expect(extSpy).not.toHaveBeenCalled();
-  });
-});
-
 describe("bind", () => {
   it("input[type=text]: control input → store", () => {
     const tag = uniqueTag("bind");
     const $val = atom("");
     define(tag, (ctx) => {
       const input = ctx.getElement("input");
-      ctx.bind(input, $val);
+      ctx.bind($val, input);
     });
     const el = mount(`<${tag}><input type="text" /></${tag}>`);
     const input = el.querySelector("input")!;
@@ -479,7 +392,7 @@ describe("bind", () => {
     const $val = atom("initial");
     define(tag, (ctx) => {
       const input = ctx.getElement("input");
-      ctx.bind(input, $val);
+      ctx.bind($val, input);
     });
     const el = mount(`<${tag}><input type="text" /></${tag}>`);
     const input = el.querySelector("input")!;
@@ -493,7 +406,7 @@ describe("bind", () => {
     const $val = atom(0);
     define(tag, (ctx) => {
       const input = ctx.getElement("input");
-      ctx.bind(input, $val);
+      ctx.bind($val, input);
     });
     const el = mount(`<${tag}><input type="number" /></${tag}>`);
     const input = el.querySelector("input")!;
@@ -507,13 +420,13 @@ describe("bind", () => {
     const $val = atom(7);
     define(tag, (ctx) => {
       const input = ctx.getElement("input");
-      ctx.bind(input, $val);
+      ctx.bind($val, input);
     });
     const el = mount(`<${tag}><input type="number" /></${tag}>`);
     const input = el.querySelector("input")!;
-    expect(input.value).toBe("7");
+    expect(input.valueAsNumber).toBe(7);
     $val.set(99);
-    expect(input.value).toBe("99");
+    expect(input.valueAsNumber).toBe(99);
   });
 
   it("input[type=range]: reads .valueAsNumber", () => {
@@ -521,7 +434,7 @@ describe("bind", () => {
     const $val = atom(1);
     define(tag, (ctx) => {
       const input = ctx.getElement("input");
-      ctx.bind(input, $val);
+      ctx.bind($val, input);
     });
     const el = mount(`<${tag}><input type="range" min="1" max="50" /></${tag}>`);
     const input = el.querySelector("input")!;
@@ -535,13 +448,13 @@ describe("bind", () => {
     const $val = atom(10);
     define(tag, (ctx) => {
       const input = ctx.getElement("input");
-      ctx.bind(input, $val);
+      ctx.bind($val, input);
     });
     const el = mount(`<${tag}><input type="range" min="1" max="50" /></${tag}>`);
     const input = el.querySelector("input")!;
-    expect(input.value).toBe("10");
+    expect(input.valueAsNumber).toBe(10);
     $val.set(30);
-    expect(input.value).toBe("30");
+    expect(input.valueAsNumber).toBe(30);
   });
 
   it("input[type=checkbox]: toggle → store (boolean)", () => {
@@ -549,7 +462,7 @@ describe("bind", () => {
     const $checked = atom(false);
     define(tag, (ctx) => {
       const input = ctx.getElement("input");
-      ctx.bind(input, $checked);
+      ctx.bind($checked, input);
     });
     const el = mount(`<${tag}><input type="checkbox" /></${tag}>`);
     const input = el.querySelector("input")!;
@@ -563,7 +476,7 @@ describe("bind", () => {
     const $checked = atom(true);
     define(tag, (ctx) => {
       const input = ctx.getElement("input");
-      ctx.bind(input, $checked);
+      ctx.bind($checked, input);
     });
     const el = mount(`<${tag}><input type="checkbox" /></${tag}>`);
     const input = el.querySelector("input")!;
@@ -577,7 +490,7 @@ describe("bind", () => {
     const $val = atom("a");
     define(tag, (ctx) => {
       const select = ctx.getElement("select");
-      ctx.bind(select, $val);
+      ctx.bind($val, select);
     });
     const el = mount(
       `<${tag}><select><option value="a">A</option><option value="b">B</option></select></${tag}>`,
@@ -593,7 +506,7 @@ describe("bind", () => {
     const $val = atom("b");
     define(tag, (ctx) => {
       const select = ctx.getElement("select");
-      ctx.bind(select, $val);
+      ctx.bind($val, select);
     });
     const el = mount(
       `<${tag}><select><option value="a">A</option><option value="b">B</option></select></${tag}>`,
@@ -607,7 +520,7 @@ describe("bind", () => {
     const $val = atom("");
     define(tag, (ctx) => {
       const textarea = ctx.getElement("textarea");
-      ctx.bind(textarea, $val);
+      ctx.bind($val, textarea);
     });
     const el = mount(`<${tag}><textarea></textarea></${tag}>`);
     const textarea = el.querySelector("textarea")!;
@@ -621,7 +534,7 @@ describe("bind", () => {
     const $val = atom("prefilled");
     define(tag, (ctx) => {
       const textarea = ctx.getElement("textarea");
-      ctx.bind(textarea, $val);
+      ctx.bind($val, textarea);
     });
     const el = mount(`<${tag}><textarea></textarea></${tag}>`);
     const textarea = el.querySelector("textarea")!;
@@ -633,7 +546,7 @@ describe("bind", () => {
     const $val = atom("from-store");
     define(tag, (ctx) => {
       const input = ctx.getElement("input");
-      ctx.bind(input, $val);
+      ctx.bind($val, input);
     });
     const el = mount(`<${tag}><input type="text" value="from-html" /></${tag}>`);
     const input = el.querySelector("input")!;
@@ -646,7 +559,7 @@ describe("bind", () => {
     const spy = vi.fn();
     define(tag, (ctx) => {
       const input = ctx.getElement("input");
-      ctx.bind(input, $val);
+      ctx.bind($val, input);
     });
     mount(`<${tag}><input type="text" /></${tag}>`);
     $val.listen(spy);
@@ -663,7 +576,7 @@ describe("bind", () => {
     const $val = atom("from-store");
     define(tag, (ctx) => {
       const ctrl = ctx.getElement(controlTag) as HTMLElement & { value: string };
-      ctx.bind(ctrl, $val);
+      ctx.bind($val, ctrl);
     });
     const el = mount(`<${tag}><${controlTag}></${controlTag}></${tag}>`);
     const ctrl = el.querySelector(controlTag)! as HTMLElement & { value: string };
@@ -679,24 +592,79 @@ describe("bind", () => {
     const tag = uniqueTag("bind");
     const $val = atom("");
     define(tag, (ctx) => {
-      ctx.bind(ctx.host as any, $val);
+      ctx.bind($val, ctx.host as any);
     });
     expect(() => mount(`<${tag}></${tag}>`)).toThrow(/has no .value property/);
+  });
+
+  it("one-way bind with { prop } — store→el, no event listener", () => {
+    const tag = uniqueTag("bind");
+    const $theme = atom("dark");
+    define(tag, (ctx) => {
+      ctx.bind($theme, ctx.host, { prop: "title" });
+    });
+    const el = mount(`<${tag}></${tag}>`);
+    expect(el.title).toBe("dark");
+    $theme.set("light");
+    expect(el.title).toBe("light");
+    // No event listener — changing title and dispatching change shouldn't update store
+    el.title = "manual";
+    el.dispatchEvent(new Event("change", { bubbles: true }));
+    expect($theme.get()).toBe("light");
+  });
+
+  it("two-way bind with { prop, event } — custom element", () => {
+    const controlTag = uniqueTag("ctrl");
+    define(controlTag)
+      .withProps((p) => ({ theme: p.string("default") }))
+      .setup((ctx) => {
+        ctx.effect(ctx.props.$theme, () => ctx.emit("change"));
+      });
+    const tag = uniqueTag("bind");
+    const $theme = atom("dark");
+    define(tag, (ctx) => {
+      const ctrl = ctx.getElement(controlTag);
+      ctx.bind($theme, ctrl, { prop: "theme", event: "change" });
+    });
+    const el = mount(`<${tag}><${controlTag}></${controlTag}></${tag}>`);
+    const ctrl = el.querySelector(controlTag)! as any;
+    expect(ctrl.theme).toBe("dark");
+    ctrl.theme = "light";
+    ctrl.dispatchEvent(new Event("change", { bubbles: true }));
+    expect($theme.get()).toBe("light");
+    $theme.set("blue");
+    expect(ctrl.theme).toBe("blue");
+  });
+
+  it("options override native defaults", () => {
+    const tag = uniqueTag("bind");
+    const $val = atom("test");
+    define(tag, (ctx) => {
+      const input = ctx.getElement("input");
+      ctx.bind($val, input, { prop: "value", event: "change" });
+    });
+    const el = mount(`<${tag}><input type="text" /></${tag}>`);
+    const input = el.querySelector("input")!;
+    expect(input.value).toBe("test");
+    input.value = "changed";
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    expect($val.get()).toBe("test");
+    input.dispatchEvent(new Event("change", { bubbles: true }));
+    expect($val.get()).toBe("changed");
   });
 
   it.skipIf(true)("rejects custom element without .value at type level", () => {
     // oxlint-disable-next-line typescript-eslint/no-empty-object-type
     const ctx = {} as SetupContext<{}, {}>;
     const plain = {} as HTMLDivElement;
-    // @ts-expect-error - HTMLDivElement has no .value, should not match any overload
-    ctx.bind(plain, atom(""));
+    // @ts-expect-error - HTMLDivElement has no .value, should not match overloads 1-2; overload 3 requires opts
+    ctx.bind(atom(""), plain);
   });
 
-  it.skipIf(true)("rejects store type mismatch for custom element at type level", () => {
+  it.skipIf(true)("accepts arbitrary element with BindOptions at type level", () => {
     // oxlint-disable-next-line typescript-eslint/no-empty-object-type
     const ctx = {} as SetupContext<{}, {}>;
-    const ctrl = {} as HTMLElement & { value: string };
-    // @ts-expect-error - WritableAtom<number> doesn't match { value: string }
-    ctx.bind(ctrl, atom(42));
+    const el = {} as HTMLElement;
+    ctx.bind(atom("x"), el, { prop: "theme" });
   });
 });

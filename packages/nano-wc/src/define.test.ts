@@ -136,7 +136,6 @@ describe("define", () => {
       expectTypeOf<"emit">().toMatchTypeOf<ReservedKeys>();
       expectTypeOf<"on">().toMatchTypeOf<ReservedKeys>();
       expectTypeOf<"effect">().toMatchTypeOf<ReservedKeys>();
-      expectTypeOf<"sync">().toMatchTypeOf<ReservedKeys>();
       expectTypeOf<"bind">().toMatchTypeOf<ReservedKeys>();
       expectTypeOf<"refs">().toMatchTypeOf<ReservedKeys>();
       expectTypeOf<"props">().toMatchTypeOf<ReservedKeys>();

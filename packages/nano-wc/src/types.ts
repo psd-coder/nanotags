@@ -92,6 +92,8 @@ export type InferRefs<Schema extends RefsSchema> = {
   [Key in keyof Schema]: InferRef<Schema[Key]>;
 };
 
+export type BindOptions = { prop?: string; event?: string };
+
 export type Prettify<T> = {
   [Key in keyof T]: T[Key];
 } & {};

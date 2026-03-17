@@ -62,9 +62,9 @@ define("x-settings")
     const $theme = atom("light");
     const $notifications = atom(true);
 
-    ctx.bind(ctx.refs.name, $name);
-    ctx.bind(ctx.refs.theme, $theme);
-    ctx.bind(ctx.refs.notifications, $notifications);
+    ctx.bind($name, ctx.refs.name);
+    ctx.bind($theme, ctx.refs.theme);
+    ctx.bind($notifications, ctx.refs.notifications);
   });
 ```
 
@@ -74,6 +74,35 @@ Control types are auto-detected:
 - `input[type=number|range]` reads `.valueAsNumber` (listens to `input`)
 - `input[type=text]` / `textarea` syncs `.value` (listens to `input`)
 - `select` syncs `.value` (listens to `change`)
+
+### Binding to custom elements
+
+Without options, `ctx.bind()` works with any element that has a `.value` property and emits `change` events. When building nano-wc components intended as form controls, expose `value` as a **prop** — not a mixin return:
+
+```typescript
+// ✅ value as prop — available at construction time
+define("x-color-picker")
+  .withProps((p) => ({ value: p.string("#000000") }))
+  .setup((ctx) => {
+    // setup logic: render swatches, handle clicks, etc.
+    // When value changes internally, dispatch change event:
+    ctx.emit("change");
+  });
+```
+
+This way a parent component can `ctx.bind($color, ctx.refs.picker)` safely — the `.value` property exists as soon as the element is created, regardless of setup ordering between parent and child.
+
+For components that expose a different property, use the options form:
+
+```typescript
+// One-way: store → element only (no event listener)
+ctx.bind($theme, ctx.refs.themeToggle, { prop: "theme" });
+
+// Two-way: store ↔ element via custom prop + event
+ctx.bind($val, ctx.refs.editor, { prop: "value", event: "change" });
+```
+
+For components that wrap an imperative resource (e.g. a code editor), use a [property-only prop](/docs/api/#property-only-props) (`attribute: false`) to avoid reflecting large content to a DOM attribute, and sync the resource bidirectionally with the prop atom in `setup`.
 
 ## Dynamic lists
 
@@ -248,29 +277,3 @@ ctx.on(listboxEl, "listbox:change", (e) => {
 });
 ```
 
-## Syncing external stores
-
-Use `ctx.sync()` to keep a component prop in sync with an external store. Useful for shared state between components:
-
-```typescript
-import { atom } from "nanostores";
-
-const $globalTheme = atom("light");
-
-define("x-theme-toggle")
-  .withProps((p) => ({
-    theme: p.oneOf(["light", "dark"]),
-  }))
-  .setup((ctx) => {
-    ctx.sync("theme", $globalTheme);
-  });
-```
-
-With transforms:
-
-```typescript
-ctx.sync("count", $offset, {
-  get: (offset) => offset * 2, // store → prop
-  set: (count) => count / 2, // prop → store
-});
-```
