@@ -178,9 +178,9 @@ describe("propBuilders", () => {
 describe("propBuilders.json", () => {
   const itemSchema = v.object({ id: v.number(), name: v.string() });
 
-  it("returns PropDef with schema, get, and sync: false", () => {
+  it("returns PropDef with schema, get, and attribute: false", () => {
     const marker = propBuilders.json(v.array(v.number()), [1, 2, 3]);
-    expect(marker.sync).toBe(false);
+    expect(marker.attribute).toBe(false);
     expect(typeof marker.get).toBe("function");
     expect(marker.schema).toBeDefined();
   });

@@ -75,7 +75,7 @@ export const propBuilders: {
     const fb = fallback ?? null;
     return {
       schema,
-      sync: false,
+      attribute: false,
       get(host: HTMLElement, propName: string) {
         const script = host.querySelector(
           `script[type="application/json"][data-prop="${propName}"]`,

@@ -154,6 +154,31 @@ After hydration the value can be set programmatically:
 el.items = [{ id: 3, name: "Charlie" }]; // updates atom directly, no DOM attribute
 ```
 
+### Property-only props
+
+Every prop entry is either a Standard Schema (attribute-backed by default) or a `PropDef` object with explicit options:
+
+```typescript
+type PropDef<T> = {
+  schema: StandardSchemaV1<unknown, T>;
+  attribute?: boolean; // default: true — reflect to/from HTML attribute
+  get?: (host: HTMLElement, key: string) => unknown; // custom hydration reader
+};
+```
+
+Set `attribute: false` to create a prop that exists only as a JavaScript property and a nanostores atom — no HTML attribute involved. The property is defined on the element in the **constructor**, so it's available immediately after `document.createElement()`, before `connectedCallback` or `setup` run.
+
+```typescript
+.withProps((p) => ({
+  label: p.string(),  // normal attribute-backed prop
+  value: { schema: p.string(""), attribute: false },  // property-only
+}))
+```
+
+Useful when the value is large/complex (editor content, binary data), the component wraps an imperative resource (CodeMirror, canvas), or a parent uses `ctx.bind()` on a child element — `attribute: false` guarantees the property exists from creation time, regardless of setup ordering.
+
+You can combine `attribute: false` with a custom `get` for hydration — `p.json()` does exactly this internally.
+
 ## Refs
 
 Declare typed element references via `withRefs`. Refs query the component's own DOM, skipping elements inside nested custom elements to respect component boundaries.

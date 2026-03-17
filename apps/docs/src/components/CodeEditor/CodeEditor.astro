@@ -42,7 +42,7 @@ const { class: className, lang, ...rest } = Astro.props;
 
     .withProps((p) => ({
       lang: p.oneOf(SUPPORTED_LANGS),
-      value: { schema: p.string(""), sync: false },
+      value: { schema: p.string(""), attribute: false },
     }))
     .setup((ctx) => {
       const language = new Compartment();

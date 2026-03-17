@@ -47,7 +47,7 @@ export function isPropDef(entry: PropEntry): entry is PropDef {
 }
 
 const defaultDef = {
-  sync: true,
+  attribute: true,
   get: (host: HTMLElement, key: string) => host.getAttribute(camelToKebab(key)),
 };
 function normalizeProp(entry: PropEntry): FullPropDef {
@@ -101,13 +101,13 @@ export function createReactiveProps<Schema extends PropsSchema>(
   normalized.forEach((def, key) => {
     const ctx = `${host.tagName} component. Prop "${key}"`;
     const attrName = camelToKebab(key);
-    const store = def.sync
+    const store = def.attribute
       ? atom(parseWithSchema(def.schema, host.getAttribute(attrName), ctx))
       : atom<unknown>(undefined);
-    const updateFromAttr = def.sync
+    const updateFromAttr = def.attribute
       ? (v: string | null) => store.set(parseWithSchema(def.schema, v, ctx))
       : null;
-    const updateFromProp = def.sync
+    const updateFromProp = def.attribute
       ? function (this: HTMLElement, v: string | null) {
           if (v === null) this.removeAttribute(attrName);
           else this.setAttribute(attrName, String(v));
@@ -205,7 +205,7 @@ export function createComponent<
 
   const attrPropKeys = Object.keys(propsSchema).filter((k) => {
     const entry = propsSchema[k];
-    return entry !== undefined && (!isPropDef(entry) || entry.sync);
+    return entry !== undefined && (!isPropDef(entry) || entry.attribute);
   });
   const attrToPropKey: Record<string, string> = Object.fromEntries(
     attrPropKeys.map((k) => [camelToKebab(k), k]),

@@ -1,4 +1,4 @@
-import type { PropsSchema, RefsSchema } from "./types";
+import type { PropsSchema, RefsSchema, StrictPropEntry } from "./types";
 import type { ComponentCtor, SetupFn, SetupContext } from "./UIComponent";
 import { propBuilders, refBuilders } from "./builders";
 import { createComponent } from "./factory.ts";
@@ -21,7 +21,7 @@ export class ComponentBuilder<
   }
 
   withProps<P extends PropsSchema>(
-    factory: (builders: typeof propBuilders) => P,
+    factory: (builders: typeof propBuilders) => P & { [K in keyof P]: StrictPropEntry<P[K]> },
   ): ComponentBuilder<Name, Props & P, Refs> {
     const newProps = factory(propBuilders);
     return new ComponentBuilder(

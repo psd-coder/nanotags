@@ -102,6 +102,35 @@ After hydration the value can be set programmatically:
 el.items = [{ id: 3, name: "Charlie" }]; // updates atom directly, no DOM attribute
 ```
 
+### Property-only props
+
+Under the hood, every prop entry is either a Standard Schema (attribute-synced by default) or a `PropDef` object with explicit options:
+
+```typescript
+type PropDef<T> = {
+  schema: StandardSchemaV1<unknown, T>;
+  attribute?: boolean; // default: true — reflect to/from HTML attribute
+  get?: (host: HTMLElement, key: string) => unknown; // custom hydration reader
+};
+```
+
+Set `attribute: false` to create a prop that exists only as a JavaScript property and a nanostores atom — no HTML attribute involved. The property is defined on the element in the **constructor**, so it's available immediately after `document.createElement()`, before `connectedCallback` or `setup` run.
+
+```typescript
+.withProps((p) => ({
+  label: p.string(),  // normal attribute-backed prop
+  value: { schema: p.string(""), attribute: false },  // property-only
+}))
+```
+
+This is useful when:
+
+- **The value is large or complex** — editor content, serialized state, binary data. Writing kilobytes to a DOM attribute on every change is wasteful and pollutes devtools.
+- **A component wraps an imperative resource** (CodeMirror, canvas, WebGL context) and exposes its state as `.value`. The prop provides the stable property descriptor from construction time, while `setup` wires bidirectional sync between the prop atom and the underlying resource.
+- **A parent uses `ctx.bind()` on a child custom element**. `bind()` checks `"value" in control` during the parent's setup. If `.value` were a mixin (returned from `setup`), it would only exist after the child's `connectedCallback` — which may not have fired yet. An `attribute: false` prop guarantees the property exists from the moment the element is created, regardless of setup ordering.
+
+You can combine `attribute: false` with a custom `get` for hydration — `p.json()` does exactly this internally.
+
 ## Refs
 
 Declare typed element references via `withRefs`. Refs query the component's own DOM, skipping elements inside nested custom elements to respect component boundaries.

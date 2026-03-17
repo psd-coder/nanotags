@@ -18,11 +18,18 @@ export type AnySchema = StandardSchemaV1;
 export type PropDef<T = unknown> = {
   schema: StandardSchemaV1<unknown, T>;
   get?: (host: HTMLElement, key: string) => unknown;
-  sync?: boolean;
+  attribute?: boolean;
+  "~standard"?: never;
 };
-export type FullPropDef<T = unknown> = Required<PropDef<T>>;
+export type FullPropDef<T = unknown> = Required<Pick<PropDef<T>, "schema" | "get" | "attribute">>;
 export type PropEntry = AnySchema | PropDef;
 export type PropsSchema = Record<string, PropEntry>;
+
+// If the entry has a `schema` key it's a PropDef — reject unknown keys.
+// Otherwise it's a plain Standard Schema — pass through.
+export type StrictPropEntry<T> = "schema" extends keyof T
+  ? Pick<T, Extract<keyof T, keyof PropDef>> & Record<Exclude<keyof T, keyof PropDef>, never>
+  : T;
 
 // oxlint-disable-next-line typescript/no-explicit-any
 export type Infer<S> =
@@ -34,7 +41,7 @@ export type Infer<S> =
       : never;
 
 export type AttrPropKeys<S extends PropsSchema> = {
-  [K in keyof S]: S[K] extends PropDef ? (S[K]["sync"] extends true ? K : never) : K;
+  [K in keyof S]: S[K] extends PropDef ? (S[K]["attribute"] extends true ? K : never) : K;
 }[keyof S] &
   string;
 

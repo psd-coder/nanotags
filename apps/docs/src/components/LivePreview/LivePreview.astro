@@ -36,7 +36,7 @@ const { class: className, ...rest } = Astro.props;
     .withProps(() => ({
       value: {
         schema: previewValueSchema,
-        sync: false
+        attribute: false
       },
     }))
     .withRefs(({ one }) => ({ frame: one("iframe") }))

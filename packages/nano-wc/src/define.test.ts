@@ -157,6 +157,36 @@ describe("define", () => {
     });
   });
 
+  describe("withProps strict checking", () => {
+    it("rejects unknown PropDef keys", () => {
+      const tag = uniqueTag("strict");
+      define(tag)
+        // @ts-expect-error — "sync" is not a valid PropDef key
+        .withProps((p) => ({ value: { schema: p.string(""), sync: true } }))
+        .setup(() => {});
+    });
+
+    it("rejects ~standard key on PropDef", () => {
+      const tag = uniqueTag("strict");
+      define(tag)
+        .withProps((p) => ({
+          value: {
+            schema: p.string(""),
+            // @ts-expect-error — "~standard" is not a valid PropDef key
+            "~standard": { version: 1, vendor: "", validate: () => ({}) },
+          },
+        }))
+        .setup(() => {});
+    });
+
+    it("allows valid PropDef keys", () => {
+      const tag = uniqueTag("strict");
+      define(tag)
+        .withProps((p) => ({ value: { schema: p.string(""), attribute: false } }))
+        .setup(() => {});
+    });
+  });
+
   describe("builder immutability", () => {
     it("withProps returns new builder", () => {
       const tag = uniqueTag("def");
