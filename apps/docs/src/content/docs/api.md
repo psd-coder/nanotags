@@ -260,21 +260,9 @@ The `setup` function receives a context object with the following properties and
 
 ### Reactivity
 
-All reactive methods (`effect`, `bind`) use structural store types instead of nanostores-specific imports. This is intentional — it avoids coupling to nanostores internal API and makes the methods work with any store that matches the shape:
-
-```typescript
-type ReadableStore<V> = {
-  get(): V;
-  subscribe(cb: (value: V) => void): () => void;
-};
-type WritableStore<V> = ReadableStore<V> & { set(value: V): void };
-```
-
-Any nanostores atom satisfies these interfaces automatically. You can also pass custom objects — useful for adapting third-party state managers or creating ad-hoc bindings with custom `get`/`set` logic.
-
 #### `effect(store, callback)` / `effect([storeA, storeB], callback)`
 
-Subscribe to one or more stores. Callback fires immediately with current value(s). Unsubscribes on disconnect.
+Subscribe to one or more nanostores atoms. Callback fires immediately with current value(s). Unsubscribes on disconnect.
 
 ```typescript
 ctx.effect(ctx.props.$count, (count) => {
@@ -288,14 +276,14 @@ ctx.effect([storeA, storeB], (a, b) => {
 
 #### `bind(store, element, options?)`
 
-Binds a writable store to a DOM element property. The store is the source of truth — the element is set from the store on bind.
+Two-way binds a DOM control to a nanostores atom. The store is the source of truth — the control is set from the store on bind.
 
 **No options** — full auto-detect, two-way binding. Works with native form controls and any custom element that exposes a `.value` property and emits `change` events:
 
-- `input[type=checkbox]` — syncs `.checked` with a boolean store (listens to `change`)
+- `input[type=checkbox]` — syncs `.checked` with a boolean atom (listens to `change`)
 - `input[type=number]` / `input[type=range]` — reads `.valueAsNumber` automatically (listens to `input`)
-- `input[type=text|email|...]` / `textarea` — syncs `.value` with a string store (listens to `input`)
-- `select` — syncs `.value` with a string store (listens to `change`)
+- `input[type=text|email|...]` / `textarea` — syncs `.value` with a string atom (listens to `input`)
+- `select` — syncs `.value` with a string atom (listens to `change`)
 - Custom elements with `.value` — syncs `.value` (listens to `change`)
 
 ```typescript

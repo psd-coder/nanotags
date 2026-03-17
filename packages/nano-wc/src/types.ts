@@ -1,15 +1,6 @@
 import type { StandardSchemaV1 } from "@standard-schema/spec";
 import type { WritableAtom } from "nanostores";
 
-export type ReadableStore<V> = {
-  get(): V;
-  subscribe(callback: (value: V) => void): () => void;
-};
-
-export type WritableStore<V> = ReadableStore<V> & {
-  set(value: V): void;
-};
-
 export type TypedEvent<T extends EventTarget, D = unknown> = CustomEvent<D> & {
   target: T;
 };

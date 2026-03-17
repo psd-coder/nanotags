@@ -1,4 +1,4 @@
-import { effect, type StoreValue } from "nanostores";
+import { effect, type ReadableAtom, type StoreValue, type WritableAtom } from "nanostores";
 import { invariant } from "./utils.ts";
 
 import type {
@@ -7,14 +7,12 @@ import type {
   InferRefs,
   PropsSchema,
   ReactiveProps,
-  WritableStore,
   RefsSchema,
-  ReadableStore,
 } from "./types.ts";
 
 export type ReservedKeys = keyof HTMLElement | "props" | "refs";
 
-type StoreValues<Stores extends ReadableStore<any>[]> = {
+type StoreValues<Stores extends ReadableAtom<any>[]> = {
   [Index in keyof Stores]: StoreValue<Stores[Index]>;
 };
 
@@ -166,8 +164,8 @@ export class Context<Props extends PropsSchema, Refs extends RefsSchema> {
    * Subscribes `callback` to one store or an array of stores and registers automatic cleanup
    * on disconnect. Immediately invokes the callback with the current value(s).
    */
-  effect<T>(store: ReadableStore<T>, callback: (value: T) => void): void;
-  effect<Stores extends ReadableStore<any>[]>(
+  effect<T>(store: ReadableAtom<T>, callback: (value: T) => void): void;
+  effect<Stores extends ReadableAtom<any>[]>(
     stores: [...Stores],
     callback: (...values: StoreValues<Stores>) => void,
   ): void;
@@ -176,24 +174,24 @@ export class Context<Props extends PropsSchema, Refs extends RefsSchema> {
   }
 
   /**
-   * Binds a writable store to a DOM element property.
+   * Binds a writable atom to a DOM element property.
    * Store is the source of truth — element is set from the store on bind.
    *
    * No options → full auto-detect (native controls + custom `.value`/`change`), two-way.
    * Options present → `prop` defaults to auto-detected, `event` undefined = one-way.
    */
   bind(
-    store: WritableStore<any>,
+    store: WritableAtom<any>,
     control: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement,
     opts?: BindOptions,
   ): void;
   bind<V>(
-    store: WritableStore<V>,
+    store: WritableAtom<V>,
     control: HTMLElement & { value: NoInfer<V> },
     opts?: BindOptions,
   ): void;
-  bind(store: WritableStore<unknown>, control: HTMLElement, opts: BindOptions): void;
-  bind(store: WritableStore<unknown>, control: HTMLElement, opts?: BindOptions): void {
+  bind(store: WritableAtom<unknown>, control: HTMLElement, opts: BindOptions): void;
+  bind(store: WritableAtom<unknown>, control: HTMLElement, opts?: BindOptions): void {
     const input = control instanceof HTMLInputElement ? control : undefined;
     let propEvent: [string, string] = ["value", "change"];
 
