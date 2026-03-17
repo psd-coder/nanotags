@@ -128,12 +128,7 @@ export class Context<Props extends PropsSchema, Refs extends RefsSchema> {
     selectorOrRoot: E | string | DocumentFragment | Element,
     maybeSelector?: E | string,
   ): HTMLElementTagNameMap[E] {
-    const hasRoot = maybeSelector !== undefined;
-    const root = hasRoot ? (selectorOrRoot as DocumentFragment | Element) : this.host;
-    const selector = (hasRoot ? maybeSelector : selectorOrRoot) as string;
-    const element = root.querySelector<HTMLElementTagNameMap[E]>(selector);
-    invariant(element, `${this.host.localName}: missing ${selector} element`);
-    return element;
+    return this.getElements<E>(selectorOrRoot as any, maybeSelector as any)[0]!;
   }
 
   /** Queries all matching elements by CSS selector. Throws if none found. */
@@ -152,7 +147,7 @@ export class Context<Props extends PropsSchema, Refs extends RefsSchema> {
     const root = hasRoot ? (selectorOrRoot as DocumentFragment | Element) : this.host;
     const selector = (hasRoot ? maybeSelector : selectorOrRoot) as string;
     const elements = Array.from(root.querySelectorAll<HTMLElementTagNameMap[E]>(selector));
-    invariant(elements.length > 0, `${this.host.localName}: missing ${selector} elements`);
+    invariant(elements.length > 0, `${this.host.localName}: missing ${selector}`);
     return elements;
   }
 
