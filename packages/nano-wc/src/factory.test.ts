@@ -451,10 +451,9 @@ describe("collectRefs", () => {
 
 describe("createComponent", () => {
   describe("registration", () => {
-    it("defines element, returns ctor with elementName", () => {
+    it("defines element, registers with customElements", () => {
       const tag = uniqueTag("reg");
       const Component = createComponent(tag, {}, {}, () => {});
-      expect(Component.elementName).toBe(tag);
       expect(customElements.get(tag)).toBe(Component);
     });
 
@@ -473,12 +472,6 @@ describe("createComponent", () => {
       expect(Component2).toBe(Component1);
       expect(warn).toHaveBeenCalledWith(expect.stringContaining("already defined"));
       warn.mockRestore();
-    });
-
-    it("elementName is literal type", () => {
-      const tag = uniqueTag("ty") as "x-ty-100";
-      const Component = createComponent(tag, {}, {}, () => {});
-      expectTypeOf(Component.elementName).toEqualTypeOf<"x-ty-100">();
     });
 
     it("instance exposes props", () => {

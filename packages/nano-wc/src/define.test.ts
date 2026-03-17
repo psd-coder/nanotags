@@ -10,13 +10,7 @@ afterEach(() => cleanup());
 
 describe("define", () => {
   describe("short form: define(name, setupFn)", () => {
-    it("returns ComponentComponent", () => {
-      const tag = uniqueTag("def");
-      const Component = define(tag, () => {});
-      expect(Component.elementName).toBe(tag);
-    });
-
-    it("registered with customElements", () => {
+    it("registers with customElements", () => {
       const tag = uniqueTag("def");
       const Component = define(tag, () => {});
       expect(customElements.get(tag)).toBe(Component);
@@ -25,7 +19,6 @@ describe("define", () => {
     it("mixin type inferred from setup return", () => {
       const tag = uniqueTag("ty") as "x-ty-202";
       const Component = define(tag, () => ({ value: 42 }));
-      expectTypeOf(Component.elementName).toEqualTypeOf<"x-ty-202">();
       const el = new Component();
       expectTypeOf(el.value).toEqualTypeOf<number>();
     });
@@ -53,12 +46,11 @@ describe("define", () => {
       expect(builder).toBeInstanceOf(ComponentBuilder);
     });
 
-    it(".setup() returns ComponentComponent with elementName", () => {
+    it(".setup() registers with customElements", () => {
       const tag = uniqueTag("def");
       const Component = define(tag)
         .withProps((p) => ({ label: p.string() }))
         .setup(() => {});
-      expect(Component.elementName).toBe(tag);
       expect(customElements.get(tag)).toBe(Component);
     });
 
@@ -82,10 +74,10 @@ describe("define", () => {
         });
     });
 
-    it("fluent form: elementName preserved", () => {
+    it("fluent form: branded as ComponentCtor", () => {
       const tag = uniqueTag("ty") as "x-ty-203";
       const Component = define(tag).setup(() => {});
-      expectTypeOf(Component.elementName).toEqualTypeOf<"x-ty-203">();
+      expect(customElements.get(tag)).toBe(Component);
     });
   });
 

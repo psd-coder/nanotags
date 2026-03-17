@@ -24,16 +24,17 @@ export type SetupFn<Props extends PropsSchema, Refs extends RefsSchema> = (
   ctx: SetupContext<Props, Refs>,
 ) => Record<string, unknown> | void;
 
+declare const __nano: unique symbol;
+export type ComponentBrand = { readonly [__nano]: true };
+
 export type ComponentCtor<
-  Name extends string,
   Props extends PropsSchema,
   Refs extends RefsSchema,
   // oxlint-disable-next-line typescript-eslint/no-empty-object-type
   Mixin = {},
 > = (new () => HTMLElement &
-  ComponentProps<Props> & { props: ReactiveProps<Props>; refs: InferRefs<Refs> } & Mixin) & {
-  readonly elementName: Name;
-};
+  ComponentProps<Props> & { props: ReactiveProps<Props>; refs: InferRefs<Refs> } & Mixin) &
+  ComponentBrand;
 
 export class Context<Props extends PropsSchema, Refs extends RefsSchema> {
   host: HTMLElement & { props: ReactiveProps<Props>; refs: InferRefs<Refs> };
@@ -131,7 +132,7 @@ export class Context<Props extends PropsSchema, Refs extends RefsSchema> {
     const root = hasRoot ? (selectorOrRoot as DocumentFragment | Element) : this.host;
     const selector = (hasRoot ? maybeSelector : selectorOrRoot) as string;
     const element = root.querySelector<HTMLElementTagNameMap[E]>(selector);
-    invariant(element, `${this.host.constructor.name}: missing ${selector} element`);
+    invariant(element, `${this.host.localName}: missing ${selector} element`);
     return element;
   }
 
@@ -151,21 +152,19 @@ export class Context<Props extends PropsSchema, Refs extends RefsSchema> {
     const root = hasRoot ? (selectorOrRoot as DocumentFragment | Element) : this.host;
     const selector = (hasRoot ? maybeSelector : selectorOrRoot) as string;
     const elements = Array.from(root.querySelectorAll<HTMLElementTagNameMap[E]>(selector));
-    invariant(elements.length > 0, `${this.host.constructor.name}: missing ${selector} elements`);
+    invariant(elements.length > 0, `${this.host.localName}: missing ${selector} elements`);
     return elements;
   }
 
   /**
-   * Finds the nearest ancestor component matching `ctor.elementName` and returns it as the typed component.
+   * Finds the nearest ancestor component and returns it as the typed component.
    * Throws if no matching ancestor exists.
    */
-  consume<T extends HTMLElement>(ctor: (new () => T) & { elementName: string }): T {
-    const closest = this.host.closest(ctor.elementName) as T | null;
-    invariant(
-      closest,
-      `${this.host.constructor.name} component: no ancestor found for consumed component ${ctor.elementName}`,
-    );
-    return closest;
+  consume<T extends HTMLElement>(ctor: (new () => T) & ComponentBrand): T {
+    const name = customElements.getName(ctor);
+    const el = name ? this.host.closest<T>(name) : null;
+    invariant(el, `${this.host.localName}: no ancestor <${name}> found`);
+    return el;
   }
 
   /**

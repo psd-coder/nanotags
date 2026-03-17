@@ -1,6 +1,6 @@
 export { define } from "./define";
 
-export type { SetupContext, SetupFn, ComponentCtor, ReservedKeys } from "./context";
+export type { SetupContext, SetupFn, ComponentCtor, ComponentBrand, ReservedKeys } from "./context";
 export type {
   TypedEvent,
   AnySchema,

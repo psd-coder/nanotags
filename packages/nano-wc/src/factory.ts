@@ -186,20 +186,19 @@ export function collectRefs<Refs extends RefsSchema>(
 }
 
 export function createComponent<
-  const Name extends string,
   Props extends PropsSchema,
   Refs extends RefsSchema,
   // oxlint-disable-next-line typescript-eslint/no-empty-object-type
   Mixin = {},
 >(
-  name: Name,
+  name: string,
   propsSchema: Props,
   refsSchema: Refs,
   setupFn: SetupFn<Props, Refs>,
-): ComponentCtor<Name, Props, Refs, Mixin> {
+): ComponentCtor<Props, Refs, Mixin> {
   if (customElements.get(name)) {
     console.warn(`${name} already defined, reusing existing class`);
-    return customElements.get(name) as ComponentCtor<Name, Props, Refs, Mixin>;
+    return customElements.get(name) as ComponentCtor<Props, Refs, Mixin>;
   }
 
   const attrPropKeys = Object.keys(propsSchema).filter((k) => {
@@ -211,7 +210,6 @@ export function createComponent<
   );
 
   class Component extends HTMLElement {
-    static readonly elementName = name;
     #cleanups: VoidFunction[] = [];
     #props!: ReactivePropsResult<Props>;
     #refs: InferRefs<Refs> | undefined;
@@ -277,5 +275,5 @@ export function createComponent<
 
   // Cast to string to avoid HTMLElementTagNameMap circular reference during type inference
   customElements.define(name as string, Component);
-  return Component as unknown as ComponentCtor<Name, Props, Refs, Mixin>;
+  return Component as unknown as ComponentCtor<Props, Refs, Mixin>;
 }

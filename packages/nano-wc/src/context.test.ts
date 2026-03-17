@@ -314,6 +314,17 @@ describe("consume", () => {
     expect(() => mount(`<${childTag}></${childTag}>`)).toThrow(/no ancestor/);
   });
 
+  it("rejects non-nano-wc constructors at type level", () => {
+    const tag = uniqueTag("brand");
+    define(tag, (ctx) => {
+      // @ts-expect-error plain HTMLElement ctor lacks ComponentBrand
+      ctx.consume(HTMLElement);
+      class MyEl extends HTMLElement {}
+      // @ts-expect-error unbranded custom element ctor
+      ctx.consume(MyEl);
+    });
+  });
+
   it("skips non-matching ancestors (picks nearest)", () => {
     const grandparent = uniqueTag("gp");
     const parent = uniqueTag("par");

@@ -44,8 +44,8 @@ export class ComponentBuilder<
   // oxlint-disable-next-line typescript-eslint/no-empty-object-type
   setup<M extends Record<string, unknown> = {}>(
     setupFn: (ctx: SetupContext<Props, Refs>) => M | void,
-  ): ComponentCtor<Name, Props, Refs, M> {
-    return createComponent<Name, Props, Refs, M>(
+  ): ComponentCtor<Props, Refs, M> {
+    return createComponent<Props, Refs, M>(
       this.name,
       this.propsSchema,
       this.refsSchema,
@@ -64,7 +64,7 @@ export function define<
   // oxlint-disable-next-line typescript-eslint/no-empty-object-type
   setup: (ctx: SetupContext<{}, {}>) => M | void,
   // oxlint-disable-next-line typescript-eslint/no-empty-object-type
-): ComponentCtor<Name, {}, {}, M>;
+): ComponentCtor<{}, {}, M>;
 export function define<const Name extends string>(
   name: Name,
   // oxlint-disable-next-line typescript-eslint/no-empty-object-type
