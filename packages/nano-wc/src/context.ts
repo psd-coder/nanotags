@@ -58,28 +58,28 @@ export class Context<Props extends PropsSchema, Refs extends RefsSchema> {
   /**
    * Adds an event listener to one or more elements, Document, or Window and registers automatic cleanup on disconnect.
    */
-  on<K extends keyof HTMLElementEventMap>(
-    target: HTMLElement,
+  on<T extends HTMLElement, K extends keyof HTMLElementEventMap>(
+    target: T,
     type: K,
-    listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any,
+    listener: (this: T, ev: HTMLElementEventMap[K] & { currentTarget: T }) => any,
     options?: boolean | AddEventListenerOptions,
   ): void;
-  on<K extends keyof HTMLElementEventMap>(
-    target: HTMLElement[],
+  on<T extends HTMLElement, K extends keyof HTMLElementEventMap>(
+    target: T[],
     type: K,
-    listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any,
+    listener: (this: T, ev: HTMLElementEventMap[K] & { currentTarget: T }) => any,
     options?: boolean | AddEventListenerOptions,
   ): void;
   on<K extends keyof DocumentEventMap>(
     target: Document,
     type: K,
-    listener: (this: Document, ev: DocumentEventMap[K]) => any,
+    listener: (this: Document, ev: DocumentEventMap[K] & { currentTarget: Document }) => any,
     options?: boolean | AddEventListenerOptions,
   ): void;
   on<K extends keyof WindowEventMap>(
     target: Window,
     type: K,
-    listener: (this: Window, ev: WindowEventMap[K]) => any,
+    listener: (this: Window, ev: WindowEventMap[K] & { currentTarget: Window }) => any,
     options?: boolean | AddEventListenerOptions,
   ): void;
   on(
