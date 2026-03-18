@@ -30,3 +30,4 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           package_manager: pnpm
           directory: packages/nano-wc
+          build_script: build:size

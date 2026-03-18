@@ -35,6 +35,7 @@
   "scripts": {
     "dev": "tsdown --watch",
     "build": "tsdown",
+    "build:size": "tsdown --minify --out-dir .size-check --no-dts",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "typecheck": "pnpm run /^typecheck:/",
@@ -43,7 +44,7 @@
     "lint": "pnpm run /^lint:/",
     "lint:oxlint": "oxlint .",
     "lint:types": "pnpm run typecheck",
-    "lint:size": "pnpm run build && size-limit",
+    "lint:size": "pnpm run build:size && size-limit",
     "format": "pnpm run /^format:/",
     "format:oxlint": "oxlint --fix --fix-suggestions .",
     "format:oxfmt": "oxfmt src/",
@@ -54,13 +55,13 @@
     "valibot": "^1.2.0"
   },
   "devDependencies": {
-    "@size-limit/file": "^12.0.0",
+    "@size-limit/file": "^12.0.1",
     "@vitest/coverage-v8": "^4.0.18",
     "happy-dom": "^20.7.0",
     "nanostores": "^1.1.1",
     "oxfmt": "^0.35.0",
     "oxlint": "^1.50.0",
-    "size-limit": "^12.0.0",
+    "size-limit": "^12.0.1",
     "tsdown": "0.21.0-beta.2",
     "typescript": "^5.9.3",
     "vitest": "^4.0.18"
@@ -70,12 +71,12 @@
   },
   "size-limit": [
     {
-      "path": "dist/index.mjs",
-      "limit": "3333 B"
+      "path": ".size-check/index.mjs",
+      "limit": "2283 B"
     },
     {
-      "path": "dist/render.mjs",
-      "limit": "611 B"
+      "path": ".size-check/render.mjs",
+      "limit": "410 B"
     }
   ]
 }

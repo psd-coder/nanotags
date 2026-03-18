@@ -24,5 +24,8 @@ dist
 # Build cache manifests
 *.tsbuildinfo
 
+# Size check
+.size-check
+
 # Coverage
 coverage
