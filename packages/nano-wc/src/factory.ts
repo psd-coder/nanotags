@@ -13,7 +13,7 @@ import type {
   RefsSchema,
   FullPropDef,
 } from "./types";
-import { Context, type ComponentCtor, type SetupFn } from "./context.ts";
+import { Context, __ctx, type ComponentCtor, type SetupFn } from "./context.ts";
 import { camelToKebab, invariant } from "./utils.ts";
 
 function belongsTo(element: Element, host: HTMLElement): boolean {
@@ -212,19 +212,7 @@ export function createComponent<
   class Component extends HTMLElement {
     #cleanups: VoidFunction[] = [];
     #props!: ReactivePropsResult<Props>;
-    #refs: InferRefs<Refs> | undefined;
-
-    get refs(): InferRefs<Refs> {
-      if (!this.#refs) {
-        customElements.upgrade(this);
-        this.#refs = collectRefs(this, refsSchema);
-      }
-      return this.#refs;
-    }
-
-    get props(): ReactiveProps<Props> {
-      return this.#props.stores;
-    }
+    [__ctx]!: Context<Props, Refs>;
 
     static get observedAttributes() {
       return attrPropKeys.map(camelToKebab);
@@ -259,12 +247,18 @@ export function createComponent<
     }
 
     connectedCallback() {
-      this.#refs = undefined;
       this.#props.hydrateProps(this);
-      const result = setupFn(new Context<Props, Refs>(this, this.#onCleanup));
-      if (result) {
+      const refs = collectRefs(this, refsSchema);
+      this[__ctx] = new Context<Props, Refs>({
+        host: this,
+        onCleanup: this.#onCleanup,
+        props: this.#props.stores,
+        refs,
+      });
+      const mixin = setupFn(this[__ctx]);
+      if (mixin) {
         const proto = Object.getPrototypeOf(this);
-        const descriptors = Object.getOwnPropertyDescriptors(result);
+        const descriptors = Object.getOwnPropertyDescriptors(mixin);
         for (const key of Object.keys(descriptors)) {
           invariant(!(key in proto), `reserved mixin: ${key}`);
         }

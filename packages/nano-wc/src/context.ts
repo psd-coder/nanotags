@@ -10,7 +10,9 @@ import type {
   RefsSchema,
 } from "./types.ts";
 
-export type ReservedKeys = keyof HTMLElement | "props" | "refs";
+export const __ctx: unique symbol = Symbol("ctx");
+
+export type ReservedKeys = keyof HTMLElement;
 
 type StoreValues<Stores extends ReadableAtom<any>[]> = {
   [Index in keyof Stores]: StoreValue<Stores[Index]>;
@@ -25,34 +27,36 @@ export type SetupFn<Props extends PropsSchema, Refs extends RefsSchema> = (
 declare const __nano: unique symbol;
 export type ComponentBrand = { readonly [__nano]: true };
 
+export type ContextOptions<Props extends PropsSchema, Refs extends RefsSchema> = {
+  host: HTMLElement;
+  props: ReactiveProps<Props>;
+  refs: InferRefs<Refs>;
+  onCleanup: (callback: VoidFunction) => void;
+};
+
 export type ComponentCtor<
   Props extends PropsSchema,
   Refs extends RefsSchema,
   // oxlint-disable-next-line typescript-eslint/no-empty-object-type
   Mixin = {},
 > = (new () => HTMLElement &
-  ComponentProps<Props> & { props: ReactiveProps<Props>; refs: InferRefs<Refs> } & Mixin) &
+  ComponentProps<Props> & { readonly [__ctx]: Context<Props, Refs> } & Mixin) &
   ComponentBrand;
 
 export class Context<Props extends PropsSchema, Refs extends RefsSchema> {
-  host: HTMLElement & { props: ReactiveProps<Props>; refs: InferRefs<Refs> };
+  readonly host: HTMLElement;
+  /** Reactive property stores of the component. */
+  readonly props: ReactiveProps<Props>;
+  /** References to elements within the component. */
+  readonly refs: InferRefs<Refs>;
   /** Registers a cleanup function to be called when the component is disconnected. */
-  onCleanup: (callback: VoidFunction) => void;
+  readonly onCleanup: (callback: VoidFunction) => void;
 
-  constructor(
-    host: HTMLElement & { props: ReactiveProps<Props>; refs: InferRefs<Refs> },
-    onCleanup: (callback: VoidFunction) => void,
-  ) {
+  constructor({ host, onCleanup, props, refs }: ContextOptions<Props, Refs>) {
     this.host = host;
     this.onCleanup = onCleanup;
-  }
-
-  get props(): ReactiveProps<Props> {
-    return this.host.props;
-  }
-
-  get refs(): InferRefs<Refs> {
-    return this.host.refs;
+    this.props = props;
+    this.refs = refs;
   }
 
   /**

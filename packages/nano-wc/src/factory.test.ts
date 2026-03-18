@@ -2,6 +2,7 @@ import { afterEach, describe, expect, expectTypeOf, it, vi } from "vitest";
 import * as v from "valibot";
 
 import { propBuilders, refBuilders } from "./builders";
+import { __ctx } from "./context";
 import { collectRefs, createComponent, createReactiveProps, parseWithSchema } from "./factory";
 import { cleanup, createHostWith, mount, uniqueTag } from "../tests/utils";
 
@@ -256,19 +257,29 @@ describe("createComponent — json props", () => {
   it("json prop accessible via props stores", () => {
     const tag = uniqueTag("json-store");
     const schema = v.object({ x: v.number() });
-    createComponent(tag, { data: propBuilders.json(schema, { x: 0 }) }, {}, () => {});
-    const el = mount(
+    const Component = createComponent(
+      tag,
+      { data: propBuilders.json(schema, { x: 0 }) },
+      {},
+      () => {},
+    );
+    const el = mount<InstanceType<typeof Component>>(
       `<${tag}><script type="application/json" data-prop="data">{"x":5}</script></${tag}>`,
     );
-    expect((el as any).props.$data.get()).toEqual({ x: 5 });
+    expect(el[__ctx].props.$data.get()).toEqual({ x: 5 });
   });
 
   it("json prop settable as JS property", () => {
     const tag = uniqueTag("json-set");
-    createComponent(tag, { items: propBuilders.json(v.array(v.number()), []) }, {}, () => {});
-    const el = mount(`<${tag}></${tag}>`) as HTMLElement & { items: number[] };
+    const Component = createComponent(
+      tag,
+      { items: propBuilders.json(v.array(v.number()), []) },
+      {},
+      () => {},
+    );
+    const el = mount(Component);
     el.items = [1, 2, 3];
-    expect((el as any).props.$items.get()).toEqual([1, 2, 3]);
+    expect(el[__ctx].props.$items.get()).toEqual([1, 2, 3]);
   });
 });
 
@@ -474,11 +485,11 @@ describe("createComponent", () => {
       warn.mockRestore();
     });
 
-    it("instance exposes props", () => {
+    it("instance exposes props via __ctx", () => {
       const tag = uniqueTag("ty") as "x-ty-101";
       const Component = createComponent(tag, {}, {}, () => {});
-      const el = new Component();
-      expectTypeOf(el.props).toBeObject();
+      const el = mount(Component);
+      expectTypeOf(el[__ctx].props).toBeObject();
     });
   });
 
@@ -502,26 +513,26 @@ describe("createComponent", () => {
     it("updates prop store on attribute change", () => {
       const tag = uniqueTag("attr");
       const Component = createComponent(tag, { val: propBuilders.string() }, {}, () => {});
-      const el = new Component();
+      const el = mount(Component);
       el.setAttribute("val", "updated");
-      expect(el.props.$val.get()).toBe("updated");
+      expect(el[__ctx].props.$val.get()).toBe("updated");
     });
 
     it("updates camelCase prop store from kebab-case attribute change", () => {
       const tag = uniqueTag("attr-camel");
       const Component = createComponent(tag, { defaultSize: propBuilders.number() }, {}, () => {});
-      const el = new Component();
+      const el = mount(Component);
       el.setAttribute("default-size", "99");
-      expect(el.props.$defaultSize.get()).toBe(99);
+      expect(el[__ctx].props.$defaultSize.get()).toBe(99);
     });
 
     it("no-ops when old === new", () => {
       const tag = uniqueTag("noop");
       const Component = createComponent(tag, { val: propBuilders.string() }, {}, () => {});
-      const el = new Component();
+      const el = mount(Component);
       el.setAttribute("val", "same");
       const spy = vi.fn();
-      el.props.$val.listen(spy);
+      el[__ctx].props.$val.listen(spy);
       // Simulate attributeChangedCallback with same old/new
       (el as any).attributeChangedCallback("val", "same", "same");
       expect(spy).not.toHaveBeenCalled();
@@ -579,28 +590,28 @@ describe("createComponent", () => {
     it("setAttribute → store → getter", () => {
       const tag = uniqueTag("rt1");
       const Component = createComponent(tag, { name: propBuilders.string() }, {}, () => {});
-      const el = new Component();
+      const el = mount(Component);
       el.setAttribute("name", "Alice");
-      expect(el.props.$name.get()).toBe("Alice");
-      expect((el as any).name).toBe("Alice");
+      expect(el[__ctx].props.$name.get()).toBe("Alice");
+      expect(el.name).toBe("Alice");
     });
 
     it("property setter → setAttribute → store", () => {
       const tag = uniqueTag("rt2");
       const Component = createComponent(tag, { name: propBuilders.string() }, {}, () => {});
-      const el = new Component();
-      (el as any).name = "Bob";
+      const el = mount(Component);
+      el.name = "Bob";
       expect(el.getAttribute("name")).toBe("Bob");
-      expect(el.props.$name.get()).toBe("Bob");
+      expect(el[__ctx].props.$name.get()).toBe("Bob");
     });
 
     it("same-value setAttribute skipped (oldValue === newValue guard)", () => {
       const tag = uniqueTag("rt3");
       const Component = createComponent(tag, { name: propBuilders.string() }, {}, () => {});
-      const el = new Component();
+      const el = mount(Component);
       el.setAttribute("name", "same");
       const spy = vi.fn();
-      el.props.$name.listen(spy);
+      el[__ctx].props.$name.listen(spy);
       el.setAttribute("name", "same");
       expect(spy).not.toHaveBeenCalled();
     });
@@ -613,15 +624,15 @@ describe("createComponent", () => {
         {},
         () => {},
       );
-      const el = new Component();
-      expect(el.props.$size.get()).toBe("m");
+      const el = mount(Component);
+      expect(el[__ctx].props.$size.get()).toBe("m");
 
       el.setAttribute("size", "l");
-      expect(el.props.$size.get()).toBe("l");
+      expect(el[__ctx].props.$size.get()).toBe("l");
 
-      (el as any).size = "s";
+      el.size = "s";
       expect(el.getAttribute("size")).toBe("s");
-      expect(el.props.$size.get()).toBe("s");
+      expect(el[__ctx].props.$size.get()).toBe("s");
     });
   });
 });

@@ -2,6 +2,7 @@ import type { WritableAtom } from "nanostores";
 import { afterEach, describe, expect, expectTypeOf, it } from "vitest";
 
 import { ComponentBuilder, define } from "./define";
+import { __ctx } from "./context";
 import type { ReservedKeys } from "./context";
 import { cleanup, mount, uniqueTag } from "../tests/utils";
 import type { ReactiveProps } from "./types";
@@ -26,7 +27,7 @@ describe("define", () => {
     it("mixin methods callable on instance", () => {
       const tag = uniqueTag("mix");
       const Component = define(tag, () => ({ greet: () => "hi" }));
-      const el = mount<InstanceType<typeof Component>>(`<${tag}></${tag}>`);
+      const el = mount(Component);
       expect(el.greet()).toBe("hi");
     });
   });
@@ -87,11 +88,11 @@ describe("define", () => {
       const Component = define(tag)
         .withProps((p) => ({ val: p.string(), count: p.number() }))
         .setup(() => {});
-      const el = new Component();
-      expectTypeOf(el.props.$val).toEqualTypeOf<WritableAtom<string>>();
-      expectTypeOf(el.props.$count).toEqualTypeOf<WritableAtom<number>>();
-      expectTypeOf(el.props.$val.get()).toEqualTypeOf<string>();
-      expectTypeOf(el.props.$count.get()).toEqualTypeOf<number>();
+      const el = mount(Component);
+      expectTypeOf(el[__ctx].props.$val).toEqualTypeOf<WritableAtom<string>>();
+      expectTypeOf(el[__ctx].props.$count).toEqualTypeOf<WritableAtom<number>>();
+      expectTypeOf(el[__ctx].props.$val.get()).toEqualTypeOf<string>();
+      expectTypeOf(el[__ctx].props.$count.get()).toEqualTypeOf<number>();
     });
 
     it("fluent: boolean prop infers WritableAtom<boolean>", () => {
@@ -99,8 +100,8 @@ describe("define", () => {
       const Component = define(tag)
         .withProps((p) => ({ active: p.boolean() }))
         .setup(() => {});
-      const el = new Component();
-      expectTypeOf(el.props.$active).toEqualTypeOf<WritableAtom<boolean>>();
+      const el = mount(Component);
+      expectTypeOf(el[__ctx].props.$active).toEqualTypeOf<WritableAtom<boolean>>();
     });
 
     it("chained withProps accumulates types", () => {
@@ -109,24 +110,22 @@ describe("define", () => {
         .withProps((p) => ({ a: p.string() }))
         .withProps((p) => ({ b: p.number() }))
         .setup(() => {});
-      const el = new Component();
-      expectTypeOf(el.props.$a).toEqualTypeOf<WritableAtom<string>>();
-      expectTypeOf(el.props.$b).toEqualTypeOf<WritableAtom<number>>();
+      const el = mount(Component);
+      expectTypeOf(el[__ctx].props.$a).toEqualTypeOf<WritableAtom<string>>();
+      expectTypeOf(el[__ctx].props.$b).toEqualTypeOf<WritableAtom<number>>();
     });
 
     it("no props: props is empty object", () => {
       const tag = uniqueTag("ty") as "x-ty-inf4";
       const Component = define(tag).setup(() => {});
-      const el = new Component();
+      const el = mount(Component);
       // oxlint-disable-next-line typescript-eslint/no-empty-object-type
-      expectTypeOf(el.props).toEqualTypeOf<ReactiveProps<{}>>();
+      expectTypeOf(el[__ctx].props).toEqualTypeOf<ReactiveProps<{}>>();
     });
   });
 
   describe("ReservedKeys type constraint", () => {
-    it("ReservedKeys includes HTMLElement members and props/refs", () => {
-      expectTypeOf<"props">().toMatchTypeOf<ReservedKeys>();
-      expectTypeOf<"refs">().toMatchTypeOf<ReservedKeys>();
+    it("ReservedKeys includes HTMLElement members", () => {
       expectTypeOf<"className">().toMatchTypeOf<ReservedKeys>();
       expectTypeOf<"innerHTML">().toMatchTypeOf<ReservedKeys>();
       expectTypeOf<"addEventListener">().toMatchTypeOf<ReservedKeys>();
