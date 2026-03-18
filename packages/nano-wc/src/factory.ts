@@ -86,6 +86,7 @@ export function createReactiveProps<Schema extends PropsSchema>(
   schema: Schema,
 ): ReactivePropsResult<Schema> {
   const stores: Record<string, WritableAtom<any>> = {};
+  const storesInit: Record<string, boolean> = {};
   const updaters: Record<string, ((value: string | null) => void) | null> = {};
   const keys = Object.keys(schema) as (keyof Schema & string)[];
   const normalized = new Map(
@@ -111,7 +112,10 @@ export function createReactiveProps<Schema extends PropsSchema>(
           if (v === null) this.removeAttribute(attrName);
           else this.setAttribute(attrName, String(v));
         }
-      : (v: unknown) => store.set(v);
+      : (v: unknown) => {
+          store.set(v);
+          storesInit[key] = true;
+        };
 
     stores[`$${key}`] = store;
     updaters[key] = updateFromAttr;
@@ -129,6 +133,8 @@ export function createReactiveProps<Schema extends PropsSchema>(
       for (const [key, def] of normalized) {
         const store = (stores as Record<string, import("nanostores").WritableAtom>)[`$${key}`]!;
         const raw = def.get ? def.get(h, key) : undefined;
+        // already set from the property setter
+        if (storesInit[key]) continue;
         store.set(parseWithSchema(def.schema, raw, `${h.tagName} component. Prop "${key}"`));
       }
     },

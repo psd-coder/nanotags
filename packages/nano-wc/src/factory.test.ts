@@ -222,6 +222,15 @@ describe("createReactiveProps — json props", () => {
     expect(div.querySelector('script[data-prop="items"]')).not.toBeNull();
   });
 
+  it("property setter before hydration is not overwritten", () => {
+    const div = document.createElement("div") as unknown as HTMLElement & { items: number[] };
+    div.innerHTML = '<script type="application/json" data-prop="items">[1,2,3]</script>';
+    const result = createReactiveProps(div, { items: propBuilders.json(numArraySchema, []) });
+    div.items = [99];
+    result.hydrateProps(div);
+    expect(result.stores.$items.get()).toEqual([99]);
+  });
+
   it("coexists with attribute-backed props", () => {
     const div = document.createElement("div") as unknown as HTMLElement & {
       label: string;
