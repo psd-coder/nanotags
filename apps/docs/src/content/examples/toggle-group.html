@@ -19,25 +19,25 @@
   <div data-type="html">
     <h4>Single select</h4>
     <x-toggle-group mode="single" value="center">
-      <x-toggle data-ref="toggles" value="left">Left</x-toggle>
-      <x-toggle data-ref="toggles" value="center" aria-pressed="true">Center</x-toggle>
-      <x-toggle data-ref="toggles" value="right">Right</x-toggle>
+      <x-toggle data-ref="toggles" role="button" value="left">Left</x-toggle>
+      <x-toggle data-ref="toggles" role="button" value="center" aria-pressed="true">Center</x-toggle>
+      <x-toggle data-ref="toggles" role="button" value="right">Right</x-toggle>
     </x-toggle-group>
 
     <h4>Multi select</h4>
     <x-toggle-group mode="multi">
-      <x-toggle data-ref="toggles" value="bold"><b>B</b></x-toggle>
-      <x-toggle data-ref="toggles" value="italic"><i>I</i></x-toggle>
-      <x-toggle data-ref="toggles" value="underline"><u>U</u></x-toggle>
+      <x-toggle data-ref="toggles" role="button" value="bold"><b>B</b></x-toggle>
+      <x-toggle data-ref="toggles" role="button" value="italic"><i>I</i></x-toggle>
+      <x-toggle data-ref="toggles" role="button" value="underline"><u>U</u></x-toggle>
     </x-toggle-group>
   </div>
 
   <script type="module" data-type="javascript">
-    import { define } from "nano-wc";
+    import { define, } from "nano-wc";
     import { atom } from "nanostores";
     import { attachRovingFocus } from "attachRovingFocus.js";
 
-    const XToggleGroup = define("x-toggle-group")
+    define("x-toggle-group")
       .withProps((p) => ({
         mode: p.oneOf(["single", "multi"], "single"),
         value: p.string(""),
@@ -66,27 +66,29 @@
 
         attachRovingFocus(ctx, ctx.host, ctx.refs.toggles);
         ctx.host.setAttribute("role", "group");
-
-        return { $selected, toggle };
+        ctx.effect($selected, (selected) => {
+          ctx.refs.toggles.forEach((toggle) => {
+            toggle.active = selected.has(toggle.getAttribute('value'));
+          });
+        });
+        ctx.on(ctx.refs.toggles, "toggle", (e) => toggle(e.detail));
       });
 
     define("x-toggle")
-      .withProps((p) => ({ value: p.string("") }))
+      .withProps((p) => ({ value: p.string(""), active: p.boolean(false) }))
       .setup((ctx) => {
-        const parent = ctx.consume(XToggleGroup);
         ctx.host.setAttribute("role", "button");
 
-        ctx.on(ctx.host, "click", () => parent.toggle(ctx.props.$value.get()));
+        ctx.on(ctx.host, "click", () => ctx.emit('toggle', ctx.props.$value.get()));
         ctx.on(ctx.host, "keydown", (e) => {
           if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
-            parent.toggle(ctx.props.$value.get());
+            ctx.emit('toggle', ctx.props.$value.get());
           }
         });
 
-        ctx.effect(parent.$selected, (selected) => {
-          const pressed = selected.has(ctx.props.$value.get());
-          ctx.host.setAttribute("aria-pressed", String(pressed));
+        ctx.effect(ctx.props.$active, (active) => {
+          ctx.host.setAttribute("aria-pressed", active);
         });
       });
   </script>

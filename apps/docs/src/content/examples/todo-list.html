@@ -8,6 +8,7 @@
     {
       "imports": {
         "nano-wc": "https://esm.sh/nano-wc@latest",
+        "nano-wc/context": "https://esm.sh/nano-wc@latest/context",
         "nano-wc/render": "https://esm.sh/nano-wc@latest/render",
         "nanostores": "https://esm.sh/nanostores@latest"
       }
@@ -37,11 +38,14 @@
 
   <script type="module" data-type="javascript">
     import { define } from "nano-wc";
+    import { createContext } from "nano-wc/context";
     import { renderList } from "nano-wc/render";
     import { atom, computed } from "nanostores";
     import * as v from 'valibot';
 
-    const XTodoList = define("x-todo-list")
+    const todoListContext = createContext("todo-list");
+
+    define("x-todo-list")
       .withRefs(({ one }) => ({
         input: one("input"),
         addBtn: one("button"),
@@ -82,13 +86,12 @@
         });
         ctx.effect([$total, $completed], (total, completed) => {
           ctx.refs.stats.textContent = `${completed}/${total} completed`;
-        })
+        });
 
-
-        return {
+        todoListContext.provide(ctx, {
           toggle: (id) => $todos.set($todos.get().map((t) => (t.id === id ? { ...t, done: !t.done } : t))),
           delete: (id) => $todos.set($todos.get().filter((t) => t.id !== id))
-        }
+        });
       });
 
     define("x-todo-item")
@@ -101,10 +104,10 @@
         deleteBtn: one("button"),
       }))
       .setup((ctx) => {
-        const parent = ctx.consume(XTodoList);
-
-        ctx.on(ctx.refs.checkbox, "change", () => parent.toggle(ctx.props.$data.get().id));
-        ctx.on(ctx.refs.deleteBtn, "click", () => parent.delete(ctx.props.$data.get().id));
+        todoListContext.consume(ctx, (parent) => {
+          ctx.on(ctx.refs.checkbox, "change", () => parent.toggle(ctx.props.$data.get().id));
+          ctx.on(ctx.refs.deleteBtn, "click", () => parent.delete(ctx.props.$data.get().id));
+        });
 
         ctx.effect(ctx.props.$data, (data) => {
           const { done, text } = data;

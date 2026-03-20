@@ -1,694 +1,266 @@
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { atom } from "nanostores";
-import { afterEach, describe, expect, expectTypeOf, it, vi } from "vitest";
 
-import { define } from "./define";
-import type { SetupContext } from "./context";
+import { createContext } from "./context";
+import { createComponent } from "./factory";
 import { cleanup, mount, uniqueTag } from "../tests/utils";
 
-afterEach(() => cleanup());
+afterEach(cleanup);
 
-describe("lifecycle cleanup", () => {
-  it("onCleanup callbacks fire on disconnect", () => {
-    const tag = uniqueTag("lc");
-    const cb = vi.fn();
-    define(tag, (ctx) => {
-      ctx.onCleanup(cb);
-    });
-    const el = mount(`<${tag}></${tag}>`);
-    el.remove();
-    expect(cb).toHaveBeenCalledOnce();
+describe("createContext", () => {
+  it("returns object with provide and consume methods", () => {
+    const ctx = createContext<string>("test");
+    expect(typeof ctx.provide).toBe("function");
+    expect(typeof ctx.consume).toBe("function");
   });
+});
 
-  it("on() listeners removed on disconnect", () => {
-    const tag = uniqueTag("lc");
-    const handler = vi.fn();
-    define(tag, (ctx) => {
-      ctx.on(ctx.host, "click", handler);
-    });
-    const el = mount(`<${tag}></${tag}>`);
-    el.click();
-    expect(handler).toHaveBeenCalledOnce();
-    el.remove();
-    el.click();
-    expect(handler).toHaveBeenCalledOnce();
-  });
+describe("provide + consume", () => {
+  it("consumer receives value synchronously when provider is ancestor", () => {
+    const parentTag = uniqueTag("prov");
+    const childTag = uniqueTag("cons");
 
-  it("effect() unsubscribed on disconnect", () => {
-    const tag = uniqueTag("lc");
-    const $store = atom(0);
-    const spy = vi.fn();
-    define(tag, (ctx) => {
-      ctx.effect($store, spy);
-    });
-    const el = mount(`<${tag}></${tag}>`);
-    expect(spy).toHaveBeenCalledWith(0);
-    el.remove();
-    $store.set(1);
-    expect(spy).toHaveBeenCalledTimes(1);
-  });
+    type API = { greet: () => string };
+    const ctx = createContext<API>("test");
 
-  it("cleanups reset after disconnect", () => {
-    const tag = uniqueTag("lc");
-    const cb = vi.fn();
-    define(tag, (ctx) => {
-      ctx.onCleanup(cb);
+    createComponent(parentTag, {}, {}, (setupCtx) => {
+      ctx.provide(setupCtx, { greet: () => "hello" });
     });
-    const el = mount(`<${tag}></${tag}>`);
-    el.remove();
-    el.remove();
-    expect(cb).toHaveBeenCalledOnce();
-  });
 
-  it("runs all cleanups even if one throws, re-throws first error", () => {
-    const tag = uniqueTag("lc");
-    const cb1 = vi.fn();
-    const cb2 = vi.fn(() => {
-      throw new Error("boom");
-    });
-    const cb3 = vi.fn();
-    define(tag, (ctx) => {
-      ctx.onCleanup(cb1);
-      ctx.onCleanup(cb2);
-      ctx.onCleanup(cb3);
-    });
-    const el = mount(`<${tag}></${tag}>`);
-    expect(() => el.remove()).toThrow("boom");
-    expect(cb1).toHaveBeenCalledOnce();
-    expect(cb2).toHaveBeenCalledOnce();
-    expect(cb3).toHaveBeenCalledOnce();
-  });
-
-  it("re-throws first error when multiple cleanups throw", () => {
-    const tag = uniqueTag("lc");
-    define(tag, (ctx) => {
-      ctx.onCleanup(() => {
-        throw new Error("first");
-      });
-      ctx.onCleanup(() => {
-        throw new Error("second");
+    let received: API | undefined;
+    createComponent(childTag, {}, {}, (setupCtx) => {
+      ctx.consume(setupCtx, (api) => {
+        received = api;
       });
     });
-    const el = mount(`<${tag}></${tag}>`);
-    expect(() => el.remove()).toThrow("first");
-  });
 
-  it("reconnect: previous listeners gone, new ones from fresh setup", () => {
-    const tag = uniqueTag("lc");
-    const calls: string[] = [];
-    define(tag, (ctx) => {
-      const id = String(calls.length);
-      ctx.onCleanup(() => calls.push(`cleanup-${id}`));
-    });
-    const el = mount(`<${tag}></${tag}>`);
-    el.remove();
-    expect(calls).toEqual(["cleanup-0"]);
-    document.body.append(el);
-    el.remove();
-    expect(calls).toEqual(["cleanup-0", "cleanup-1"]);
-  });
-
-  it("SetupContext exposes ctx API and omits HTMLElement members", () => {
-    // oxlint-disable-next-line typescript-eslint/no-empty-object-type
-    type Ctx = SetupContext<{}, {}>;
-    expectTypeOf<Ctx>().toHaveProperty("props");
-    expectTypeOf<Ctx>().toHaveProperty("refs");
-    expectTypeOf<Ctx>().toHaveProperty("host");
-    expectTypeOf<Ctx>().toHaveProperty("on");
-    expectTypeOf<Ctx>().toHaveProperty("emit");
-    expectTypeOf<Ctx>().toHaveProperty("effect");
-    expectTypeOf<Ctx>().toHaveProperty("bind");
-    expectTypeOf<Ctx>().toHaveProperty("onCleanup");
-    expectTypeOf<Ctx>().toHaveProperty("consume");
-    expectTypeOf<Ctx>().toHaveProperty("getElement");
-    expectTypeOf<Ctx>().toHaveProperty("getElements");
-    expectTypeOf<Ctx>().not.toHaveProperty("className");
-    expectTypeOf<Ctx>().not.toHaveProperty("innerHTML");
-    expectTypeOf<Ctx>().not.toHaveProperty("addEventListener");
-  });
-});
-
-describe("on", () => {
-  it("single element", () => {
-    const tag = uniqueTag("on");
-    const handler = vi.fn();
-    define(tag, (ctx) => {
-      ctx.on(ctx.host, "click", handler);
-    });
-    const el = mount(`<${tag}></${tag}>`);
-    el.click();
-    expect(handler).toHaveBeenCalledOnce();
-  });
-
-  it("array of elements", () => {
-    const tag = uniqueTag("on");
-    const handler = vi.fn();
-    define(tag)
-      .withRefs((r) => ({ btns: r.many("button") }))
-      .setup((ctx) => {
-        ctx.on(ctx.refs.btns, "click", handler);
-      });
-    mount(`<${tag}><button data-ref="btns">A</button><button data-ref="btns">B</button></${tag}>`);
-    const btns = document.querySelectorAll<HTMLElement>("button");
-    btns[0]?.click();
-    btns[1]?.click();
-    expect(handler).toHaveBeenCalledTimes(2);
-  });
-
-  it("Document target", () => {
-    const tag = uniqueTag("on");
-    const handler = vi.fn();
-    define(tag, (ctx) => {
-      ctx.on(document, "keydown", handler);
-    });
-    mount(`<${tag}></${tag}>`);
-    document.dispatchEvent(new Event("keydown"));
-    expect(handler).toHaveBeenCalledOnce();
-  });
-
-  it("Window target", () => {
-    const tag = uniqueTag("on");
-    const handler = vi.fn();
-    define(tag, (ctx) => {
-      ctx.on(window, "resize", handler);
-    });
-    mount(`<${tag}></${tag}>`);
-    window.dispatchEvent(new Event("resize"));
-    expect(handler).toHaveBeenCalledOnce();
-  });
-});
-
-describe("emit", () => {
-  it("emit(Event) dispatches provided event", () => {
-    const tag = uniqueTag("emit");
-    const spy = vi.fn();
-    define(tag, (ctx) => {
-      ctx.host.addEventListener("my-event", spy);
-      ctx.emit(new Event("my-event"));
-    });
-    mount(`<${tag}></${tag}>`);
-    expect(spy).toHaveBeenCalledOnce();
-  });
-
-  it("emit(name, detail) creates bubbling composed CustomEvent", () => {
-    const tag = uniqueTag("emit");
-    let captured: CustomEvent | undefined;
-    define(tag, (ctx) => {
-      ctx.host.addEventListener("notify", (e) => (captured = e as CustomEvent));
-      ctx.emit("notify", { msg: "hi" });
-    });
-    mount(`<${tag}></${tag}>`);
-    expect(captured).toBeDefined();
-    expect(captured?.detail).toEqual({ msg: "hi" });
-    expect(captured?.bubbles).toBe(true);
-    expect(captured?.composed).toBe(true);
-  });
-
-  it("options override merged", () => {
-    const tag = uniqueTag("emit");
-    let captured: CustomEvent | undefined;
-    define(tag, (ctx) => {
-      ctx.host.addEventListener("evt", (e) => (captured = e as CustomEvent));
-      ctx.emit("evt", null, { bubbles: false });
-    });
-    mount(`<${tag}></${tag}>`);
-    expect(captured?.bubbles).toBe(false);
-  });
-});
-
-describe("getElement / getElements", () => {
-  it("returns matching element", () => {
-    const tag = uniqueTag("ge");
-    let found: Element | undefined;
-    define(tag, (ctx) => {
-      found = ctx.getElement(".item");
-    });
-    mount(`<${tag}><span class="item">ok</span></${tag}>`);
-    expect(found).toBeDefined();
-    expectTypeOf(found!).toEqualTypeOf<Element>();
-  });
-
-  it("Inferres type from the tag-name selector", () => {
-    const tag = uniqueTag("ge");
-    let found: HTMLButtonElement | undefined;
-    define(tag, (ctx) => {
-      found = ctx.getElement("button");
-    });
-    mount(`<${tag}><button>Click</button></${tag}>`);
-    expect(found).toBeDefined();
-    expectTypeOf(found!).toEqualTypeOf<HTMLButtonElement>();
-  });
-
-  it("throws when not found", () => {
-    const tag = uniqueTag("ge");
-    define(tag, (ctx) => {
-      ctx.getElement(".missing");
-    });
-    expect(() => mount(`<${tag}></${tag}>`)).toThrow(/missing/);
-  });
-
-  it("returns matching elements", () => {
-    const tag = uniqueTag("ge");
-    let found: Element[] | undefined;
-    define(tag, (ctx) => {
-      found = ctx.getElements(".item");
-    });
-    mount(`<${tag}><span class="item">1</span><span class="item">2</span></${tag}>`);
-    expect(found).toHaveLength(2);
-  });
-
-  it("getElements throws when not found", () => {
-    const tag = uniqueTag("ge");
-    define(tag, (ctx) => {
-      ctx.getElements(".missing");
-    });
-    expect(() => mount(`<${tag}></${tag}>`)).toThrow(/missing/);
-  });
-
-  it("works with custom root", () => {
-    const tag = uniqueTag("ge");
-    let found: Element | undefined;
-    define(tag, (ctx) => {
-      const container = ctx.getElement(".container");
-      found = ctx.getElement(container, ".nested");
-    });
-    mount(`<${tag}><div class="container"><span class="nested">ok</span></div></${tag}>`);
-    expect(found).toBeDefined();
-    expect((found as Element).tagName).toBe("SPAN");
-  });
-
-  it("getElements works with custom root", () => {
-    const tag = uniqueTag("ge");
-    let found: Element[] | undefined;
-    define(tag, (ctx) => {
-      const container = ctx.getElement(".container");
-      found = ctx.getElements(container, ".item");
-    });
-    mount(
-      `<${tag}><div class="container"><span class="item">1</span><span class="item">2</span></div></${tag}>`,
-    );
-    expect(found).toHaveLength(2);
-  });
-});
-
-describe("consume", () => {
-  it("finds nearest ancestor", () => {
-    const parentTag = uniqueTag("parent");
-    const childTag = uniqueTag("child");
-    const ParentComponent = define(parentTag, () => ({ kind: "parent" }));
-    let consumed: InstanceType<typeof ParentComponent> | undefined;
-    define(childTag, (ctx) => {
-      consumed = ctx.consume(ParentComponent);
-    });
     mount(`<${parentTag}><${childTag}></${childTag}></${parentTag}>`);
-    expect(consumed).toBeDefined();
-    expect(consumed!.kind).toBe("parent");
+    expect(received).toBeDefined();
+    expect(received!.greet()).toBe("hello");
   });
 
-  it("throws when no ancestor", () => {
-    const parentTag = uniqueTag("parent");
-    const childTag = uniqueTag("child");
-    const ParentComponent = define(parentTag, () => {});
-    define(childTag, (ctx) => {
-      ctx.consume(ParentComponent);
+  it("callback receives reactive stores within the value", () => {
+    const parentTag = uniqueTag("prov");
+    const childTag = uniqueTag("cons");
+
+    type API = { $count: ReturnType<typeof atom<number>> };
+    const ctx = createContext<API>("reactive");
+
+    const $count = atom(0);
+    createComponent(parentTag, {}, {}, (setupCtx) => {
+      ctx.provide(setupCtx, { $count });
     });
-    expect(() => mount(`<${childTag}></${childTag}>`)).toThrow(/no ancestor/);
-  });
 
-  it("rejects non-nano-wc constructors at type level", () => {
-    const tag = uniqueTag("brand");
-    define(tag, (ctx) => {
-      // @ts-expect-error plain HTMLElement ctor lacks ComponentBrand
-      ctx.consume(HTMLElement);
-      class MyEl extends HTMLElement {}
-      // @ts-expect-error unbranded custom element ctor
-      ctx.consume(MyEl);
-    });
-  });
-
-  it("skips non-matching ancestors (picks nearest)", () => {
-    const grandparent = uniqueTag("gp");
-    const parent = uniqueTag("par");
-    const child = uniqueTag("ch");
-    define(grandparent, () => ({ level: "grandparent" }));
-    const ParentComponent = define(parent, () => ({ level: "parent" }));
-    let consumed: any;
-    define(child, (ctx) => {
-      consumed = ctx.consume(ParentComponent);
-    });
-    mount(`<${grandparent}><${parent}><${child}></${child}></${parent}></${grandparent}>`);
-    expect((consumed as any).level).toBe("parent");
-  });
-});
-
-describe("effect", () => {
-  it("single store: immediate + on change", () => {
-    const tag = uniqueTag("eff");
-    const $store = atom(10);
-    const spy = vi.fn();
-    define(tag, (ctx) => {
-      ctx.effect($store, spy);
-    });
-    mount(`<${tag}></${tag}>`);
-    expect(spy).toHaveBeenCalledWith(10);
-    $store.set(20);
-    expect(spy).toHaveBeenCalledWith(20);
-    expect(spy).toHaveBeenCalledTimes(2);
-  });
-
-  it("multi-store: invoked with all values", () => {
-    const tag = uniqueTag("eff");
-    const $a = atom(1);
-    const $b = atom("x");
-    const spy = vi.fn();
-    define(tag, (ctx) => {
-      ctx.effect([$a, $b], spy);
-    });
-    mount(`<${tag}></${tag}>`);
-    expect(spy).toHaveBeenCalledWith(1, "x");
-    $a.set(2);
-    expect(spy).toHaveBeenCalledWith(2, "x");
-  });
-
-  it("cleaned on disconnect", () => {
-    const tag = uniqueTag("eff");
-    const $store = atom(0);
-    const spy = vi.fn();
-    define(tag, (ctx) => {
-      ctx.effect($store, spy);
-    });
-    const el = mount(`<${tag}></${tag}>`);
-    el.remove();
-    $store.set(99);
-    expect(spy).toHaveBeenCalledTimes(1);
-  });
-});
-
-describe("bind", () => {
-  it("input[type=text]: control input → store", () => {
-    const tag = uniqueTag("bind");
-    const $val = atom("");
-    define(tag, (ctx) => {
-      const input = ctx.getElement("input");
-      ctx.bind($val, input);
-    });
-    const el = mount(`<${tag}><input type="text" /></${tag}>`);
-    const input = el.querySelector("input")!;
-    input.value = "hello";
-    input.dispatchEvent(new Event("input", { bubbles: true }));
-    expect($val.get()).toBe("hello");
-  });
-
-  it("input[type=text]: store set → control.value", () => {
-    const tag = uniqueTag("bind");
-    const $val = atom("initial");
-    define(tag, (ctx) => {
-      const input = ctx.getElement("input");
-      ctx.bind($val, input);
-    });
-    const el = mount(`<${tag}><input type="text" /></${tag}>`);
-    const input = el.querySelector("input")!;
-    expect(input.value).toBe("initial");
-    $val.set("updated");
-    expect(input.value).toBe("updated");
-  });
-
-  it("input[type=number]: reads .valueAsNumber", () => {
-    const tag = uniqueTag("bind");
-    const $val = atom(0);
-    define(tag, (ctx) => {
-      const input = ctx.getElement("input");
-      ctx.bind($val, input);
-    });
-    const el = mount(`<${tag}><input type="number" /></${tag}>`);
-    const input = el.querySelector("input")!;
-    input.value = "42";
-    input.dispatchEvent(new Event("input", { bubbles: true }));
-    expect($val.get()).toBe(42);
-  });
-
-  it("input[type=number]: store set → control.value", () => {
-    const tag = uniqueTag("bind");
-    const $val = atom(7);
-    define(tag, (ctx) => {
-      const input = ctx.getElement("input");
-      ctx.bind($val, input);
-    });
-    const el = mount(`<${tag}><input type="number" /></${tag}>`);
-    const input = el.querySelector("input")!;
-    expect(input.valueAsNumber).toBe(7);
-    $val.set(99);
-    expect(input.valueAsNumber).toBe(99);
-  });
-
-  it("input[type=range]: reads .valueAsNumber", () => {
-    const tag = uniqueTag("bind");
-    const $val = atom(1);
-    define(tag, (ctx) => {
-      const input = ctx.getElement("input");
-      ctx.bind($val, input);
-    });
-    const el = mount(`<${tag}><input type="range" min="1" max="50" /></${tag}>`);
-    const input = el.querySelector("input")!;
-    input.value = "25";
-    input.dispatchEvent(new Event("input", { bubbles: true }));
-    expect($val.get()).toBe(25);
-  });
-
-  it("input[type=range]: store set → control.value", () => {
-    const tag = uniqueTag("bind");
-    const $val = atom(10);
-    define(tag, (ctx) => {
-      const input = ctx.getElement("input");
-      ctx.bind($val, input);
-    });
-    const el = mount(`<${tag}><input type="range" min="1" max="50" /></${tag}>`);
-    const input = el.querySelector("input")!;
-    expect(input.valueAsNumber).toBe(10);
-    $val.set(30);
-    expect(input.valueAsNumber).toBe(30);
-  });
-
-  it("input[type=checkbox]: toggle → store (boolean)", () => {
-    const tag = uniqueTag("bind");
-    const $checked = atom(false);
-    define(tag, (ctx) => {
-      const input = ctx.getElement("input");
-      ctx.bind($checked, input);
-    });
-    const el = mount(`<${tag}><input type="checkbox" /></${tag}>`);
-    const input = el.querySelector("input")!;
-    input.checked = true;
-    input.dispatchEvent(new Event("change", { bubbles: true }));
-    expect($checked.get()).toBe(true);
-  });
-
-  it("input[type=checkbox]: store set → .checked", () => {
-    const tag = uniqueTag("bind");
-    const $checked = atom(true);
-    define(tag, (ctx) => {
-      const input = ctx.getElement("input");
-      ctx.bind($checked, input);
-    });
-    const el = mount(`<${tag}><input type="checkbox" /></${tag}>`);
-    const input = el.querySelector("input")!;
-    expect(input.checked).toBe(true);
-    $checked.set(false);
-    expect(input.checked).toBe(false);
-  });
-
-  it("select: change → store", () => {
-    const tag = uniqueTag("bind");
-    const $val = atom("a");
-    define(tag, (ctx) => {
-      const select = ctx.getElement("select");
-      ctx.bind($val, select);
-    });
-    const el = mount(
-      `<${tag}><select><option value="a">A</option><option value="b">B</option></select></${tag}>`,
-    );
-    const select = el.querySelector("select")!;
-    select.value = "b";
-    select.dispatchEvent(new Event("change", { bubbles: true }));
-    expect($val.get()).toBe("b");
-  });
-
-  it("select: store set → .value", () => {
-    const tag = uniqueTag("bind");
-    const $val = atom("b");
-    define(tag, (ctx) => {
-      const select = ctx.getElement("select");
-      ctx.bind($val, select);
-    });
-    const el = mount(
-      `<${tag}><select><option value="a">A</option><option value="b">B</option></select></${tag}>`,
-    );
-    const select = el.querySelector("select")!;
-    expect(select.value).toBe("b");
-  });
-
-  it("textarea: input → store", () => {
-    const tag = uniqueTag("bind");
-    const $val = atom("");
-    define(tag, (ctx) => {
-      const textarea = ctx.getElement("textarea");
-      ctx.bind($val, textarea);
-    });
-    const el = mount(`<${tag}><textarea></textarea></${tag}>`);
-    const textarea = el.querySelector("textarea")!;
-    textarea.value = "hello";
-    textarea.dispatchEvent(new Event("input", { bubbles: true }));
-    expect($val.get()).toBe("hello");
-  });
-
-  it("textarea: store set → .value", () => {
-    const tag = uniqueTag("bind");
-    const $val = atom("prefilled");
-    define(tag, (ctx) => {
-      const textarea = ctx.getElement("textarea");
-      ctx.bind($val, textarea);
-    });
-    const el = mount(`<${tag}><textarea></textarea></${tag}>`);
-    const textarea = el.querySelector("textarea")!;
-    expect(textarea.value).toBe("prefilled");
-  });
-
-  it("initial value from store applied to control on bind", () => {
-    const tag = uniqueTag("bind");
-    const $val = atom("from-store");
-    define(tag, (ctx) => {
-      const input = ctx.getElement("input");
-      ctx.bind($val, input);
-    });
-    const el = mount(`<${tag}><input type="text" value="from-html" /></${tag}>`);
-    const input = el.querySelector("input")!;
-    expect(input.value).toBe("from-store");
-  });
-
-  it("Object.is guard prevents loops", () => {
-    const tag = uniqueTag("bind");
-    const $val = atom("same");
-    const spy = vi.fn();
-    define(tag, (ctx) => {
-      const input = ctx.getElement("input");
-      ctx.bind($val, input);
-    });
-    mount(`<${tag}><input type="text" /></${tag}>`);
-    $val.listen(spy);
-    $val.set("same");
-    expect(spy).not.toHaveBeenCalled();
-  });
-
-  it("custom element with .value prop + change event", () => {
-    const controlTag = uniqueTag("ctrl");
-    define(controlTag)
-      .withProps((p) => ({ value: p.string("init") }))
-      .setup(() => {});
-    const tag = uniqueTag("bind");
-    const $val = atom("from-store");
-    define(tag, (ctx) => {
-      const ctrl = ctx.getElement(controlTag) as HTMLElement & { value: string };
-      ctx.bind($val, ctrl);
-    });
-    const el = mount(`<${tag}><${controlTag}></${controlTag}></${tag}>`);
-    const ctrl = el.querySelector(controlTag)! as HTMLElement & { value: string };
-    expect(ctrl.value).toBe("from-store");
-    ctrl.value = "user-input";
-    ctrl.dispatchEvent(new Event("change", { bubbles: true }));
-    expect($val.get()).toBe("user-input");
-    $val.set("programmatic");
-    expect(ctrl.value).toBe("programmatic");
-  });
-
-  it("works with not-yet-upgraded custom element child", () => {
-    const childTag = uniqueTag("bind-child");
-    const parentTag = uniqueTag("bind-parent");
-    const $val = atom("from-parent");
-    define(parentTag, (ctx) => {
-      const child = ctx.getElement(childTag);
-      ctx.bind($val, child, { prop: "value", event: "change" });
-    });
-    const el = mount(`<${parentTag}><${childTag}></${childTag}></${parentTag}>`);
-    const child = el.querySelector(childTag)! as HTMLElement & { value: string };
-    // Before child upgrade, value is set as plain property
-    expect(child.value).toBe("from-parent");
-    // Define and upgrade child
-    define(childTag)
-      .withProps((p) => ({ value: p.string("default") }))
-      .setup(() => {});
-    customElements.upgrade(child);
-    // Store update propagates through accessor
-    $val.set("updated");
-    expect(child.value).toBe("updated");
-  });
-
-  it("one-way bind with { prop } — store→el, no event listener", () => {
-    const tag = uniqueTag("bind");
-    const $theme = atom("dark");
-    define(tag, (ctx) => {
-      ctx.bind($theme, ctx.host, { prop: "title" });
-    });
-    const el = mount(`<${tag}></${tag}>`);
-    expect(el.title).toBe("dark");
-    $theme.set("light");
-    expect(el.title).toBe("light");
-    // No event listener — changing title and dispatching change shouldn't update store
-    el.title = "manual";
-    el.dispatchEvent(new Event("change", { bubbles: true }));
-    expect($theme.get()).toBe("light");
-  });
-
-  it("two-way bind with { prop, event } — custom element", () => {
-    const controlTag = uniqueTag("ctrl");
-    define(controlTag)
-      .withProps((p) => ({ theme: p.string("default") }))
-      .setup((ctx) => {
-        ctx.effect(ctx.props.$theme, () => ctx.emit("change"));
+    let store: ReturnType<typeof atom<number>> | undefined;
+    createComponent(childTag, {}, {}, (setupCtx) => {
+      ctx.consume(setupCtx, (api) => {
+        store = api.$count;
       });
-    const tag = uniqueTag("bind");
-    const $theme = atom("dark");
-    define(tag, (ctx) => {
-      const ctrl = ctx.getElement(controlTag);
-      ctx.bind($theme, ctrl, { prop: "theme", event: "change" });
     });
-    const el = mount(`<${tag}><${controlTag}></${controlTag}></${tag}>`);
-    const ctrl = el.querySelector(controlTag)! as any;
-    expect(ctrl.theme).toBe("dark");
-    ctrl.theme = "light";
-    ctrl.dispatchEvent(new Event("change", { bubbles: true }));
-    expect($theme.get()).toBe("light");
-    $theme.set("blue");
-    expect(ctrl.theme).toBe("blue");
+
+    mount(`<${parentTag}><${childTag}></${childTag}></${parentTag}>`);
+    expect(store).toBeDefined();
+    expect(store!.get()).toBe(0);
+    $count.set(42);
+    expect(store!.get()).toBe(42);
   });
 
-  it("options override native defaults", () => {
-    const tag = uniqueTag("bind");
-    const $val = atom("test");
-    define(tag, (ctx) => {
-      const input = ctx.getElement("input");
-      ctx.bind($val, input, { prop: "value", event: "change" });
+  it("nearest provider wins with nested providers", () => {
+    const outerTag = uniqueTag("outer");
+    const innerTag = uniqueTag("inner");
+    const childTag = uniqueTag("child");
+
+    const ctx = createContext<string>("nested");
+
+    createComponent(outerTag, {}, {}, (setupCtx) => {
+      ctx.provide(setupCtx, "outer");
     });
-    const el = mount(`<${tag}><input type="text" /></${tag}>`);
-    const input = el.querySelector("input")!;
-    expect(input.value).toBe("test");
-    input.value = "changed";
-    input.dispatchEvent(new Event("input", { bubbles: true }));
-    expect($val.get()).toBe("test");
-    input.dispatchEvent(new Event("change", { bubbles: true }));
-    expect($val.get()).toBe("changed");
+    createComponent(innerTag, {}, {}, (setupCtx) => {
+      ctx.provide(setupCtx, "inner");
+    });
+
+    let received: string | undefined;
+    createComponent(childTag, {}, {}, (setupCtx) => {
+      ctx.consume(setupCtx, (value) => {
+        received = value;
+      });
+    });
+
+    mount(`<${outerTag}><${innerTag}><${childTag}></${childTag}></${innerTag}></${outerTag}>`);
+    expect(received).toBe("inner");
   });
 
-  it.skipIf(true)("rejects custom element without .value at type level", () => {
-    // oxlint-disable-next-line typescript-eslint/no-empty-object-type
-    const ctx = {} as SetupContext<{}, {}>;
-    const plain = {} as HTMLDivElement;
-    // @ts-expect-error - HTMLDivElement has no .value, should not match overloads 1-2; overload 3 requires opts
-    ctx.bind(atom(""), plain);
+  it("different context keys don't cross-match", () => {
+    const parentTag = uniqueTag("prov");
+    const childTag = uniqueTag("cons");
+
+    const ctx1 = createContext<string>("ctx1");
+    const ctx2 = createContext<string>("ctx2");
+
+    createComponent(parentTag, {}, {}, (setupCtx) => {
+      ctx1.provide(setupCtx, "value1");
+    });
+
+    let received: string | undefined;
+    createComponent(childTag, {}, {}, (setupCtx) => {
+      ctx2.consume(setupCtx, (value) => {
+        received = value;
+      });
+    });
+
+    mount(`<${parentTag}><${childTag}></${childTag}></${parentTag}>`);
+    expect(received).toBeUndefined();
   });
 
-  it.skipIf(true)("accepts arbitrary element with BindOptions at type level", () => {
-    // oxlint-disable-next-line typescript-eslint/no-empty-object-type
-    const ctx = {} as SetupContext<{}, {}>;
-    const el = {} as HTMLElement;
-    ctx.bind(atom("x"), el, { prop: "theme" });
+  it("multiple consumers for same context", () => {
+    const parentTag = uniqueTag("prov");
+    const child1Tag = uniqueTag("c1");
+    const child2Tag = uniqueTag("c2");
+
+    const ctx = createContext<string>("shared");
+
+    createComponent(parentTag, {}, {}, (setupCtx) => {
+      ctx.provide(setupCtx, "shared-value");
+    });
+
+    let r1: string | undefined;
+    let r2: string | undefined;
+    createComponent(child1Tag, {}, {}, (setupCtx) => {
+      ctx.consume(setupCtx, (v) => {
+        r1 = v;
+      });
+    });
+    createComponent(child2Tag, {}, {}, (setupCtx) => {
+      ctx.consume(setupCtx, (v) => {
+        r2 = v;
+      });
+    });
+
+    mount(
+      `<${parentTag}><${child1Tag}></${child1Tag}><${child2Tag}></${child2Tag}></${parentTag}>`,
+    );
+    expect(r1).toBe("shared-value");
+    expect(r2).toBe("shared-value");
+  });
+
+  it("consumer without provider warns after microtask", async () => {
+    const tag = uniqueTag("orphan");
+    const ctx = createContext<string>("orphan-ctx");
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    createComponent(tag, {}, {}, (setupCtx) => {
+      ctx.consume(setupCtx, () => {});
+    });
+
+    mount(`<${tag}></${tag}>`);
+    expect(warn).not.toHaveBeenCalled();
+
+    await Promise.resolve();
+    expect(warn).toHaveBeenCalledOnce();
+    expect(warn.mock.calls[0]![0]).toContain("no provider");
+    warn.mockRestore();
+  });
+
+  it("no warning when provider is present", async () => {
+    const parentTag = uniqueTag("prov");
+    const childTag = uniqueTag("cons");
+    const ctx = createContext<string>("ok");
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    createComponent(parentTag, {}, {}, (setupCtx) => {
+      ctx.provide(setupCtx, "val");
+    });
+    createComponent(childTag, {}, {}, (setupCtx) => {
+      ctx.consume(setupCtx, () => {});
+    });
+
+    mount(`<${parentTag}><${childTag}></${childTag}></${parentTag}>`);
+    await Promise.resolve();
+    expect(warn).not.toHaveBeenCalled();
+    warn.mockRestore();
+  });
+});
+
+describe("late provider", () => {
+  it("consumer receives value when provider upgrades later", () => {
+    const parentTag = uniqueTag("late-prov");
+    const childTag = uniqueTag("late-cons");
+
+    const ctx = createContext<string>("late");
+
+    let received: string | undefined;
+    createComponent(childTag, {}, {}, (setupCtx) => {
+      ctx.consume(setupCtx, (value) => {
+        received = value;
+      });
+    });
+
+    // Mount with parent undefined — child connects, parent stays as unknown element
+    document.body.innerHTML = `<${parentTag}><${childTag}></${childTag}></${parentTag}>`;
+    expect(received).toBeUndefined();
+
+    // Now define parent — triggers upgrade + provide
+    createComponent(parentTag, {}, {}, (setupCtx) => {
+      ctx.provide(setupCtx, "late-value");
+    });
+    customElements.upgrade(document.body.querySelector(parentTag)!);
+
+    expect(received).toBe("late-value");
+  });
+
+  it("consumer disconnect before resolution cleans up pending", () => {
+    const parentTag = uniqueTag("late-prov2");
+    const childTag = uniqueTag("late-cons2");
+
+    const ctx = createContext<string>("cleanup");
+    const callback = vi.fn();
+
+    createComponent(childTag, {}, {}, (setupCtx) => {
+      ctx.consume(setupCtx, callback);
+    });
+
+    // Mount with parent undefined
+    document.body.innerHTML = `<${parentTag}><${childTag}></${childTag}></${parentTag}>`;
+    expect(callback).not.toHaveBeenCalled();
+
+    // Remove child before provider connects
+    document.body.querySelector(childTag)!.remove();
+
+    // Now define parent — child is disconnected, callback should not fire
+    createComponent(parentTag, {}, {}, (setupCtx) => {
+      ctx.provide(setupCtx, "too-late");
+    });
+    customElements.upgrade(document.body.querySelector(parentTag)!);
+
+    expect(callback).not.toHaveBeenCalled();
+  });
+
+  it("provider reconnect resolves new consumers", () => {
+    const parentTag = uniqueTag("reconn-prov");
+    const childTag = uniqueTag("reconn-cons");
+
+    const ctx = createContext<string>("reconnect");
+
+    createComponent(parentTag, {}, {}, (setupCtx) => {
+      ctx.provide(setupCtx, "reconnected");
+    });
+
+    let received: string | undefined;
+    createComponent(childTag, {}, {}, (setupCtx) => {
+      ctx.consume(setupCtx, (v) => {
+        received = v;
+      });
+    });
+
+    // Mount, disconnect, re-mount
+    const html = `<${parentTag}><${childTag}></${childTag}></${parentTag}>`;
+    mount(html);
+    expect(received).toBe("reconnected");
+
+    // Remove and re-add
+    received = undefined;
+    document.body.innerHTML = "";
+    document.body.innerHTML = html;
+    expect(received).toBe("reconnected");
   });
 });

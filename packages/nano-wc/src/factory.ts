@@ -13,8 +13,8 @@ import type {
   RefsSchema,
   FullPropDef,
 } from "./types";
-import { Context, __ctx, type ComponentCtor, type SetupFn } from "./context.ts";
-import { camelToKebab, invariant } from "./utils.ts";
+import { Context, __ctx, type ComponentCtor, type SetupFn } from "./setup-context";
+import { camelToKebab, invariant } from "./utils";
 
 function belongsTo(element: Element, host: HTMLElement): boolean {
   let ancestor = element.parentElement;

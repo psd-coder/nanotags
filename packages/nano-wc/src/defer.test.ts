@@ -72,27 +72,6 @@ describe("deferSetups / flushSetups", () => {
     expect(setup).toHaveBeenCalledOnce();
   });
 
-  it("consume() works across deferred parent-child when flushed in DOM order", () => {
-    const parentTag = uniqueTag("ctx-par");
-    const childTag = uniqueTag("ctx-ch");
-
-    const Parent = createComponent(parentTag, {}, {}, () => ({
-      getInfo: () => "from-parent",
-    }));
-
-    let consumed: string | undefined;
-    createComponent(childTag, {}, {}, (ctx) => {
-      const parent = ctx.consume(Parent);
-      consumed = (parent as any).getInfo();
-    });
-
-    deferSetups();
-    document.body.innerHTML = `<${parentTag}><${childTag}></${childTag}></${parentTag}>`;
-
-    flushSetups();
-    expect(consumed).toBe("from-parent");
-  });
-
   it("multiple components with nesting depth > 2 flush in correct order", () => {
     const order: string[] = [];
     const grandparentTag = uniqueTag("gp");

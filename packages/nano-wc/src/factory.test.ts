@@ -2,7 +2,7 @@ import { afterEach, describe, expect, expectTypeOf, it, vi } from "vitest";
 import * as v from "valibot";
 
 import { propBuilders, refBuilders } from "./builders";
-import { __ctx } from "./context";
+import { __ctx } from "./setup-context";
 import { collectRefs, createComponent, createReactiveProps, parseWithSchema } from "./factory";
 import { cleanup, createHostWith, mount, uniqueTag } from "../tests/utils";
 
@@ -600,29 +600,6 @@ describe("createComponent", () => {
       createComponent(tag, {}, {}, () => ({ emit: () => "fired" }));
       const el = mount(`<${tag}></${tag}>`);
       expect((el as any).emit()).toBe("fired");
-    });
-  });
-
-  describe("consume() timing with mixin", () => {
-    it("child defined after mount can consume() parent mixin via upgrade", () => {
-      const parentTag = uniqueTag("par");
-      const childTag = uniqueTag("ch");
-
-      const Parent = createComponent(parentTag, {}, {}, () => ({ getInfo: () => "from-parent" }));
-
-      // Mount with child NOT yet defined — child stays as plain element
-      const el = mount(`<${parentTag}><${childTag}></${childTag}></${parentTag}>`);
-      expect((el as any).getInfo()).toBe("from-parent");
-
-      // Now define child — upgrade will connect it
-      let consumed: string | undefined;
-      createComponent(childTag, {}, {}, (ctx) => {
-        const parent = ctx.consume(Parent);
-        consumed = (parent as any).getInfo();
-      });
-
-      customElements.upgrade(el);
-      expect(consumed).toBe("from-parent");
     });
   });
 

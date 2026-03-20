@@ -75,7 +75,7 @@ const Logger = define("x-logger", (ctx) => {
 });
 ```
 
-In the fluent form, `withProps` and `withRefs` are optional and can appear in any order. `setup` ends the chain — it calls `customElements.define` under the hood and returns a typed constructor you can use for `consume`/`instanceof`/`typeof` checks.
+In the fluent form, `withProps` and `withRefs` are optional and can appear in any order. `setup` ends the chain — it calls `customElements.define` under the hood and returns a typed constructor.
 
 ## Props
 
@@ -410,27 +410,6 @@ const buttons = ctx.getElements("button"); // HTMLButtonElement[]
 
 ### Misc
 
-#### `consume(ComponentCtor)`
-
-Find the nearest ancestor component of the given type — similar to React's `useContext`. Useful for cross-component communication when a component is composed of sub-components. Throws if no ancestor found.
-
-```typescript
-// x-tab consumes its parent x-tabs to register itself
-const XTabs = define("x-tabs").setup((ctx) => {
-  const tabs: HTMLElement[] = [];
-  return {
-    register(tab: HTMLElement) {
-      tabs.push(tab);
-    },
-  };
-});
-
-define("x-tab").setup((ctx) => {
-  const tabs = ctx.consume(XTabs); // fully typed, has .register()
-  tabs.register(ctx.host);
-});
-```
-
 #### `onCleanup(callback)`
 
 Register arbitrary teardown logic to run on disconnect.
@@ -644,6 +623,65 @@ declare global {
 const MyEl = define("x-my-el").withProps(/* ... */).setup(/* ... */);
 ```
 
+## Component Communication
+
+Data flows **top-down through props** — a parent sets attributes or properties on its children, and each child reacts via its own prop stores. This is the primary communication channel and covers most cases.
+
+For **child → parent** notifications, dispatch custom events with `ctx.emit`. The parent listens via `ctx.on`. This is the standard DOM approach — no extra imports needed.
+
+When a child needs **access to parent state or API** (not just fire-and-forget events), use the **context protocol** (`nano-wc/context`). A parent calls `provide()` to expose a value; descendants call `consume()` to receive it. Context lives in a separate entry point because it's opt-in — most components don't need it.
+
+For **sibling or unrelated** components, share a nanostore directly — import the same atom in both components and react to changes via `ctx.effect`.
+
+| Direction | Mechanism |
+|-----------|-----------|
+| Parent → Child | Props (attributes / properties) |
+| Child → Parent (fire-and-forget) | Custom events (`ctx.emit` / `ctx.on`) |
+| Child → Parent (shared state / API) | Context protocol (`nano-wc/context`) |
+| Siblings / unrelated | Shared nanostores |
+
+## Context Protocol
+
+Cross-component communication via event-based context — similar to React's `useContext`, but decoupled from the component tree. Import from the standalone `nano-wc/context` entry point.
+
+```typescript
+import { createContext } from "nano-wc/context";
+
+const tabsContext = createContext<TabsAPI>("tabs");
+```
+
+### Provider
+
+Call `provide` in the parent's setup to make a value available to descendants:
+
+```typescript
+define("x-tabs").setup((ctx) => {
+  const $active = atom(0);
+  tabsContext.provide(ctx, {
+    $active,
+    register(tab: HTMLElement) { /* ... */ },
+  });
+});
+```
+
+### Consumer
+
+Call `consume` in the child's setup. The callback fires synchronously when a provider is found:
+
+```typescript
+define("x-tab").setup((ctx) => {
+  tabsContext.consume(ctx, (tabs) => {
+    tabs.register(ctx.host);
+    ctx.effect(tabs.$active, (index) => { /* ... */ });
+  });
+});
+```
+
+### How it works
+
+- **Normal case** — parent setup runs `provide()`, which registers a `context-request` listener on the host. Child setup runs `consume()`, which dispatches a `context-request` event. The parent catches it synchronously.
+- **Late provider (client-side navigation)** — if the parent isn't upgraded yet when `consume()` runs, a document-level handler stores the pending request. When the parent upgrades and calls `provide()`, it dispatches a `context-provider` event. The document handler re-dispatches `context-request` from the pending consumer, completing the handshake.
+
 ## Client-Side Routing
 
 Client-side routers (Astro for example) swap page content between navigations. When new components are inserted, child modules may load before parents — causing `setup` to run in the wrong order and `consume()` to fail.
@@ -670,7 +708,7 @@ Initial page load is unaffected — no `deferSetups()` call means no queue, so c
 ## Lifecycle
 
 1. **Constructor** — reactive prop stores created, getters/setters defined (attribute-backed props read their initial value; JSON props start as `undefined`)
-2. **connectedCallback** — all props hydrated (each prop's `get` is called → parsed through schema → atom set), descendants upgraded, `setup` runs, mixin applied
+2. **connectedCallback** — all props hydrated (each prop's `get` is called → parsed through schema → atom set), descendants upgraded, `setup` runs
 3. **attributeChangedCallback** — attribute change validated and pushed to prop store (attribute-backed props only)
 4. **disconnectedCallback** — cache cleared, all cleanups run (listeners, effects, bindings)
 

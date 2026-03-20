@@ -31,6 +31,10 @@
       "types": "./dist/render.d.mts",
       "import": "./dist/render.mjs"
     },
+    "./context": {
+      "types": "./dist/context.d.mts",
+      "import": "./dist/context.mjs"
+    },
     "./defer": {
       "types": "./dist/defer.d.mts",
       "import": "./dist/defer.mjs"
@@ -76,7 +80,7 @@
   "size-limit": [
     {
       "path": ".size-check/index.mjs",
-      "limit": "2398 B"
+      "limit": "2350 B"
     },
     {
       "path": ".size-check/render.mjs",
@@ -85,6 +89,10 @@
     {
       "path": ".size-check/defer.mjs",
       "limit": "179 B"
+    },
+    {
+      "path": ".size-check/context.mjs",
+      "limit": "466 B"
     }
   ]
 }

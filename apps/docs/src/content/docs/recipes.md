@@ -6,29 +6,29 @@ order: 3
 
 ## Parent-child communication
 
-When components form a logical group (Tabs/Tab, Accordion/Panel), use the **context pattern** via `ctx.consume()`. The parent exposes an API through its mixin, children look it up by constructor:
+When components form a logical group (Tabs/Tab, Accordion/Panel), use the **context protocol** via `createContext` from `nano-wc/context`. The parent provides a typed API, children consume it by context key:
 
 ```typescript
+import { createContext } from "nano-wc/context";
+
+type TabsAPI = { register: (el: Element) => void; $active: WritableAtom<string> };
+const tabsContext = createContext<TabsAPI>("tabs");
+
 const XTabs = define("x-tabs").setup((ctx) => {
   const panels: HTMLElement[] = [];
+  const $active = atom("");
 
-  function activate(index: number) {
-    panels.forEach((p, i) => {
-      p.hidden = i !== index;
-    });
-  }
-
-  return {
-    register(panel: HTMLElement) {
-      panels.push(panel);
-    },
-    activate,
-  };
+  tabsContext.provide(ctx, {
+    register: (el) => panels.push(el),
+    $active,
+  });
+  return { $active };
 });
 
 define("x-tab-panel").setup((ctx) => {
-  const tabs = ctx.consume(XTabs);
-  tabs.register(ctx.host);
+  tabsContext.consume(ctx, (tabs) => {
+    tabs.register(ctx.host);
+  });
 });
 ```
 
@@ -77,7 +77,7 @@ Control types are auto-detected:
 
 ### Binding to custom elements
 
-Without options, `ctx.bind()` works with any element that has a `.value` property and emits `change` events. When building nano-wc components intended as form controls, expose `value` as a **prop** — not a mixin return:
+Without options, `ctx.bind()` works with any element that has a `.value` property and emits `change` events. When building nano-wc components intended as form controls, expose `value` as a **prop**:
 
 ```typescript
 // ✅ value as prop — available at construction time

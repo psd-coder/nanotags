@@ -1,220 +1,130 @@
-import { effect, type ReadableAtom, type StoreValue, type WritableAtom } from "nanostores";
-import { invariant } from "./utils.ts";
+import type { TypedEvent } from "./types";
 
-import type {
-  BindOptions,
-  ComponentProps,
-  InferRefs,
-  PropsSchema,
-  ReactiveProps,
-  RefsSchema,
-} from "./types.ts";
-
-export const __ctx: unique symbol = Symbol("ctx");
-
-export type ReservedKeys = keyof HTMLElement;
-
-type StoreValues<Stores extends ReadableAtom<any>[]> = {
-  [Index in keyof Stores]: StoreValue<Stores[Index]>;
-};
-
-export type SetupContext<Props extends PropsSchema, Refs extends RefsSchema> = Context<Props, Refs>;
-
-export type SetupFn<Props extends PropsSchema, Refs extends RefsSchema> = (
-  ctx: SetupContext<Props, Refs>,
-) => Record<string, unknown> | void;
-
-declare const __nano: unique symbol;
-export type ComponentBrand = { readonly [__nano]: true };
-
-export type ContextOptions<Props extends PropsSchema, Refs extends RefsSchema> = {
-  host: HTMLElement;
-  props: ReactiveProps<Props>;
-  refs: InferRefs<Refs>;
-  onCleanup: (callback: VoidFunction) => void;
-};
-
-export type ComponentCtor<
-  Props extends PropsSchema,
-  Refs extends RefsSchema,
-  // oxlint-disable-next-line typescript-eslint/no-empty-object-type
-  Mixin = {},
-> = (new () => HTMLElement &
-  ComponentProps<Props> & { readonly [__ctx]: Context<Props, Refs> } & Mixin) &
-  ComponentBrand;
-
-export class Context<Props extends PropsSchema, Refs extends RefsSchema> {
+type ContextLike = {
   readonly host: HTMLElement;
-  /** Reactive property stores of the component. */
-  readonly props: ReactiveProps<Props>;
-  /** References to elements within the component. */
-  readonly refs: InferRefs<Refs>;
-  /** Registers a cleanup function to be called when the component is disconnected. */
-  readonly onCleanup: (callback: VoidFunction) => void;
+  readonly onCleanup: (cb: VoidFunction) => void;
+};
+type ContextRequestEvent<V> = TypedEvent<
+  HTMLElement,
+  { key: symbol; callback: (value: V) => void }
+>;
+type ContextProviderEvent = TypedEvent<HTMLElement, { key: symbol }>;
 
-  constructor({ host, onCleanup, props, refs }: ContextOptions<Props, Refs>) {
-    this.host = host;
-    this.onCleanup = onCleanup;
-    this.props = props;
-    this.refs = refs;
+declare global {
+  interface DocumentEventMap {
+    "context-provider": ContextProviderEvent;
   }
+  interface HTMLElementEventMap {
+    "context-request": ContextRequestEvent<any>;
+  }
+}
 
-  /**
-   * Adds an event listener to one or more elements, Document, or Window and registers automatic cleanup on disconnect.
-   */
-  on<T extends HTMLElement, K extends keyof HTMLElementEventMap>(
-    target: T,
-    type: K,
-    listener: (this: T, ev: HTMLElementEventMap[K] & { currentTarget: T }) => any,
-    options?: boolean | AddEventListenerOptions,
-  ): void;
-  on<T extends HTMLElement, K extends keyof HTMLElementEventMap>(
-    target: T[],
-    type: K,
-    listener: (this: T, ev: HTMLElementEventMap[K] & { currentTarget: T }) => any,
-    options?: boolean | AddEventListenerOptions,
-  ): void;
-  on<K extends keyof DocumentEventMap>(
-    target: Document,
-    type: K,
-    listener: (this: Document, ev: DocumentEventMap[K] & { currentTarget: Document }) => any,
-    options?: boolean | AddEventListenerOptions,
-  ): void;
-  on<K extends keyof WindowEventMap>(
-    target: Window,
-    type: K,
-    listener: (this: Window, ev: WindowEventMap[K] & { currentTarget: Window }) => any,
-    options?: boolean | AddEventListenerOptions,
-  ): void;
-  on(
-    target: HTMLElement | HTMLElement[] | Document | Window,
-    type: string,
-    listener: (this: HTMLElement | Document | Window, ev: Event) => any,
-    options?: boolean | AddEventListenerOptions,
-  ): void;
-  on(
-    target: HTMLElement | HTMLElement[] | Document | Window,
-    type: string,
-    listener: (this: HTMLElement | Document | Window, ev: Event) => any,
-    options?: boolean | AddEventListenerOptions,
-  ): void {
-    const targets = Array.isArray(target) ? target : [target];
-    for (const t of targets) {
-      t.addEventListener(type, listener as EventListener, options);
-      this.onCleanup(() => t.removeEventListener(type, listener as EventListener, options));
+export type ContextKey<T> = {
+  provide(ctx: ContextLike, value: T): void;
+  consume(ctx: ContextLike, callback: (value: T) => void): void;
+};
+
+type PendingEntry = {
+  element: HTMLElement;
+  key: symbol;
+  callback: (value: any) => void;
+};
+
+let pending: PendingEntry[] | undefined;
+
+function ensureDocumentHandler(): void {
+  if (pending) return;
+  pending = [];
+  document.addEventListener("context-provider", (e: ContextProviderEvent) => {
+    const { key } = e.detail;
+    const remaining: PendingEntry[] = [];
+    for (const entry of pending!) {
+      if (
+        entry.key !== e.detail.key ||
+        !e.target.contains(entry.element) ||
+        !entry.element.isConnected
+      ) {
+        remaining.push(entry);
+        continue;
+      }
+      let resolved = false;
+      entry.element.dispatchEvent(
+        new CustomEvent("context-request", {
+          bubbles: true,
+          composed: true,
+          detail: {
+            key,
+            callback: (value: unknown) => {
+              resolved = true;
+              entry.callback(value);
+            },
+          },
+        }),
+      );
+      if (!resolved) remaining.push(entry);
     }
-  }
+    pending = remaining;
+  });
+}
 
-  /** Dispatches an existing Event, or creates and dispatches a bubbling CustomEvent. */
-  emit(event: Event): void;
-  emit<D>(name: string, detail?: D, options?: Omit<CustomEventInit<D>, "detail">): void;
-  emit(nameOrEvent: string | Event, detail?: unknown, options?: CustomEventInit): void {
-    if (nameOrEvent instanceof Event) return void this.host.dispatchEvent(nameOrEvent);
-    this.host.dispatchEvent(
-      new CustomEvent(nameOrEvent, {
-        bubbles: true,
-        composed: true,
-        ...options,
-        detail,
-      }),
-    );
-  }
+function registerPending<T>(element: HTMLElement, key: symbol, callback: (value: T) => void): void {
+  ensureDocumentHandler();
+  pending!.push({ element, key, callback });
+}
 
-  /** Queries a single required element by CSS selector. Throws if not found. */
-  getElement<E extends keyof HTMLElementTagNameMap>(selector: E | string): HTMLElementTagNameMap[E];
-  getElement<E extends keyof HTMLElementTagNameMap>(
-    root: DocumentFragment | Element,
-    selector: E | string,
-  ): HTMLElementTagNameMap[E];
-  getElement<E extends keyof HTMLElementTagNameMap>(
-    selectorOrRoot: E | string | DocumentFragment | Element,
-    maybeSelector?: E | string,
-  ): HTMLElementTagNameMap[E] {
-    return this.getElements<E>(selectorOrRoot as any, maybeSelector as any)[0]!;
-  }
+function unregisterPending(element: HTMLElement, key: symbol): void {
+  if (!pending) return;
+  pending = pending.filter((e) => !(e.element === element && e.key === key));
+}
 
-  /** Queries all matching elements by CSS selector. Throws if none found. */
-  getElements<E extends keyof HTMLElementTagNameMap>(
-    selector: E | string,
-  ): HTMLElementTagNameMap[E][];
-  getElements<E extends keyof HTMLElementTagNameMap>(
-    root: DocumentFragment | Element,
-    selector: E | string,
-  ): HTMLElementTagNameMap[E][];
-  getElements<E extends keyof HTMLElementTagNameMap>(
-    selectorOrRoot: E | string | DocumentFragment | Element,
-    maybeSelector?: E | string,
-  ): HTMLElementTagNameMap[E][] {
-    const hasRoot = maybeSelector !== undefined;
-    const root = hasRoot ? (selectorOrRoot as DocumentFragment | Element) : this.host;
-    const selector = (hasRoot ? maybeSelector : selectorOrRoot) as string;
-    const elements = Array.from(root.querySelectorAll<HTMLElementTagNameMap[E]>(selector));
-    invariant(elements.length > 0, `${this.host.localName}: missing ${selector}`);
-    return elements;
-  }
+export function createContext<T>(name?: string): ContextKey<T> {
+  const key = Symbol(name);
 
-  /**
-   * Finds the nearest ancestor component and returns it as the typed component.
-   * Throws if no matching ancestor exists.
-   */
-  consume<T extends HTMLElement>(ctor: (new () => T) & ComponentBrand): T {
-    const name = customElements.getName(ctor);
-    const el = name ? this.host.closest<T>(name) : null;
-    invariant(el, `${this.host.localName}: no ancestor <${name}> found`);
-    return el;
-  }
+  return {
+    provide(ctx, value) {
+      function handler(e: ContextRequestEvent<T>) {
+        if (e.detail.key !== key) return;
+        e.stopPropagation();
+        e.detail.callback(value);
+      }
+      ctx.host.addEventListener("context-request", handler);
+      ctx.onCleanup(() => ctx.host.removeEventListener("context-request", handler));
 
-  /**
-   * Subscribes `callback` to one store or an array of stores and registers automatic cleanup
-   * on disconnect. Immediately invokes the callback with the current value(s).
-   */
-  effect<T>(store: ReadableAtom<T>, callback: (value: T) => void): void;
-  effect<Stores extends ReadableAtom<any>[]>(
-    stores: [...Stores],
-    callback: (...values: StoreValues<Stores>) => void,
-  ): void;
-  effect(storeOrStores: any, callback: any): void {
-    this.onCleanup(effect(storeOrStores, callback));
-  }
+      ctx.host.dispatchEvent(
+        new CustomEvent("context-provider", {
+          bubbles: true,
+          composed: true,
+          detail: { key },
+        }),
+      );
+    },
 
-  /**
-   * Binds a writable atom to a DOM element property.
-   * Store is the source of truth — element is set from the store on bind.
-   *
-   * No options → full auto-detect (native controls + custom `.value`/`change`), two-way.
-   * Options present → `prop` defaults to auto-detected, `event` undefined = one-way.
-   */
-  bind(
-    store: WritableAtom<any>,
-    control: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement,
-    opts?: BindOptions,
-  ): void;
-  bind<V>(
-    store: WritableAtom<V>,
-    control: HTMLElement & { value: NoInfer<V> },
-    opts?: BindOptions,
-  ): void;
-  bind(store: WritableAtom<unknown>, control: HTMLElement, opts: BindOptions): void;
-  bind(store: WritableAtom<unknown>, control: HTMLElement, opts?: BindOptions): void {
-    const input = control instanceof HTMLInputElement ? control : undefined;
-    let propEvent: [string, string] = ["value", "change"];
+    consume(ctx, callback) {
+      let resolved = false;
+      const wrappedCallback = (value: T) => {
+        resolved = true;
+        callback(value);
+      };
 
-    if (input?.type === "checkbox") {
-      propEvent = ["checked", "change"];
-    } else if (input?.type === "number" || input?.type === "range") {
-      propEvent = ["valueAsNumber", "input"];
-    } else if (input || control instanceof HTMLTextAreaElement) {
-      propEvent = ["value", "input"];
-    }
+      ctx.host.dispatchEvent(
+        new CustomEvent("context-request", {
+          bubbles: true,
+          composed: true,
+          detail: { key, callback: wrappedCallback },
+        }),
+      );
 
-    const prop = opts?.prop ?? propEvent[0];
-    const event = opts ? opts?.event : propEvent[1];
-    const el = control as any;
-
-    el[prop] = store.get();
-    event && this.on(control, event, () => store.set(el[prop]));
-    this.effect(store, (value) => {
-      el[prop] = value;
-    });
-  }
+      if (!resolved) {
+        registerPending(ctx.host, key, wrappedCallback);
+        ctx.onCleanup(() => unregisterPending(ctx.host, key));
+        queueMicrotask(() => {
+          if (!resolved) {
+            console.warn(
+              `${ctx.host.localName}: no provider found for context "${name ?? String(key)}"`,
+            );
+          }
+        });
+      }
+    },
+  };
 }

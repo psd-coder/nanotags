@@ -8,6 +8,7 @@
     {
       "imports": {
         "nano-wc": "https://esm.sh/nano-wc@latest",
+        "nano-wc/context": "https://esm.sh/nano-wc@latest/context",
         "nanostores": "https://esm.sh/nanostores@latest"
       }
     }
@@ -43,10 +44,13 @@
 
   <script type="module" data-type="javascript">
     import { define } from "nano-wc";
+    import { createContext } from "nano-wc/context";
     import { atom } from "nanostores";
     import { attachRovingFocus } from "attachRovingFocus.js";
 
-    const XTabs = define("x-tabs")
+    const tabsContext = createContext("tabs");
+
+    define("x-tabs")
       .withProps((p) => ({ active: p.string("") }))
       .withRefs((r) => ({
         tablist: r.one("div"),
@@ -68,18 +72,18 @@
           });
         });
 
-        return { $active };
+        tabsContext.provide(ctx, { $active });
       });
 
     define("x-tab-panel")
       .withProps((p) => ({ value: p.string("") }))
       .setup((ctx) => {
-        const parent = ctx.consume(XTabs);
-
-        ctx.effect(parent.$active, (active) => {
-          const visible = active === ctx.props.$value.get();
-          ctx.host.setAttribute("role", "tabpanel");
-          ctx.host.hidden = !visible;
+        tabsContext.consume(ctx, (parent) => {
+          ctx.effect(parent.$active, (active) => {
+            const visible = active === ctx.props.$value.get();
+            ctx.host.setAttribute("role", "tabpanel");
+            ctx.host.hidden = !visible;
+          });
         });
       });
   </script>

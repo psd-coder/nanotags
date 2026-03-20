@@ -1,7 +1,7 @@
 export { define } from "./define";
-export { __ctx } from "./context";
+export { __ctx } from "./setup-context";
 
-export type { SetupContext, SetupFn, ComponentCtor, ComponentBrand, ReservedKeys } from "./context";
+export type { SetupContext, SetupFn, ComponentCtor, ReservedKeys } from "./setup-context";
 export type {
   TypedEvent,
   AnySchema,

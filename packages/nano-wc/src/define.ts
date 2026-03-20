@@ -1,7 +1,7 @@
 import type { PropsSchema, RefsSchema, StrictPropEntry } from "./types";
-import type { ComponentCtor, SetupFn, SetupContext } from "./context";
+import type { ComponentCtor, SetupFn, SetupContext } from "./setup-context";
 import { propBuilders, refBuilders } from "./builders";
-import { createComponent } from "./factory.ts";
+import { createComponent } from "./factory";
 
 export class ComponentBuilder<
   Name extends string,

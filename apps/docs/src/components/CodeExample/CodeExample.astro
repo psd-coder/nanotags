@@ -55,6 +55,7 @@ invariant(firstFile, "No files provided");
   import { renderList } from "nano-wc/render";
   import nanoWcRaw from "nano-wc:dist/index.mjs?raw";
   import nanoWcRenderRaw from "nano-wc:dist/render.mjs?raw";
+  import nanoWcContextRaw from "nano-wc:dist/context.mjs?raw";
   import { atom, computed } from "nanostores";
   import * as v from "valibot";
   import { debouncedComputed } from "~/utils/debouncedComputed";
@@ -66,6 +67,7 @@ invariant(firstFile, "No files provided");
     imports: {
       "nano-wc": toDataUri(nanoWcRaw),
       "nano-wc/render": toDataUri(nanoWcRenderRaw),
+      "nano-wc/context": toDataUri(nanoWcContextRaw),
       valibot: "https://esm.sh/valibot@latest",
     },
   };
