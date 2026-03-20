@@ -64,12 +64,12 @@ describe("propBuilders", () => {
       expect(parseWithSchema(schema, null, "test")).toBe(false);
     });
 
-    it('rejects "yes"', () => {
-      expect(() => parseWithSchema(schema, "yes", "test")).toThrow(TypeError);
+    it("false -> false", () => {
+      expect(parseWithSchema(schema, false, "test")).toBe(false);
     });
 
-    it('rejects "1"', () => {
-      expect(() => parseWithSchema(schema, "1", "test")).toThrow(TypeError);
+    it("true -> true", () => {
+      expect(parseWithSchema(schema, true, "test")).toBe(true);
     });
   });
 

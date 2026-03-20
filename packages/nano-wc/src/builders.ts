@@ -57,11 +57,12 @@ export const propBuilders: {
     return v.pipe(getBaseSchema(fallback), parser);
   },
   boolean(fallback?: boolean | null) {
-    const n = fallback === null;
     return v.pipe(
       getBaseSchema(fallback),
-      v.union([v.literal("true"), v.literal("false"), v.literal(""), v.null()]),
-      v.transform((s) => (n && s === null ? null : s === "true" || s === "")),
+      v.transform((s) => {
+        if (s === "false") return false;
+        return s === "" || !!s;
+      }),
     );
   },
   oneOf(
