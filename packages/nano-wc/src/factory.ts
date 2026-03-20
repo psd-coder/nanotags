@@ -5,6 +5,7 @@ import type {
   PropEntry,
   AnySchema,
   AttrPropKeys,
+  ContextsSchema,
   Infer,
   InferRefs,
   PropDef,
@@ -208,15 +209,18 @@ export function createComponent<
   Refs extends RefsSchema,
   // oxlint-disable-next-line typescript-eslint/no-empty-object-type
   Mixin = {},
+  // oxlint-disable-next-line typescript-eslint/no-empty-object-type
+  Contexts extends ContextsSchema = {},
 >(
   name: string,
   propsSchema: Props,
   refsSchema: Refs,
-  setupFn: SetupFn<Props, Refs>,
-): ComponentCtor<Props, Refs, Mixin> {
+  setupFn: SetupFn<Props, Refs, Contexts>,
+  contextsSchema: Contexts = {} as Contexts,
+): ComponentCtor<Props, Refs, Mixin, Contexts> {
   if (customElements.get(name)) {
     console.warn(`${name} already defined, reusing existing class`);
-    return customElements.get(name) as ComponentCtor<Props, Refs, Mixin>;
+    return customElements.get(name) as ComponentCtor<Props, Refs, Mixin, Contexts>;
   }
 
   const attrPropKeys = Object.keys(propsSchema).filter((k) => {
@@ -226,11 +230,12 @@ export function createComponent<
   const attrToPropKey: Record<string, string> = Object.fromEntries(
     attrPropKeys.map((k) => [camelToKebab(k), k]),
   );
+  const ctxKeys = Object.keys(contextsSchema);
 
   class Component extends HTMLElement {
     #cleanups: VoidFunction[] = [];
     #props!: ReactivePropsResult<Props>;
-    [__ctx]!: Context<Props, Refs>;
+    [__ctx]!: Context<Props, Refs, Contexts>;
 
     static get observedAttributes() {
       return attrPropKeys.map(camelToKebab);
@@ -265,17 +270,34 @@ export function createComponent<
     }
 
     connectedCallback() {
-      this.#connect();
-    }
-
-    #connect() {
       this.#props.hydrateProps(this);
       const refs = collectRefs(this, refsSchema);
-      this[__ctx] = new Context<Props, Refs>({
+
+      if (ctxKeys.length === 0) {
+        this.#runSetup(refs, {} as any);
+        return;
+      }
+
+      const resolved: Record<string, unknown> = {};
+      let remaining = ctxKeys.length;
+      const ctxLike = { host: this as HTMLElement, onCleanup: this.#onCleanup };
+      for (const k of ctxKeys) {
+        contextsSchema[k]!.consume(ctxLike, (value: unknown) => {
+          resolved[k] = value;
+          if (--remaining === 0) {
+            this.#runSetup(refs, resolved as any);
+          }
+        });
+      }
+    }
+
+    #runSetup(refs: InferRefs<Refs>, contexts: any) {
+      this[__ctx] = new Context<Props, Refs, Contexts>({
         host: this,
         onCleanup: this.#onCleanup,
         props: this.#props.stores,
         refs,
+        contexts,
       });
       const mixin = setupFn(this[__ctx]);
       if (mixin) {
@@ -291,5 +313,5 @@ export function createComponent<
 
   // Cast to string to avoid HTMLElementTagNameMap circular reference during type inference
   customElements.define(name as string, Component);
-  return Component as unknown as ComponentCtor<Props, Refs, Mixin>;
+  return Component as unknown as ComponentCtor<Props, Refs, Mixin, Contexts>;
 }

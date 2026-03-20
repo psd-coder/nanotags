@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { atom } from "nanostores";
 
 import { createContext } from "./context";
+import { define } from "./define";
 import { createComponent } from "./factory";
 import { cleanup, mount, uniqueTag } from "../tests/utils";
 
@@ -142,43 +143,6 @@ describe("provide + consume", () => {
     expect(r1).toBe("shared-value");
     expect(r2).toBe("shared-value");
   });
-
-  it("consumer without provider warns after microtask", async () => {
-    const tag = uniqueTag("orphan");
-    const ctx = createContext<string>("orphan-ctx");
-    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
-
-    createComponent(tag, {}, {}, (setupCtx) => {
-      ctx.consume(setupCtx, () => {});
-    });
-
-    mount(`<${tag}></${tag}>`);
-    expect(warn).not.toHaveBeenCalled();
-
-    await Promise.resolve();
-    expect(warn).toHaveBeenCalledOnce();
-    expect(warn.mock.calls[0]![0]).toContain("no provider");
-    warn.mockRestore();
-  });
-
-  it("no warning when provider is present", async () => {
-    const parentTag = uniqueTag("prov");
-    const childTag = uniqueTag("cons");
-    const ctx = createContext<string>("ok");
-    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
-
-    createComponent(parentTag, {}, {}, (setupCtx) => {
-      ctx.provide(setupCtx, "val");
-    });
-    createComponent(childTag, {}, {}, (setupCtx) => {
-      ctx.consume(setupCtx, () => {});
-    });
-
-    mount(`<${parentTag}><${childTag}></${childTag}></${parentTag}>`);
-    await Promise.resolve();
-    expect(warn).not.toHaveBeenCalled();
-    warn.mockRestore();
-  });
 });
 
 describe("late provider", () => {
@@ -262,5 +226,143 @@ describe("late provider", () => {
     document.body.innerHTML = "";
     document.body.innerHTML = html;
     expect(received).toBe("reconnected");
+  });
+});
+
+describe("withContexts", () => {
+  it("setup receives resolved context value synchronously", () => {
+    const parentTag = uniqueTag("wc-prov");
+    const childTag = uniqueTag("wc-cons");
+
+    type API = { greet: () => string };
+    const ctx = createContext<API>("wc-test");
+
+    createComponent(parentTag, {}, {}, (setupCtx) => {
+      ctx.provide(setupCtx, { greet: () => "hello" });
+    });
+
+    let received: API | undefined;
+    define(childTag)
+      .withContexts({ api: ctx })
+      .setup((setupCtx) => {
+        received = setupCtx.contexts.api;
+      });
+
+    mount(`<${parentTag}><${childTag}></${childTag}></${parentTag}>`);
+    expect(received).toBeDefined();
+    expect(received!.greet()).toBe("hello");
+  });
+
+  it("setup deferred until late provider connects", () => {
+    const parentTag = uniqueTag("wc-late-prov");
+    const childTag = uniqueTag("wc-late-cons");
+
+    const ctx = createContext<string>("wc-late");
+
+    const setup = vi.fn();
+    define(childTag)
+      .withContexts({ val: ctx })
+      .setup((setupCtx) => {
+        setup(setupCtx.contexts.val);
+      });
+
+    // Mount child before parent is defined
+    document.body.innerHTML = `<${parentTag}><${childTag}></${childTag}></${parentTag}>`;
+    expect(setup).not.toHaveBeenCalled();
+
+    // Define and upgrade parent
+    createComponent(parentTag, {}, {}, (setupCtx) => {
+      ctx.provide(setupCtx, "late-value");
+    });
+    customElements.upgrade(document.body.querySelector(parentTag)!);
+
+    expect(setup).toHaveBeenCalledOnce();
+    expect(setup).toHaveBeenCalledWith("late-value");
+  });
+
+  it("multiple contexts all resolved before setup", () => {
+    const parentTag = uniqueTag("wc-multi-prov");
+    const childTag = uniqueTag("wc-multi-cons");
+
+    const ctx1 = createContext<string>("ctx1");
+    const ctx2 = createContext<number>("ctx2");
+
+    createComponent(parentTag, {}, {}, (setupCtx) => {
+      ctx1.provide(setupCtx, "hello");
+      ctx2.provide(setupCtx, 42);
+    });
+
+    let r1: string | undefined;
+    let r2: number | undefined;
+    define(childTag)
+      .withContexts({ str: ctx1, num: ctx2 })
+      .setup((setupCtx) => {
+        r1 = setupCtx.contexts.str;
+        r2 = setupCtx.contexts.num;
+      });
+
+    mount(`<${parentTag}><${childTag}></${childTag}></${parentTag}>`);
+    expect(r1).toBe("hello");
+    expect(r2).toBe(42);
+  });
+
+  it("disconnected before resolve — setup never runs", () => {
+    const parentTag = uniqueTag("wc-disc-prov");
+    const childTag = uniqueTag("wc-disc-cons");
+
+    const ctx = createContext<string>("disc");
+    const setup = vi.fn();
+
+    define(childTag).withContexts({ val: ctx }).setup(setup);
+
+    // Mount child, parent not defined
+    document.body.innerHTML = `<${parentTag}><${childTag}></${childTag}></${parentTag}>`;
+    expect(setup).not.toHaveBeenCalled();
+
+    // Remove child before defining parent
+    document.body.querySelector(childTag)!.remove();
+
+    createComponent(parentTag, {}, {}, (setupCtx) => {
+      ctx.provide(setupCtx, "too-late");
+    });
+    customElements.upgrade(document.body.querySelector(parentTag)!);
+
+    expect(setup).not.toHaveBeenCalled();
+  });
+
+  it("reconnect runs setup again with fresh context", () => {
+    const parentTag = uniqueTag("wc-reconn-prov");
+    const childTag = uniqueTag("wc-reconn-cons");
+
+    const ctx = createContext<string>("reconn");
+
+    createComponent(parentTag, {}, {}, (setupCtx) => {
+      ctx.provide(setupCtx, "value");
+    });
+
+    const calls: string[] = [];
+    define(childTag)
+      .withContexts({ val: ctx })
+      .setup((setupCtx) => {
+        calls.push(setupCtx.contexts.val);
+      });
+
+    const html = `<${parentTag}><${childTag}></${childTag}></${parentTag}>`;
+    mount(html);
+    expect(calls).toEqual(["value"]);
+
+    document.body.innerHTML = "";
+    document.body.innerHTML = html;
+    expect(calls).toEqual(["value", "value"]);
+  });
+
+  it("empty contexts — setup runs immediately", () => {
+    const tag = uniqueTag("wc-empty");
+    const setup = vi.fn();
+
+    define(tag).withContexts({}).setup(setup);
+
+    mount(`<${tag}></${tag}>`);
+    expect(setup).toHaveBeenCalledOnce();
   });
 });

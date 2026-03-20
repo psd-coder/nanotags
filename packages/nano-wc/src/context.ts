@@ -117,13 +117,6 @@ export function createContext<T>(name?: string): ContextKey<T> {
       if (!resolved) {
         registerPending(ctx.host, key, wrappedCallback);
         ctx.onCleanup(() => unregisterPending(ctx.host, key));
-        queueMicrotask(() => {
-          if (!resolved) {
-            console.warn(
-              `${ctx.host.localName}: no provider found for context "${name ?? String(key)}"`,
-            );
-          }
-        });
       }
     },
   };

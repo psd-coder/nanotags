@@ -76,15 +76,15 @@
   "size-limit": [
     {
       "path": ".size-check/index.mjs",
-      "limit": "2350 B"
+      "limit": "2415 B"
     },
     {
       "path": ".size-check/render.mjs",
       "limit": "410 B"
     },
-    {
+{
       "path": ".size-check/context.mjs",
-      "limit": "466 B"
+      "limit": "408 B"
     }
   ]
 }

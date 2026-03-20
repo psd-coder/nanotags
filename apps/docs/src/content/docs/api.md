@@ -634,7 +634,7 @@ define("x-tabs").setup((ctx) => {
 
 ### `contextKey.consume(ctx, callback)`
 
-Requests the context value from the nearest ancestor provider. The callback receives the provided value.
+Requests the context value from the nearest ancestor provider. The callback receives the provided value. Use for dynamic or conditional context access.
 
 ```typescript
 define("x-tab").setup((ctx) => {
@@ -644,6 +644,25 @@ define("x-tab").setup((ctx) => {
   });
 });
 ```
+
+### `withContexts` builder method
+
+Declares required contexts on the builder. Setup is deferred until all contexts resolve — no callback nesting needed:
+
+```typescript
+import { createContext } from "nano-wc/context";
+
+const tabsCtx = createContext<TabsAPI>("tabs");
+
+define("x-tab")
+  .withContexts({ tabs: tabsCtx })
+  .setup((ctx) => {
+    ctx.contexts.tabs.register(ctx.host);
+    ctx.effect(ctx.contexts.tabs.$active, (active) => { /* ... */ });
+  });
+```
+
+If a context never resolves (no provider in the tree), setup never runs — debug via devtools.
 
 ### How it works
 

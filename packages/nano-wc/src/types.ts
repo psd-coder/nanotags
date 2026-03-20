@@ -83,6 +83,19 @@ export type InferRefs<Schema extends RefsSchema> = {
   [Key in keyof Schema]: InferRef<Schema[Key]>;
 };
 
+export type Consumable<T> = {
+  consume(
+    ctx: { readonly host: HTMLElement; readonly onCleanup: (cb: VoidFunction) => void },
+    callback: (value: T) => void,
+  ): void;
+};
+
+export type ContextsSchema = Record<string, Consumable<unknown>>;
+
+export type InferContexts<S extends ContextsSchema> = {
+  [K in keyof S]: S[K] extends Consumable<infer T> ? T : never;
+};
+
 export type BindOptions = { prop?: string; event?: string };
 
 export type Prettify<T> = {

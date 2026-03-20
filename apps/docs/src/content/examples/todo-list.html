@@ -103,11 +103,10 @@
         text: one("span"),
         deleteBtn: one("button"),
       }))
+      .withContexts({ list: todoListContext })
       .setup((ctx) => {
-        todoListContext.consume(ctx, (parent) => {
-          ctx.on(ctx.refs.checkbox, "change", () => parent.toggle(ctx.props.$data.get().id));
-          ctx.on(ctx.refs.deleteBtn, "click", () => parent.delete(ctx.props.$data.get().id));
-        });
+        ctx.on(ctx.refs.checkbox, "change", () => ctx.contexts.list.toggle(ctx.props.$data.get().id));
+        ctx.on(ctx.refs.deleteBtn, "click", () => ctx.contexts.list.delete(ctx.props.$data.get().id));
 
         ctx.effect(ctx.props.$data, (data) => {
           const { done, text } = data;

@@ -18,4 +18,7 @@ export type {
   InferRef,
   InferRefs,
   BindOptions,
+  Consumable,
+  ContextsSchema,
+  InferContexts,
 } from "./types";

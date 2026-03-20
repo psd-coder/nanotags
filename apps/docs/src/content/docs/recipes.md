@@ -6,7 +6,7 @@ order: 3
 
 ## Parent-child communication
 
-When components form a logical group (Tabs/Tab, Accordion/Panel), use the **context protocol** via `createContext` from `nano-wc/context`. The parent provides a typed API, children consume it by context key:
+When components form a logical group (Tabs/Tab, Accordion/Panel), use the **context protocol** via `createContext` from `nano-wc/context`. The parent provides a typed API, children declare required contexts with `withContexts`:
 
 ```typescript
 import { createContext } from "nano-wc/context";
@@ -25,12 +25,14 @@ const XTabs = define("x-tabs").setup((ctx) => {
   return { $active };
 });
 
-define("x-tab-panel").setup((ctx) => {
-  tabsContext.consume(ctx, (tabs) => {
-    tabs.register(ctx.host);
+define("x-tab-panel")
+  .withContexts({ tabs: tabsContext })
+  .setup((ctx) => {
+    ctx.contexts.tabs.register(ctx.host);
   });
-});
 ```
+
+`withContexts` defers setup until all declared contexts resolve — no callback nesting needed. For dynamic or conditional context access, use `consume()` directly.
 
 For **unrelated** components, use events instead:
 

@@ -664,18 +664,20 @@ define("x-tabs").setup((ctx) => {
 });
 ```
 
-### Consumer
+### Consumer — `withContexts`
 
-Call `consume` in the child's setup. The callback fires synchronously when a provider is found:
+Declare required contexts on the builder. Setup is deferred until all contexts resolve — no callback nesting:
 
 ```typescript
-define("x-tab").setup((ctx) => {
-  tabsContext.consume(ctx, (tabs) => {
-    tabs.register(ctx.host);
-    ctx.effect(tabs.$active, (index) => { /* ... */ });
+define("x-tab")
+  .withContexts({ tabs: tabsContext })
+  .setup((ctx) => {
+    ctx.contexts.tabs.register(ctx.host);
+    ctx.effect(ctx.contexts.tabs.$active, (index) => { /* ... */ });
   });
-});
 ```
+
+If a context never resolves (no provider), setup never runs. For dynamic/conditional access, use `consume()` directly.
 
 ### How it works
 

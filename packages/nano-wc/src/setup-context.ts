@@ -4,6 +4,8 @@ import { invariant } from "./utils";
 import type {
   BindOptions,
   ComponentProps,
+  ContextsSchema,
+  InferContexts,
   InferRefs,
   PropsSchema,
   ReactiveProps,
@@ -18,20 +20,34 @@ type StoreValues<Stores extends ReadableAtom<any>[]> = {
   [Index in keyof Stores]: StoreValue<Stores[Index]>;
 };
 
-export type SetupContext<Props extends PropsSchema, Refs extends RefsSchema> = Context<Props, Refs>;
+export type SetupContext<
+  Props extends PropsSchema,
+  Refs extends RefsSchema,
+  // oxlint-disable-next-line typescript-eslint/no-empty-object-type
+  Contexts extends ContextsSchema = {},
+> = Context<Props, Refs, Contexts>;
 
-export type SetupFn<Props extends PropsSchema, Refs extends RefsSchema> = (
-  ctx: SetupContext<Props, Refs>,
-) => Record<string, unknown> | void;
+export type SetupFn<
+  Props extends PropsSchema,
+  Refs extends RefsSchema,
+  // oxlint-disable-next-line typescript-eslint/no-empty-object-type
+  Contexts extends ContextsSchema = {},
+> = (ctx: SetupContext<Props, Refs, Contexts>) => Record<string, unknown> | void;
 
 declare const __nano: unique symbol;
 export type ComponentBrand = { readonly [__nano]: true };
 
-export type ContextOptions<Props extends PropsSchema, Refs extends RefsSchema> = {
+export type ContextOptions<
+  Props extends PropsSchema,
+  Refs extends RefsSchema,
+  // oxlint-disable-next-line typescript-eslint/no-empty-object-type
+  Contexts extends ContextsSchema = {},
+> = {
   host: HTMLElement;
   props: ReactiveProps<Props>;
   refs: InferRefs<Refs>;
   onCleanup: (callback: VoidFunction) => void;
+  contexts: InferContexts<Contexts>;
 };
 
 export type ComponentCtor<
@@ -39,24 +55,34 @@ export type ComponentCtor<
   Refs extends RefsSchema,
   // oxlint-disable-next-line typescript-eslint/no-empty-object-type
   Mixin = {},
+  // oxlint-disable-next-line typescript-eslint/no-empty-object-type
+  Contexts extends ContextsSchema = {},
 > = (new () => HTMLElement &
-  ComponentProps<Props> & { readonly [__ctx]: Context<Props, Refs> } & Mixin) &
+  ComponentProps<Props> & { readonly [__ctx]: Context<Props, Refs, Contexts> } & Mixin) &
   ComponentBrand;
 
-export class Context<Props extends PropsSchema, Refs extends RefsSchema> {
+export class Context<
+  Props extends PropsSchema,
+  Refs extends RefsSchema,
+  // oxlint-disable-next-line typescript-eslint/no-empty-object-type
+  Contexts extends ContextsSchema = {},
+> {
   readonly host: HTMLElement;
   /** Reactive property stores of the component. */
   readonly props: ReactiveProps<Props>;
   /** References to elements within the component. */
   readonly refs: InferRefs<Refs>;
+  /** Resolved context values declared via withContexts. */
+  readonly contexts: InferContexts<Contexts>;
   /** Registers a cleanup function to be called when the component is disconnected. */
   readonly onCleanup: (callback: VoidFunction) => void;
 
-  constructor({ host, onCleanup, props, refs }: ContextOptions<Props, Refs>) {
+  constructor({ host, onCleanup, props, refs, contexts }: ContextOptions<Props, Refs, Contexts>) {
     this.host = host;
     this.onCleanup = onCleanup;
     this.props = props;
     this.refs = refs;
+    this.contexts = contexts;
   }
 
   /**
