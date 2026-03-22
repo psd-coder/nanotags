@@ -28,7 +28,7 @@
     "linkedom": "^0.18.12",
     "nano-wc": "workspace:*",
     "nanoid": "^5.1.7",
-    "nanostores": "^1.1.1",
+    "nanostores": "^1.2.0",
     "rehype-autolink-headings": "^7.1.0",
     "rehype-slug": "^6.0.0",
     "valibot": "^1.2.0"
