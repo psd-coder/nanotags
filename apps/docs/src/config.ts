@@ -1,5 +1,7 @@
 export const siteConfig = {
   name: "nano-wc",
+  description:
+    "Tiny Web Components wrapper powered by Nano Stores reactivity. No Shadow DOM, typed builder API, reactive props and refs via nanostores, automatic cleanup on disconnect.",
   author: {
     name: "Pavel Grinchenko",
     twitter: "https://x.com/psd_coder",
