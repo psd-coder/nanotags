@@ -6,7 +6,21 @@ order: 1
 
 import { InstallPackage } from "~/components/InstallPackage";
 
-A thin Web Components wrapper powered by [Nano Stores](https://github.com/nanostores/nanostores) reactivity. It leans on the platform — Custom Elements, standard DOM, regular CSS — instead of reinventing them. The result is a typed, reactive component model with automatic cleanup in under 2.5 KB.
+A thin Web Components wrapper powered by [Nano Stores](https://github.com/nanostores/nanostores) reactivity. It leans on the platform — Custom Elements, standard DOM, regular CSS — instead of reinventing them. The result is a typed, reactive component model with automatic cleanup in under **2.5 KB**.
+
+```typescript
+import { define } from "nano-wc";
+
+define("copy-btn")
+  .withRefs((r) => ({ code: r.one("code") }))
+  .setup((ctx) => {
+    ctx.on(ctx.host, "click", async () => {
+      await navigator.clipboard.writeText(ctx.refs.code.textContent);
+      ctx.host.classList.add('active');
+      setTimeout(() => ctx.host.classList.remove('active'), 1000);
+    });
+  });
+```
 
 ## Why nano-wc?
 
@@ -65,14 +79,6 @@ What happens:
 2. **[`.withProps`](api#withprops)** — declares a `count` attribute parsed as a number, exposed as `ctx.props.$count` atom
 3. **[`.withRefs`](api#withrefs)** — declares typed refs resolved via `[data-ref="name"]` selectors
 4. **[`.setup`](api#setup)** — wires event listeners and reactive effects; everything is auto-cleaned on disconnect
-
-For simple components without props or refs, pass setup directly:
-
-```typescript
-const Logger = define("x-logger", (ctx) => {
-  console.log("connected:", ctx.host.tagName);
-});
-```
 
 ## FAQ
 
