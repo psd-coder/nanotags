@@ -12,10 +12,12 @@ const examples = await getCollection("examples");
   <p class={styles.subtitle}>Live playground — edit code and see changes in the Preview immediately.</p>
   <div class={styles.grid}>
     {examples.map((example) => (
-      <a class={styles.card} href={getHref(`examples/${example.id}`)}>
-        <h2 class={styles.cardTitle}>{example.data.title}</h2>
-        <p class={styles.cardDescription}>{example.data.description}</p>
-      </a>
+      <div class={styles.card}>
+        <h2 class={styles.cardTitle}>
+          <a class={styles.cardLink} href={getHref(`examples/${example.id}`)}>{example.data.title}</a>
+        </h2>
+        <p class={styles.cardDescription} set:html={example.data.description} />
+      </div>
     ))}
   </div>
 </MainLayout>

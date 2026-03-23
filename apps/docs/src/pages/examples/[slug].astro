@@ -24,7 +24,7 @@ const { title, description, files } = example.data;
       </a>
       {title}
     </h1>
-    <p class={styles.subtitle}>{description}</p>
+    <p class={styles.subtitle} set:html={description} />
     <CodeExample files={files} />
     <p class={styles.footerNote}>
       Btw, this playground is written using nano-wc 😉.

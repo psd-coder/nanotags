@@ -38,6 +38,8 @@
 }
 
 .card {
+  position: relative;
+
   display: flex;
   flex-direction: column;
 
@@ -46,7 +48,6 @@
   border-radius: var(--radius-md);
 
   color: var(--color-text-primary);
-  text-decoration: none;
 
   transition:
     border-color 0.15s,
@@ -58,7 +59,19 @@
   }
 }
 
+.cardLink {
+  color: inherit;
+  text-decoration: none;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+  }
+}
+
 .cardTitle {
+  position: static;
   margin: 0 0 calc(var(--spacing) * 3);
   font-size: var(--text-lg);
 }
@@ -68,6 +81,10 @@
   padding: var(--spacing) 0;
   font-size: var(--text-sm);
   color: var(--color-text-secondary);
+
+  & a {
+    position: relative;
+  }
 }
 
 .footerNote {
