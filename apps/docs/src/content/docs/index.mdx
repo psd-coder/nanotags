@@ -84,27 +84,27 @@ What happens:
 
 nano-wc builds on the standard Custom Elements lifecycle with a thin reactive layer on top.
 
-### 1. Constructor
+**1. Constructor**
 
 Reactive prop stores are created and getter/setter descriptors are defined on the element instance. Attribute-backed props read their initial value from the DOM; JSON and property-only props start as `undefined`.
 
 The element is usable as a JS object at this point, but it is not connected to the DOM and [`setup()`](api#setup) has not run.
 
-### 2. connectedCallback
+**2. connectedCallback**
 
 All props are hydrated: each prop's `get` function is called, the raw value is parsed through the schema, and the corresponding atom is set. Then [`setup()`](api#setup) runs.
 
 If [`withContexts()`](api#withcontexts) was used, setup is deferred until all declared contexts resolve. See [Context API](cookbook#context-api) for details.
 
-### 3. attributeChangedCallback
+**3. attributeChangedCallback**
 
 Fires when an observed attribute changes. The new value is validated through the prop's schema and pushed to the corresponding atom. Only attribute-backed props trigger this; JSON and property-only props are not observed.
 
-### 4. disconnectedCallback
+**4. disconnectedCallback**
 
 All registered cleanups run: event listeners are removed, store subscriptions are cancelled, and any [`onCleanup()`](api#oncleanup) callbacks execute. The cleanup list is then cleared.
 
-### Reconnection
+**Reconnection**
 
 Re-connecting a previously disconnected component runs [`setup()`](api#setup) again with a fresh cleanup scope. Props that were set programmatically (via the property setter) retain their values; attribute-backed props that were never set programmatically re-read from the DOM.
 
@@ -114,7 +114,7 @@ This means:
 - Refs are re-resolved from the current DOM
 - Mixin members are re-assigned
 
-### Cleanup guarantees
+**Cleanup guarantees**
 
 All of these are auto-cleaned on disconnect:
 - Event listeners registered via [`ctx.on()`](api#on)
@@ -126,18 +126,18 @@ If a cleanup function throws, the remaining cleanups still execute. The first er
 
 ## FAQ
 
-### Why no Shadow DOM?
+**Why no Shadow DOM?**
 
 Shadow DOM brings encapsulation at the cost of complexity: styling piercing, slotting quirks, form participation hacks. nano-wc targets server-rendered or static markup where global CSS is already the norm. Keeping elements in the light DOM means your existing styles, CSS frameworks, and dev tools work as expected.
 
-### How does it compare to Lit / Stencil / vanilla CE?
+**How does it compare to Lit / Stencil / vanilla CE?**
 
 nano-wc is intentionally minimal. It doesn't ship a template engine, virtual DOM, or lifecycle beyond connect/disconnect. If you need those, use Lit. If you want a thin reactivity layer over standard custom elements with TypeScript-first DX, nano-wc is a good fit.
 
-### Does it work with SSR frameworks?
+**Does it work with SSR frameworks?**
 
 Yes. nano-wc is designed for hydration: render markup on the server (Astro, PHP, Rails, static HTML), then hydrate on the client. Props are read from attributes, refs are resolved from existing DOM.
 
-### What happens when a context provider is missing?
+**What happens when a context provider is missing?**
 
 When [`withContexts()`](api#withcontexts) is used, setup is deferred until all declared contexts resolve. If a provider never appears, setup never runs and the element stays inert. Use [`consume()`](api#contextconsume) directly for contexts that may or may not be available.
