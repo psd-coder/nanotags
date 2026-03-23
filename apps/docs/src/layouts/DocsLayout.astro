@@ -2,6 +2,8 @@
 import { Layout } from "~/components/Layout";
 import { Icon } from "~/components/Icon";
 import { MobileTableOfContents, TableOfContents } from "~/components/TableOfContents";
+import PrevNextNav from "~/components/PrevNextNav/PrevNextNav.astro";
+import type { NavLink } from "~/components/PrevNextNav/PrevNextNav.astro";
 import { getHref } from "~/utils/urls";
 import styles from "./styles.module.css";
 
@@ -15,9 +17,11 @@ type Props = {
   title: string;
   slug: string;
   headings: Heading[];
+  prev?: NavLink;
+  next?: NavLink;
 };
 
-const { title, slug, headings } = Astro.props;
+const { title, slug, headings, prev, next } = Astro.props;
 ---
 
 <Layout title={title}>
@@ -43,5 +47,6 @@ const { title, slug, headings } = Astro.props;
       </a>
     </div>
     <slot />
+    <PrevNextNav prev={prev} next={next} />
   </article>
 </Layout>

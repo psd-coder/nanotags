@@ -1,19 +1,28 @@
 ---
 import { getCollection, render } from "astro:content";
+import { getHref } from "~/utils/urls";
 import DocsLayout from "~/layouts/DocsLayout.astro";
 
 export async function getStaticPaths() {
-  const docs = await getCollection("docs");
-  return docs.map((doc) => ({
-    params: { slug: doc.id === "index" ? undefined : doc.id },
-    props: { doc },
-  }));
+  const docs = (await getCollection("docs")).sort((a, b) => a.data.order - b.data.order);
+  return docs.map((doc, i) => {
+    const prev = docs[i - 1];
+    const next = docs[i + 1];
+    return {
+      params: { slug: doc.id === "index" ? undefined : doc.id },
+      props: {
+        doc,
+        prev: prev ? { title: prev.data.title, href: getHref(prev.id === "index" ? "" : prev.id) } : undefined,
+        next: next ? { title: next.data.title, href: getHref(next.id === "index" ? "" : next.id) } : undefined,
+      },
+    };
+  });
 }
 
-const { doc } = Astro.props;
+const { doc, prev, next } = Astro.props;
 const { Content, headings } = await render(doc);
 ---
 
-<DocsLayout title={doc.data.title} slug={doc.id} headings={headings}>
+<DocsLayout title={doc.data.title} slug={doc.id} headings={headings} prev={prev} next={next}>
   <Content />
 </DocsLayout>
