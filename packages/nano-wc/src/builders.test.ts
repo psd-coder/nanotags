@@ -295,12 +295,6 @@ describe("refBuilders", () => {
     it("InferRef: typed → concrete element", () => {
       expectTypeOf<InferRef<SingleRefMarker<"button">>>().toEqualTypeOf<HTMLButtonElement>();
     });
-
-    it("generic type param with selector: typed without runtime tag check", () => {
-      const marker = refBuilders.one<"button">(".my-trigger");
-      expectTypeOf(marker).toExtend<SingleRefMarker<"button">>();
-      expect(marker.__selector).toBe(".my-trigger");
-    });
   });
 
   describe("many", () => {
@@ -326,11 +320,6 @@ describe("refBuilders", () => {
       expect(marker.__selector).toBe(".items");
     });
 
-    it("no __selector for tags array", () => {
-      const marker = refBuilders.many(["button"]);
-      expect(marker.__selector).toBeUndefined();
-    });
-
     it("typed many() infers __list and __tag", () => {
       const marker = refBuilders.many("input");
       expectTypeOf(marker).toExtend<{ __list: true; __tag: "input" }>();
@@ -349,12 +338,6 @@ describe("refBuilders", () => {
 
     it("InferRef: typed → concrete element[]", () => {
       expectTypeOf<InferRef<ListRefMarker<"input">>>().toEqualTypeOf<HTMLInputElement[]>();
-    });
-
-    it("generic type param with selector: typed without runtime tag check", () => {
-      const marker = refBuilders.many<"li">(".items");
-      expectTypeOf(marker).toExtend<ListRefMarker<"li">>();
-      expect(marker.__selector).toBe(".items");
     });
   });
 
@@ -386,40 +369,6 @@ describe("refBuilders", () => {
     });
   });
 
-  describe("array-of-tags overloads", () => {
-    it('one(["button", "a"]) → InferRef resolves to union', () => {
-      const marker = refBuilders.one(["button", "a"]);
-      expectTypeOf<InferRef<typeof marker>>().toEqualTypeOf<
-        HTMLButtonElement | HTMLAnchorElement
-      >();
-    });
-
-    it('many(["button", "a"]) → InferRef resolves to union[]', () => {
-      const marker = refBuilders.many(["button", "a"]);
-      expectTypeOf<InferRef<typeof marker>>().toEqualTypeOf<
-        (HTMLButtonElement | HTMLAnchorElement)[]
-      >();
-    });
-
-    it("array-of-tags: no __selector", () => {
-      const marker = refBuilders.one(["button", "a"]);
-      expectTypeOf<InferRef<typeof marker>>().toEqualTypeOf<
-        HTMLButtonElement | HTMLAnchorElement
-      >();
-      expect(marker.__selector).toBeUndefined();
-    });
-
-    it("mixed tags and selectors in array → falls back to Element", () => {
-      const oneMarker = refBuilders.one(["button", ".some-class"]);
-      expectTypeOf<InferRef<typeof oneMarker>>().toEqualTypeOf<Element>();
-      expect(oneMarker.__selector).toBeUndefined();
-
-      const manyMarker = refBuilders.many(["li", ".some-class"]);
-      expectTypeOf<InferRef<typeof manyMarker>>().toEqualTypeOf<Element[]>();
-      expect(manyMarker.__selector).toBeUndefined();
-    });
-  });
-
   it("InferRefs maps mixed schema to correct element types", () => {
     type CustomEl = HTMLElement & { custom: true };
     type Schema = {
@@ -427,14 +376,12 @@ describe("refBuilders", () => {
       items: ListRefMarker<"li">;
       generic: SingleRefMarker;
       custom: SingleRefMarker & { readonly __el: CustomEl };
-      unionTags: ListRefMarker<"button" | "a">;
     };
     type Result = InferRefs<Schema>;
     expectTypeOf<Result["btn"]>().toEqualTypeOf<HTMLButtonElement>();
     expectTypeOf<Result["items"]>().toEqualTypeOf<HTMLLIElement[]>();
     expectTypeOf<Result["generic"]>().toEqualTypeOf<Element>();
     expectTypeOf<Result["custom"]>().toEqualTypeOf<CustomEl>();
-    expectTypeOf<Result["unionTags"]>().toEqualTypeOf<(HTMLButtonElement | HTMLAnchorElement)[]>();
   });
 });
 

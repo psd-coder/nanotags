@@ -146,8 +146,7 @@ By default, refs match `[data-ref="name"]`. Non-tag strings (containing `.`, `#`
 ```typescript
 .withRefs((r) => ({
   custom: r.one(".my-trigger"), // Element
-  typed:  r.one<"button">(".my-trigger"), // HTMLButtonElement (type-only)
-  union:  r.one(["button", "a"]), // HTMLButtonElement | HTMLAnchorElement
+  typed:  r.one<HTMLButtonElement>(".my-trigger"), // HTMLButtonElement (type-only)
   any:    r.many<HTMLElement>(), // HTMLElement[] (no tag validation)
 }))
 ```

@@ -32,7 +32,7 @@ const { value, class: className, ...rest } = Astro.props;
   const XTabs = define("x-tabs")
     .withProps((p) => ({ value: p.string(null) }))
     .withRefs((r) => ({
-      tabs: r.many("button[role=tab]"),
+      tabs: r.many<HTMLButtonElement>("button[role=tab]"),
       arrowLeft: r.one("button"),
       arrowRight: r.one("button"),
     }))

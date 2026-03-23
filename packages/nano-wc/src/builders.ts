@@ -101,16 +101,12 @@ function buildRefSchema(tag: string | undefined) {
 
 const TAG_RE = /^[a-z][a-z0-9-]*$/;
 
-function parseRefArgs(tagOrSelector?: string | readonly string[]) {
+function parseRefArgs(tagOrSelector?: string) {
   const tag =
     typeof tagOrSelector === "string" && TAG_RE.test(tagOrSelector) ? tagOrSelector : undefined;
-  const tags = Array.isArray(tagOrSelector)
-    ? (tagOrSelector as readonly string[]).filter((t) => TAG_RE.test(t))
-    : undefined;
   const sel = typeof tagOrSelector === "string" && !tag ? tagOrSelector : undefined;
   return {
     ...(tag && { __tag: tag }),
-    ...(tags?.length && { __tags: tags }),
     ...(sel && { __selector: sel }),
     schema: buildRefSchema(tag),
   };
@@ -118,29 +114,19 @@ function parseRefArgs(tagOrSelector?: string | readonly string[]) {
 
 function one(): SingleRefMarker;
 function one<const Tag extends keyof HTMLElementTagNameMap>(tag: Tag): SingleRefMarker<Tag>;
-function one<const Tag extends keyof HTMLElementTagNameMap>(selector: string): SingleRefMarker<Tag>;
-function one<const Tags extends readonly (keyof HTMLElementTagNameMap)[]>(
-  tags: Tags,
-): SingleRefMarker<Tags[number]>;
-function one(selectors: readonly string[]): SingleRefMarker;
 function one<El extends Element>(): SingleRefMarker & { readonly __el: El };
 function one<El extends Element>(selector: string): SingleRefMarker & { readonly __el: El };
 function one(selector: string): SingleRefMarker;
-function one(tagOrSelector?: string | readonly string[]): SingleRefMarker {
+function one(tagOrSelector?: string): SingleRefMarker {
   return parseRefArgs(tagOrSelector) as SingleRefMarker;
 }
 
 function many(): ListRefMarker;
 function many<const Tag extends keyof HTMLElementTagNameMap>(tag: Tag): ListRefMarker<Tag>;
-function many<const Tag extends keyof HTMLElementTagNameMap>(selector: string): ListRefMarker<Tag>;
-function many<const Tags extends readonly (keyof HTMLElementTagNameMap)[]>(
-  tags: Tags,
-): ListRefMarker<Tags[number]>;
-function many(selectors: readonly string[]): ListRefMarker;
 function many<El extends Element>(): ListRefMarker & { readonly __el: El };
 function many<El extends Element>(selector: string): ListRefMarker & { readonly __el: El };
 function many(selector: string): ListRefMarker;
-function many(tagOrSelector?: string | readonly string[]): ListRefMarker {
+function many(tagOrSelector?: string): ListRefMarker {
   return { __list: true as const, ...parseRefArgs(tagOrSelector) } as ListRefMarker;
 }
 
