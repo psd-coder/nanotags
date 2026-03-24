@@ -1,5 +1,39 @@
 # Changelog
 
+## 0.12.0
+
+### Breaking Changes
+
+- Replace `UIComponent` abstract class with plain context object: `ctx` is now a separate object with a `host` ref instead of being the element itself
+- Remove `ctx.sync()`, replace with unified `ctx.bind(store, element)`: store is always the first argument
+- Rename `PropDef.sync` to `attribute` for controlling HTML attribute reflection
+- Move props/refs into Context, expose via `__ctx` symbol instead of host element getters
+- Replace static `elementName` with `customElements.getName()`, add `ComponentBrand` type for type-safe `consume()`
+- Revert to nanostores `ReadableAtom`/`WritableAtom` types instead of local store types (local types lacked `listen()` causing runtime crash with `effect()`)
+- Split context protocol into separate `nano-wc/context` entry point
+- Drop tag-name generics and array-of-tags from ref builders: use `r.one<HTMLButtonElement>` instead of `r.one<"button">`
+
+### Features
+
+- Add `withContexts()` builder method: declares required contexts on the builder chain, setup defers until all resolve, eliminating callback nesting from `consume()`
+- Type `currentTarget` in `ctx.on()` overloads for exact element type in callbacks
+
+### Bug Fixes
+
+- Support native boolean values (`true`/`false`) in boolean prop schema
+- Skip attribute init for props already set via property setter
+- Handle pre-upgrade properties on not-yet-upgraded custom element children
+
+### Refactoring
+
+- Simplify `invariant` to only accept string messages
+- Reuse `getElements` in `getElement` to reduce bundle size
+- Remove `composed: true` from emitted `CustomEvent`s (unnecessary without Shadow DOM)
+
+### Dependencies
+
+- Bump `valibot` to `^1.3.1`
+
 ## 0.11.0
 
 ### Breaking Changes
