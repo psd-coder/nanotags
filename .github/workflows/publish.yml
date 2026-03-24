@@ -16,4 +16,5 @@ jobs:
       - uses: actions/checkout@v6
       - uses: ./.github/actions/prepare-runner
       - run: pnpm --filter nano-wc build
+      - run: cp README.md LICENSE.md packages/nano-wc/
       - run: pnpm --filter nano-wc publish --no-git-checks --provenance

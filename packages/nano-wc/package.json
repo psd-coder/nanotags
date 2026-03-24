@@ -37,7 +37,7 @@
     }
   },
   "scripts": {
-    "dev": "tsdown --watch",
+"dev": "tsdown --watch",
     "build": "tsdown",
     "build:size": "tsdown --minify --out-dir .size-check --no-dts",
     "test": "vitest run",
