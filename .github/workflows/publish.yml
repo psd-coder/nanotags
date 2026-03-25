@@ -15,6 +15,6 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - uses: ./.github/actions/prepare-runner
-      - run: pnpm --filter nano-wc build
-      - run: cp README.md LICENSE.md packages/nano-wc/
-      - run: pnpm --filter nano-wc publish --no-git-checks --provenance
+      - run: pnpm --filter nanotags build
+      - run: cp README.md LICENSE.md packages/nanotags/
+      - run: pnpm --filter nanotags publish --no-git-checks --access public --provenance

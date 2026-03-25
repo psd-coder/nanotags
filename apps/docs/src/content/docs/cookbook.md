@@ -112,7 +112,7 @@ ctx.effect(ctx.props.$open, (open) => {
 
 ## Components Communication
 
-Parents pass data down through props. Children notify parents via custom events ([`ctx.emit()`](api#emit) / [`ctx.on()`](api#on)). When a child needs ongoing access to parent state, use the [context protocol](cookbook#context-api) (`nano-wc/context`). Unrelated components share [Nano Stores](https://github.com/nanostores/nanostores) atoms directly.
+Parents pass data down through props. Children notify parents via custom events ([`ctx.emit()`](api#emit) / [`ctx.on()`](api#on)). When a child needs ongoing access to parent state, use the [context protocol](cookbook#context-api) (`nanotags/context`). Unrelated components share [Nano Stores](https://github.com/nanostores/nanostores) atoms directly.
 
 ### Parent to child
 
@@ -147,7 +147,7 @@ Use the [Context protocol](cookbook#context-api). The parent exposes a value via
 When components form a logical group (Tabs/Tab, Accordion/Panel), the parent provides a typed API and children declare required contexts:
 
 ```typescript
-import { createContext } from "nano-wc/context";
+import { createContext } from "nanotags/context";
 
 type TabsAPI = { register: (el: Element) => void; $active: WritableAtom<string> };
 const tabsContext = createContext<TabsAPI>("tabs");
@@ -225,7 +225,7 @@ define("x-results-list")
 
 ## Context API
 
-The Context API enables cross-component communication for parent-child relationships without tight coupling. It's imported from the separate `nano-wc/context` entry point (~0.4 KB).
+The Context API enables cross-component communication for parent-child relationships without tight coupling. It's imported from the separate `nanotags/context` entry point (~0.4 KB).
 
 ### When to use context
 
@@ -312,7 +312,7 @@ r.one("x-my-el"); // typed as InstanceType<typeof MyEl>, validated at runtime
 Use [`TypedEvent`](api#typedevent) to define type-safe events, then augment `HTMLElementEventMap` so that [`ctx.on()`](api#on), [`ctx.emit()`](api#emit), and `addEventListener` are fully typed:
 
 ```typescript
-import type { TypedEvent } from "nano-wc";
+import type { TypedEvent } from "nanotags";
 
 type SelectionChangeEvent = TypedEvent<
   InstanceType<typeof XListBox>,
@@ -340,8 +340,8 @@ ctx.on(listboxEl, "listbox:change", (e) => {
 For a complete component definition, declare both the element and its events together:
 
 ```typescript
-import { define } from "nano-wc";
-import type { TypedEvent } from "nano-wc";
+import { define } from "nanotags";
+import type { TypedEvent } from "nanotags";
 
 type TabsChangedEvent = TypedEvent<InstanceType<typeof XTabs>, { index: number }>;
 

@@ -29,5 +29,5 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           package_manager: pnpm
-          directory: packages/nano-wc
+          directory: packages/nanotags
           build_script: build:size

@@ -1,5 +1,5 @@
 import type { WritableAtom } from "nanostores";
-import { define } from "nano-wc";
+import { define } from "nanotags";
 
 type TabsElement = HTMLElement & { value: string | null };
 

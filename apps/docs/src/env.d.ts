@@ -1,9 +1,9 @@
-declare module "nano-wc?url" {
+declare module "nanotags?url" {
   declare const url: string;
   export default url;
 }
 
-declare module "nano-wc/render?url" {
+declare module "nanotags/render?url" {
   declare const url: string;
   export default url;
 }

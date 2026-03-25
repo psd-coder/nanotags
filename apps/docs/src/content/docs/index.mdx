@@ -10,7 +10,7 @@ import { CdnImport } from "~/components/CdnImport";
 A thin Web Components wrapper powered by [Nano Stores](https://github.com/nanostores/nanostores) reactivity. It leans on the platform—Custom Elements, standard DOM, regular CSS—instead of reinventing them. The result is a typed, reactive component model with automatic cleanup in under **2.5 KB**.
 
 ```typescript
-import { define } from "nano-wc";
+import { define } from "nanotags";
 
 define("copy-btn")
   .withRefs((r) => ({ code: r.one("code") }))
@@ -23,19 +23,19 @@ define("copy-btn")
   });
 ```
 
-## Why nano-wc?
+## Why nanotags?
 
 - **No Shadow DOM**: markup stays in the regular DOM, styled with normal CSS
 - **Reactive props** via [Nano Stores](https://github.com/nanostores/nanostores) atoms: subscribe when you need updates, `.get()` when you don't
 - **Typed fluent builder**: props, refs, and contexts are fully inferred through the chain
 - **Automatic cleanup**: event listeners, store subscriptions, and bindings are removed on disconnect
-- **Tree-shakeable**: `nano-wc/render` and `nano-wc/context` are separate entry points
+- **Tree-shakeable**: `nanotags/render` and `nanotags/context` are separate entry points
 - **Standard Schema**: built-in validators plus any [Standard Schema](https://github.com/standard-schema/standard-schema)-compatible library (Valibot, Zod, ArkType)
 - **Hydration-first**: built for statically rendered markup. Pair with [Astro](https://astro.build/), server-rendered HTML, or any static-first setup to hydrate lightweight interactive islands
 
 ## Installation
 
-<InstallPackage pkg="nano-wc nanostores" />
+<InstallPackage pkg="nanotags nanostores" />
 
 [`nanostores`](https://github.com/nanostores/nanostores) is a peer dependency.
 
@@ -49,16 +49,16 @@ Then use bare specifiers as usual:
 
 ```html
 <script type="module">
-  import { define } from "nano-wc";
+  import { define } from "nanotags";
   import { atom } from "nanostores";
 </script>
 ```
 
-Sub-entry points (`nano-wc/render`, `nano-wc/context`) follow the same URL pattern.
+Sub-entry points (`nanotags/render`, `nanotags/context`) follow the same URL pattern.
 
 ## Quick Start
 
-Start with markup: nano-wc hydrates existing DOM rather than rendering from scratch:
+Start with markup: nanotags hydrates existing DOM rather than rendering from scratch:
 
 ```html
 <x-counter count="0">
@@ -70,7 +70,7 @@ Start with markup: nano-wc hydrates existing DOM rather than rendering from scra
 Then define the component:
 
 ```typescript
-import { define } from "nano-wc";
+import { define } from "nanotags";
 
 const Counter = define("x-counter")
   .withProps((p) => ({
@@ -100,7 +100,7 @@ What happens:
 
 ## Lifecycle
 
-nano-wc builds on the standard Custom Elements lifecycle with a thin reactive layer on top.
+nanotags builds on the standard Custom Elements lifecycle with a thin reactive layer on top.
 
 **1. Constructor**
 
@@ -146,15 +146,15 @@ If a cleanup function throws, the remaining cleanups still execute. The first er
 
 **Why no Shadow DOM?**
 
-Shadow DOM brings encapsulation at the cost of complexity: styling piercing, slotting quirks, form participation hacks. nano-wc targets server-rendered or static markup where global CSS is already the norm. Keeping elements in the light DOM means your existing styles, CSS frameworks, and dev tools work as expected.
+Shadow DOM brings encapsulation at the cost of complexity: styling piercing, slotting quirks, form participation hacks. nanotags targets server-rendered or static markup where global CSS is already the norm. Keeping elements in the light DOM means your existing styles, CSS frameworks, and dev tools work as expected.
 
 **How does it compare to Lit / Stencil / vanilla CE?**
 
-nano-wc is intentionally minimal. It doesn't ship a template engine, virtual DOM, or lifecycle beyond connect/disconnect. If you need those, use Lit. If you want a thin reactivity layer over standard custom elements with TypeScript-first DX, nano-wc is a good fit.
+nanotags is intentionally minimal. It doesn't ship a template engine, virtual DOM, or lifecycle beyond connect/disconnect. If you need those, use Lit. If you want a thin reactivity layer over standard custom elements with TypeScript-first DX, nanotags is a good fit.
 
 **Does it work with SSR frameworks?**
 
-Yes. nano-wc is designed for hydration: render markup on the server (Astro, PHP, Rails, static HTML), then hydrate on the client. Props are read from attributes, refs are resolved from existing DOM.
+Yes. nanotags is designed for hydration: render markup on the server (Astro, PHP, Rails, static HTML), then hydrate on the client. Props are read from attributes, refs are resolved from existing DOM.
 
 **What happens when a context provider is missing?**
 

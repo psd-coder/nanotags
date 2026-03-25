@@ -231,11 +231,11 @@ describe("late provider", () => {
 
 describe("withContexts", () => {
   it("setup receives resolved context value synchronously", () => {
-    const parentTag = uniqueTag("wc-prov");
-    const childTag = uniqueTag("wc-cons");
+    const parentTag = uniqueTag("tags-prov");
+    const childTag = uniqueTag("tags-cons");
 
     type API = { greet: () => string };
-    const ctx = createContext<API>("wc-test");
+    const ctx = createContext<API>("tags-test");
 
     createComponent(parentTag, {}, {}, (setupCtx) => {
       ctx.provide(setupCtx, { greet: () => "hello" });
@@ -254,10 +254,10 @@ describe("withContexts", () => {
   });
 
   it("setup deferred until late provider connects", () => {
-    const parentTag = uniqueTag("wc-late-prov");
-    const childTag = uniqueTag("wc-late-cons");
+    const parentTag = uniqueTag("tags-late-prov");
+    const childTag = uniqueTag("tags-late-cons");
 
-    const ctx = createContext<string>("wc-late");
+    const ctx = createContext<string>("tags-late");
 
     const setup = vi.fn();
     define(childTag)
@@ -281,8 +281,8 @@ describe("withContexts", () => {
   });
 
   it("multiple contexts all resolved before setup", () => {
-    const parentTag = uniqueTag("wc-multi-prov");
-    const childTag = uniqueTag("wc-multi-cons");
+    const parentTag = uniqueTag("tags-multi-prov");
+    const childTag = uniqueTag("tags-multi-cons");
 
     const ctx1 = createContext<string>("ctx1");
     const ctx2 = createContext<number>("ctx2");
@@ -307,8 +307,8 @@ describe("withContexts", () => {
   });
 
   it("disconnected before resolve, setup never runs", () => {
-    const parentTag = uniqueTag("wc-disc-prov");
-    const childTag = uniqueTag("wc-disc-cons");
+    const parentTag = uniqueTag("tags-disc-prov");
+    const childTag = uniqueTag("tags-disc-cons");
 
     const ctx = createContext<string>("disc");
     const setup = vi.fn();
@@ -331,8 +331,8 @@ describe("withContexts", () => {
   });
 
   it("reconnect runs setup again with fresh context", () => {
-    const parentTag = uniqueTag("wc-reconn-prov");
-    const childTag = uniqueTag("wc-reconn-cons");
+    const parentTag = uniqueTag("tags-reconn-prov");
+    const childTag = uniqueTag("tags-reconn-cons");
 
     const ctx = createContext<string>("reconn");
 
@@ -357,7 +357,7 @@ describe("withContexts", () => {
   });
 
   it("empty contexts, setup runs immediately", () => {
-    const tag = uniqueTag("wc-empty");
+    const tag = uniqueTag("tags-empty");
     const setup = vi.fn();
 
     define(tag).withContexts({}).setup(setup);

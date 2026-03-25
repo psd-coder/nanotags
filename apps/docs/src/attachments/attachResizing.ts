@@ -1,4 +1,4 @@
-import type { SetupContext } from "nano-wc";
+import type { SetupContext } from "nanotags";
 import { atom } from "nanostores";
 import styles from "./styles.module.css";
 

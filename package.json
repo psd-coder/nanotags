@@ -1,8 +1,8 @@
 {
   "private": true,
   "scripts": {
-    "core": "pnpm --filter nano-wc",
-    "astro": "pnpm --filter nano-wc-docs",
+    "core": "pnpm --filter nanotags",
+    "astro": "pnpm --filter nanotags-docs",
     "typecheck": "pnpm -r run typecheck",
     "lint": "pnpm -r run lint",
     "format": "pnpm -r run format",

@@ -1,4 +1,4 @@
-import type { SetupContext } from "nano-wc";
+import type { SetupContext } from "nanotags";
 
 type RovingFocusOptions = {
   orientation?: "horizontal" | "vertical" | "both";

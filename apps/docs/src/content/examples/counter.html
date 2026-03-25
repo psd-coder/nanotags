@@ -3,11 +3,11 @@
 
 <head>
   <title>Counter</title>
-  <meta name="description" content="A minimal counter using nano-wc with nanostores reactivity.">
+  <meta name="description" content="A minimal counter using nanotags with nanostores reactivity.">
   <script type="importmap">
     {
       "imports": {
-        "nano-wc": "https://esm.sh/nano-wc@latest",
+        "nanotags": "https://esm.sh/nanotags@latest",
         "nanostores": "https://esm.sh/nanostores@latest"
       }
     }
@@ -30,7 +30,7 @@
   </div>
 
   <script type="module" data-type="javascript">
-    import { define } from 'nano-wc';
+    import { define } from 'nanotags';
     import { atom } from 'nanostores';
 
     define('x-counter')

@@ -1,5 +1,5 @@
 {
-  "name": "nano-wc",
+  "name": "nanotags",
   "version": "0.12.1",
   "description": "Tiny Web Components wrapper with nanostores reactivity. No Shadow DOM, typesafe builder, props/refs, automatic cleanup, all under 3 KB.",
   "keywords": [
@@ -13,7 +13,7 @@
   ],
   "license": "MIT",
   "author": "Pavel Grinchenko <psdcoder@gmail.com>",
-  "repository": "psd-coder/nano-wc",
+  "repository": "psd-coder/nanotags",
   "files": [
     "dist/*",
     "package.json",

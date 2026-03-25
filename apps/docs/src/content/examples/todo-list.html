@@ -7,9 +7,9 @@
   <script type="importmap">
     {
       "imports": {
-        "nano-wc": "https://esm.sh/nano-wc@latest",
-        "nano-wc/context": "https://esm.sh/nano-wc@latest/context",
-        "nano-wc/render": "https://esm.sh/nano-wc@latest/render",
+        "nanotags": "https://esm.sh/nanotags@latest",
+        "nanotags/context": "https://esm.sh/nanotags@latest/context",
+        "nanotags/render": "https://esm.sh/nanotags@latest/render",
         "nanostores": "https://esm.sh/nanostores@latest"
       }
     }
@@ -37,9 +37,9 @@
   </div>
 
   <script type="module" data-type="javascript">
-    import { define } from "nano-wc";
-    import { createContext } from "nano-wc/context";
-    import { renderList } from "nano-wc/render";
+    import { define } from "nanotags";
+    import { createContext } from "nanotags/context";
+    import { renderList } from "nanotags/render";
     import { atom, computed } from "nanostores";
     import * as v from 'valibot';
 
@@ -55,7 +55,7 @@
       }))
       .setup((ctx) => {
         const $todos = atom([
-          { id: 1, text: "Try nano-wc", done: false },
+          { id: 1, text: "Try nanotags", done: false },
           { id: 2, text: "Build something cool", done: false },
         ]);
         const $total = computed($todos, (todos) => todos.length);

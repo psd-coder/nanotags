@@ -51,11 +51,11 @@ invariant(firstFile, "No files provided");
 </x-code-example>
 
 <script>
-  import { define } from "nano-wc";
-  import { renderList } from "nano-wc/render";
-  import nanoWcRaw from "nano-wc:dist/index.mjs?raw";
-  import nanoWcRenderRaw from "nano-wc:dist/render.mjs?raw";
-  import nanoWcContextRaw from "nano-wc:dist/context.mjs?raw";
+  import { define } from "nanotags";
+  import { renderList } from "nanotags/render";
+  import nanoTagsRaw from "nanotags:dist/index.mjs?raw";
+  import nanoTagsRenderRaw from "nanotags:dist/render.mjs?raw";
+  import nanoTagsContextRaw from "nanotags:dist/context.mjs?raw";
   import { atom, computed } from "nanostores";
   import * as v from "valibot";
   import { debouncedComputed } from "~/utils/debouncedComputed";
@@ -65,9 +65,9 @@ invariant(firstFile, "No files provided");
   const toDataUri = (raw: string) => `data:text/javascript;charset=utf-8,${encodeURIComponent(raw)}`;
   const importOverrides = {
     imports: {
-      "nano-wc": toDataUri(nanoWcRaw),
-      "nano-wc/render": toDataUri(nanoWcRenderRaw),
-      "nano-wc/context": toDataUri(nanoWcContextRaw),
+      "nanotags": toDataUri(nanoTagsRaw),
+      "nanotags/render": toDataUri(nanoTagsRenderRaw),
+      "nanotags/context": toDataUri(nanoTagsContextRaw),
       valibot: "https://esm.sh/valibot@latest",
     },
   };

@@ -8,8 +8,8 @@
   <script type="importmap">
     {
       "imports": {
-        "nano-wc": "https://esm.sh/nano-wc@latest",
-        "nano-wc/context": "https://esm.sh/nano-wc@latest/context",
+        "nanotags": "https://esm.sh/nanotags@latest",
+        "nanotags/context": "https://esm.sh/nanotags@latest/context",
         "nanostores": "https://esm.sh/nanostores@latest"
       }
     }
@@ -26,7 +26,7 @@
       </div>
       <x-tab-panel value="overview">
         <h3>Overview</h3>
-        <p>nano-wc is a lightweight web components framework powered by nanostores.</p>
+        <p>nanotags is a lightweight web components framework powered by nanostores.</p>
       </x-tab-panel>
       <x-tab-panel value="features" hidden>
         <h3>Features</h3>
@@ -38,14 +38,14 @@
       </x-tab-panel>
       <x-tab-panel value="setup" hidden>
         <h3>Setup</h3>
-        <pre><code>npm install nano-wc nanostores</code></pre>
+        <pre><code>npm install nanotags nanostores</code></pre>
       </x-tab-panel>
     </x-tabs>
   </div>
 
   <script type="module" data-type="javascript">
-    import { define } from "nano-wc";
-    import { createContext } from "nano-wc/context";
+    import { define } from "nanotags";
+    import { createContext } from "nanotags/context";
     import { atom } from "nanostores";
     import { attachRovingFocus } from "attachRovingFocus.js";
 

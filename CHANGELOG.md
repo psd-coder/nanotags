@@ -10,7 +10,7 @@
 - Move props/refs into Context, expose via `__ctx` symbol instead of host element getters
 - Replace static `elementName` with `customElements.getName()`, add `ComponentBrand` type for type-safe `consume()`
 - Revert to nanostores `ReadableAtom`/`WritableAtom` types instead of local store types (local types lacked `listen()` causing runtime crash with `effect()`)
-- Split context protocol into separate `nano-wc/context` entry point
+- Split context protocol into separate `nanotags/context` entry point
 - Drop tag-name generics and array-of-tags from ref builders: use `r.one<HTMLButtonElement>` instead of `r.one<"button">`
 
 ### Features
@@ -56,11 +56,11 @@
 - Replace `includeComponents` with prefix-based ref ownership
 - Replace options object with flat string API for refs (`one`/`many`)
 - Rename `bind` to `sync`, add `bind` for DOM controls
-- Replace `clone`/`cloneList` with `renderList` and `render` in `nano-wc/render`
+- Replace `clone`/`cloneList` with `renderList` and `render` in `nanotags/render`
 
 ### Features
 
-- Extract `render`/`renderList` into separate `nano-wc/render` entry
+- Extract `render`/`renderList` into separate `nanotags/render` entry
 - Replace `JsonPropMarker` with `PropDef` for unified prop hydration
 - Add null fallback overloads and rename `list` to `oneOf` in props
 - Auto-convert camelCase prop keys to kebab-case HTML attributes

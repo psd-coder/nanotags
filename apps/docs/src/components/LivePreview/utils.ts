@@ -5,7 +5,7 @@ import type { FileEntry, FileEntryType, ImportMap } from "./types";
 const METHOD_OVERRIDES = `
   const log = (l, a) =>
     window.parent?.postMessage(
-      { type: "nano-wc-log", level: l, args: a.map(String) },
+      { type: "nanotags-log", level: l, args: a.map(String) },
       "*"
     );
   ["log", "warn", "error", "info", "debug"].forEach(l => {

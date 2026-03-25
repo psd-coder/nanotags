@@ -23,7 +23,7 @@ jobs:
       - uses: ./.github/actions/prepare-runner
 
       - name: Build docs
-        run: pnpm --filter nano-wc-docs build
+        run: pnpm --filter nanotags-docs build
 
       - uses: actions/upload-pages-artifact@v3
         with:

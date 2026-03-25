@@ -10,7 +10,7 @@ const { class: className, ...rest } = Astro.props;
   <iframe data-ref="frame" class={styles.frame} sandbox="allow-scripts allow-same-origin" title="Live preview" />
 </x-live-preview>
 <script>
-  import { define, type TypedEvent } from "nano-wc";
+  import { define, type TypedEvent } from "nanotags";
   import { computed, onMount } from "nanostores";
   import * as v from "valibot";
   import { $resolvedTheme } from "~/stores/theme";

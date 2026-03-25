@@ -30,12 +30,12 @@ function rehypeFixBaseAnchors() {
   };
 }
 
-const nanoWcRoot = new URL("../../packages/nano-wc", import.meta.url).pathname;
+const nanoTagsRoot = new URL("../../packages/nanotags", import.meta.url).pathname;
 
 // https://astro.build/config
 export default defineConfig({
   site: "https://psd-coder.github.io",
-  base: process.env.CI ? "/nano-wc/" : "/",
+  base: process.env.CI ? "/nanotags/" : "/",
   integrations: [mdx(), sitemap()],
   markdown: {
     shikiConfig: {
@@ -112,14 +112,14 @@ export default defineConfig({
     },
     plugins: [
       {
-        name: "nano-wc-source",
+        name: "nanotags-source",
         enforce: "pre",
         resolveId(id) {
-          if (id === "nano-wc") return `${nanoWcRoot}/src/index.ts`;
-          if (id.startsWith("nano-wc/"))
-            return `${nanoWcRoot}/src/${id.slice("nano-wc/".length)}.ts`;
-          if (id.startsWith("nano-wc:dist/"))
-            return `${nanoWcRoot}/dist/${id.slice("nano-wc:dist/".length)}`;
+          if (id === "nanotags") return `${nanoTagsRoot}/src/index.ts`;
+          if (id.startsWith("nanotags/"))
+            return `${nanoTagsRoot}/src/${id.slice("nanotags/".length)}.ts`;
+          if (id.startsWith("nanotags:dist/"))
+            return `${nanoTagsRoot}/dist/${id.slice("nanotags:dist/".length)}`;
         },
       },
     ],

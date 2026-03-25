@@ -1,6 +1,6 @@
 ---
 import { CodePanels, codePanelsStyles } from "~/components/CodePanels";
-import { version } from "../../../../../packages/nano-wc/package.json";
+import { version } from "../../../../../packages/nanotags/package.json";
 
 const cdns = [
   {
@@ -9,7 +9,7 @@ const cdns = [
       `<script type="importmap">`,
       `{`,
       `  "imports": {`,
-      `    "nano-wc": "https://esm.sh/nano-wc@${version}",`,
+      `    "nanotags": "https://esm.sh/nanotags@${version}",`,
       `    "nanostores": "https://esm.sh/nanostores@1"`,
       `  }`,
       `}`,
@@ -22,7 +22,7 @@ const cdns = [
       `<script type="importmap">`,
       `{`,
       `  "imports": {`,
-      `    "nano-wc": "https://cdn.jsdelivr.net/npm/nano-wc@${version}/+esm",`,
+      `    "nanotags": "https://cdn.jsdelivr.net/npm/nanotags@${version}/+esm",`,
       `    "nanostores": "https://cdn.jsdelivr.net/npm/nanostores@1.2/+esm"`,
       `  }`,
       `}`,

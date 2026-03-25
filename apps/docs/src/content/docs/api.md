@@ -1,6 +1,6 @@
 ---
 title: API
-description: Complete API reference for nano-wc
+description: Complete API reference for nanotags
 order: 2
 ---
 
@@ -185,7 +185,7 @@ The JS definition stays the same: each ref automatically checks both `[data-ref=
 Declares required contexts on the builder. Setup is deferred until all contexts resolve:
 
 ```typescript
-import { createContext } from "nano-wc/context";
+import { createContext } from "nanotags/context";
 
 const tabsCtx = createContext<TabsAPI>("tabs");
 
@@ -373,10 +373,10 @@ ctx.onCleanup(() => cancelAnimationFrame(raf));
 
 ## Context API
 
-Cross-component communication for parent-child relationships. Import from the separate `nano-wc/context` entry point (~0.4 KB).
+Cross-component communication for parent-child relationships. Import from the separate `nanotags/context` entry point (~0.4 KB).
 
 ```typescript
-import { createContext } from "nano-wc/context";
+import { createContext } from "nanotags/context";
 ```
 
 For a conceptual overview, see the [Context API guide](cookbook#context-api).
@@ -435,10 +435,10 @@ If a provider is already connected, the callback fires synchronously. If not, th
 
 ## Rendering
 
-Keyed reconciliation utilities for dynamic content. Import from the separate `nano-wc/render` entry point (~0.4 KB).
+Keyed reconciliation utilities for dynamic content. Import from the separate `nanotags/render` entry point (~0.4 KB).
 
 ```typescript
-import { render, renderList } from "nano-wc/render";
+import { render, renderList } from "nanotags/render";
 ```
 
 Both `render()` and `renderList()` **own the entire container**: any child not part of the current render cycle is removed. Containers must be dedicated to rendered content.
@@ -503,7 +503,7 @@ ctx.effect($users, (users) => {
 A type-only helper that narrows `CustomEvent` to a specific `target` and `detail`. Useful for defining type-safe custom events:
 
 ```typescript
-import type { TypedEvent } from "nano-wc";
+import type { TypedEvent } from "nanotags";
 
 type TabsChangedEvent = TypedEvent<
   InstanceType<typeof XTabs>,

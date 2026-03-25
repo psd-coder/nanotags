@@ -19,7 +19,7 @@ export type FileEntryLang = FileEntry["lang"];
 
 export const logLevelSchema = v.picklist(["log", "warn", "error", "info", "debug"]);
 export const logMessageSchema = v.object({
-  type: v.literal("nano-wc-log"),
+  type: v.literal("nanotags-log"),
   level: logLevelSchema,
   args: v.array(v.string()),
 });

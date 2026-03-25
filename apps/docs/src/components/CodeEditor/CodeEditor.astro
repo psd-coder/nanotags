@@ -9,7 +9,7 @@ const { class: className, lang, ...rest } = Astro.props;
 <x-code-editor class:list={[styles.host, className]} lang={lang} {...rest}>
 </x-code-editor>
 <script>
-  import { define } from "nano-wc";
+  import { define } from "nanotags";
   import { EditorView, basicSetup } from "codemirror";
   import { Annotation, Compartment, EditorSelection } from "@codemirror/state";
   import { javascript } from "@codemirror/lang-javascript";

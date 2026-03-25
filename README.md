@@ -1,9 +1,9 @@
-# nano-wc
+# nanotags
 
-<img align="right" width="92" height="92" title="nano-wc logo"
+<img align="right" width="92" height="92" title="nanotags logo"
      src="./logo.svg">
 
-[![npm version](https://img.shields.io/npm/v/nano-wc.svg)](https://www.npmjs.com/package/nano-wc)
+[![npm version](https://img.shields.io/npm/v/nanotags.svg)](https://www.npmjs.com/package/nanotags)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
 A thin Web Components wrapper powered by [Nano Stores](https://github.com/nanostores/nanostores) reactivity. It leans on the platform—Custom Elements, standard DOM, regular CSS—instead of reinventing them. The result is a typed, reactive component model with automatic cleanup in under 2.5 KB.
@@ -12,7 +12,7 @@ A thin Web Components wrapper powered by [Nano Stores](https://github.com/nanost
 - **Reactive props** via Nano Stores atoms: subscribe when you need updates, `.get()` when you don't
 - **Typed fluent builder**: props, refs, and contexts are fully inferred through the chain
 - **Automatic cleanup**: event listeners, store subscriptions, and bindings are removed on disconnect
-- **Tree-shakeable**: `nano-wc/render` and `nano-wc/context` are separate entry points
+- **Tree-shakeable**: `nanotags/render` and `nanotags/context` are separate entry points
 - **Standard Schema**: built-in validators plus any [Standard Schema](https://github.com/standard-schema/standard-schema)&#8209;compatible library (Valibot, Zod, ArkType)
 - **Hydration-first**: built for statically rendered markup. Pair with [Astro](https://astro.build/), server-rendered HTML, or any static-first setup to hydrate lightweight interactive islands
 
@@ -21,7 +21,7 @@ A thin Web Components wrapper powered by [Nano Stores](https://github.com/nanost
 ```
 
 ```typescript
-import { define } from 'nano-wc';
+import { define } from 'nanotags';
 
 define("x-hello", () => alert("Hello, world!"));
 ```
@@ -36,7 +36,7 @@ For components with props and refs, use the fluent builder:
 ```
 
 ```typescript
-import { define } from "nano-wc";
+import { define } from "nanotags";
 
 const Counter = define("x-counter")
   .withProps((p) => ({
@@ -90,7 +90,7 @@ const Counter = define("x-counter")
 ## Installation
 
 ```bash
-npm install nano-wc nanostores
+npm install nanotags nanostores
 ```
 
 `nanostores` is a peer dependency.
@@ -323,7 +323,7 @@ ctx.emit("change", { value: 42 });
 
 ### DOM Queries
 
-Typed wrappers around `querySelector`/`querySelectorAll` that **throw when nothing matches**. Since nano-wc targets static markup, a missing element is usually a bug.
+Typed wrappers around `querySelector`/`querySelectorAll` that **throw when nothing matches**. Since nanotags targets static markup, a missing element is usually a bug.
 
 ```typescript
 ctx.getElement("input");              // HTMLInputElement (throws if missing)
@@ -347,10 +347,10 @@ ctx.onCleanup(() => cancelAnimationFrame(raf));
 
 ### Context
 
-Cross-component communication via event-based context, similar to React's `useContext`. Import from `nano-wc/context` (~0.4 KB).
+Cross-component communication via event-based context, similar to React's `useContext`. Import from `nanotags/context` (~0.4 KB).
 
 ```typescript
-import { createContext } from "nano-wc/context";
+import { createContext } from "nanotags/context";
 
 const tabsCtx = createContext<TabsAPI>("tabs");
 ```
@@ -390,7 +390,7 @@ Based on the [Web Components Community Group Context Protocol](https://github.co
 
 ### Render
 
-Keyed reconciliation for dynamic content. Import from `nano-wc/render` (~0.4 KB).
+Keyed reconciliation for dynamic content. Import from `nanotags/render` (~0.4 KB).
 
 #### `renderList(container, template, options)`
 
@@ -405,7 +405,7 @@ Reconcile a data array against DOM by key. Creates, updates, removes, and reorde
 ```
 
 ```typescript
-import { renderList } from "nano-wc/render";
+import { renderList } from "nanotags/render";
 
 ctx.effect($users, (users) => {
   renderList(ctx.refs.list, ctx.refs.rowTpl, {
@@ -425,7 +425,7 @@ Options: `data` (readonly array), `key(item, index)` (unique key), `update(el, i
 Single-item rendering. Options are optional. Omit for static templates:
 
 ```typescript
-import { render } from "nano-wc/render";
+import { render } from "nanotags/render";
 
 render(container, loadingTpl);                          // static
 render(container, profileTpl, {                         // data-driven
@@ -440,7 +440,7 @@ Both `render` and `renderList` **own the entire container**: any child not part 
 
 ## Component Communication
 
-Parents pass data down through props. Children notify parents via custom events (`ctx.emit` / `ctx.on`). When a child needs ongoing access to parent state, use the context protocol (`nano-wc/context`). Unrelated components share [Nano Stores](https://github.com/nanostores/nanostores) atoms directly.
+Parents pass data down through props. Children notify parents via custom events (`ctx.emit` / `ctx.on`). When a child needs ongoing access to parent state, use the context protocol (`nanotags/context`). Unrelated components share [Nano Stores](https://github.com/nanostores/nanostores) atoms directly.
 
 ### Parent &rarr; Child
 
@@ -563,7 +563,7 @@ Since attachments receive `ctx`, listeners and effects are automatically cleaned
 `TypedEvent<Target, Detail>` is a type-only helper that narrows `CustomEvent` to a specific `target` and `detail`. Combine with `HTMLElementEventMap` augmentation for app-wide type-safe events:
 
 ```typescript
-import type { TypedEvent } from "nano-wc";
+import type { TypedEvent } from "nanotags";
 
 type TabsChangedEvent = TypedEvent<InstanceType<typeof XTabs>, { index: number }>;
 
@@ -603,15 +603,15 @@ const MyEl = define("x-my-el")
 
 **Why no Shadow DOM?**
 
-Shadow DOM brings encapsulation at the cost of complexity: styling piercing, slotting quirks, form participation hacks. nano-wc targets server-rendered or static markup where global CSS is already the norm. Keeping elements in the light DOM means your existing styles, CSS frameworks, and dev tools work as expected.
+Shadow DOM brings encapsulation at the cost of complexity: styling piercing, slotting quirks, form participation hacks. nanotags targets server-rendered or static markup where global CSS is already the norm. Keeping elements in the light DOM means your existing styles, CSS frameworks, and dev tools work as expected.
 
 **How does it compare to Lit / Stencil / vanilla CE?**
 
-nano-wc is intentionally minimal. It doesn't ship a template engine, virtual DOM, or lifecycle beyond connect/disconnect. If you need those, use Lit. If you want a thin reactivity layer over standard custom elements with TypeScript-first DX, nano-wc is a good fit.
+nanotags is intentionally minimal. It doesn't ship a template engine, virtual DOM, or lifecycle beyond connect/disconnect. If you need those, use Lit. If you want a thin reactivity layer over standard custom elements with TypeScript-first DX, nanotags is a good fit.
 
 **Does it work with SSR frameworks?**
 
-Yes. nano-wc is designed for hydration: render markup on the server (Astro, PHP, Rails, static HTML), then hydrate on the client. Props are read from attributes, refs are resolved from existing DOM.
+Yes. nanotags is designed for hydration: render markup on the server (Astro, PHP, Rails, static HTML), then hydrate on the client. Props are read from attributes, refs are resolved from existing DOM.
 
 **What happens when a context provider is missing?**
 
