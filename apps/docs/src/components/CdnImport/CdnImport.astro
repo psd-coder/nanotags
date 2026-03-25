@@ -1,0 +1,43 @@
+---
+import { CodePanels, codePanelsStyles } from "~/components/CodePanels";
+import { version } from "../../../../../packages/nano-wc/package.json";
+
+const cdns = [
+  {
+    id: "esm.sh",
+    content: [
+      `<script type="importmap">`,
+      `{`,
+      `  "imports": {`,
+      `    "nano-wc": "https://esm.sh/nano-wc@${version}",`,
+      `    "nanostores": "https://esm.sh/nanostores@1"`,
+      `  }`,
+      `}`,
+      `</script>`,
+    ].join("\n"),
+  },
+  {
+    id: "jsdelivr",
+    content: [
+      `<script type="importmap">`,
+      `{`,
+      `  "imports": {`,
+      `    "nano-wc": "https://cdn.jsdelivr.net/npm/nano-wc@${version}/+esm",`,
+      `    "nanostores": "https://cdn.jsdelivr.net/npm/nanostores@1.2/+esm"`,
+      `  }`,
+      `}`,
+      `</script>`,
+    ].join("\n"),
+  },
+];
+---
+
+<x-cdn-import class={codePanelsStyles.wrapper}>
+  <CodePanels items={cdns} defaultValue="esm.sh" lang="html" />
+</x-cdn-import>
+<script>
+  import { defineCodePanels } from "~/utils/defineCodePanels";
+  import { $cdn } from "~/stores/cdn";
+
+  defineCodePanels("x-cdn-import", $cdn);
+</script>

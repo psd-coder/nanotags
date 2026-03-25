@@ -5,6 +5,7 @@ order: 1
 ---
 
 import { InstallPackage } from "~/components/InstallPackage";
+import { CdnImport } from "~/components/CdnImport";
 
 A thin Web Components wrapper powered by [Nano Stores](https://github.com/nanostores/nanostores) reactivity. It leans on the platform—Custom Elements, standard DOM, regular CSS—instead of reinventing them. The result is a typed, reactive component model with automatic cleanup in under **2.5 KB**.
 
@@ -37,6 +38,23 @@ define("copy-btn")
 <InstallPackage pkg="nano-wc nanostores" />
 
 [`nanostores`](https://github.com/nanostores/nanostores) is a peer dependency.
+
+**CDN**
+
+No build step needed. Add an [import map](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script/type/importmap) to your HTML:
+
+<CdnImport />
+
+Then use bare specifiers as usual:
+
+```html
+<script type="module">
+  import { define } from "nano-wc";
+  import { atom } from "nanostores";
+</script>
+```
+
+Sub-entry points (`nano-wc/render`, `nano-wc/context`) follow the same URL pattern.
 
 ## Quick Start
 

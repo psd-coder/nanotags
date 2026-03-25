@@ -6,7 +6,7 @@ import DocsLayout from "~/layouts/DocsLayout.astro";
 // Astro discovers CSS before MDX component frontmatter runs (astro#7761).
 // Side-effect imports force CSS into the module graph for components used in MDX.
 import "~/components/Tabs/styles.module.css";
-import "~/components/InstallPackage/styles.module.css";
+import "~/components/CodePanels/styles.module.css";
 
 export async function getStaticPaths() {
   const docs = (await getCollection("docs")).sort((a, b) => a.data.order - b.data.order);

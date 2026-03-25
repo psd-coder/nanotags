@@ -16,3 +16,5 @@ export const siteConfig = {
     url: "https://evilmartians.com/",
   },
 };
+
+export const shikiThemes = { light: "catppuccin-latte", dark: "catppuccin-mocha" } as const;

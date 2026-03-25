@@ -7,6 +7,7 @@ import sitemap from "@astrojs/sitemap";
 import postcssPresetEnv from "postcss-preset-env";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
 import rehypeSlug from "rehype-slug";
+import { shikiThemes } from "./src/config.ts";
 
 /** Fixes heading anchor links broken by <base href="/">: rewrites #fragment → slug#fragment */
 function rehypeFixBaseAnchors() {
@@ -38,7 +39,7 @@ export default defineConfig({
   integrations: [mdx(), sitemap()],
   markdown: {
     shikiConfig: {
-      themes: { light: "catppuccin-latte", dark: "catppuccin-mocha" },
+      themes: shikiThemes,
     },
     rehypePlugins: [
       rehypeSlug,

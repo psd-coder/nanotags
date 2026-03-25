@@ -1,7 +1,5 @@
 ---
-import Tabs from "~/components/Tabs/Tabs.astro";
-import Tab from "~/components/Tabs/Tab.astro";
-import styles from "./styles.module.css";
+import { CodePanels, codePanelsStyles } from "~/components/CodePanels";
 
 type Props = {
   pkg: string;
@@ -11,42 +9,19 @@ type Props = {
 const { pkg, dev } = Astro.props;
 
 const managers = [
-  { id: "pnpm", cmd: `pnpm add${dev ? " -D" : ""} ${pkg}` },
-  { id: "npm", cmd: `npm install${dev ? " --save-dev" : ""} ${pkg}` },
-  { id: "yarn", cmd: `yarn add${dev ? " -D" : ""} ${pkg}` },
-  { id: "bun", cmd: `bun add${dev ? " -d" : ""} ${pkg}` },
+  { id: "pnpm", content: `pnpm add${dev ? " -D" : ""} ${pkg}` },
+  { id: "npm", content: `npm install${dev ? " --save-dev" : ""} ${pkg}` },
+  { id: "yarn", content: `yarn add${dev ? " -D" : ""} ${pkg}` },
+  { id: "bun", content: `bun add${dev ? " -d" : ""} ${pkg}` },
 ];
 ---
 
-<x-install-package class={styles.wrapper}>
-  <Tabs value="pnpm" class={styles.tabs} data-ref="tabs">
-    {managers.map(({ id }) => (
-      <Tab value={id} class={styles.tab}>{id}</Tab>
-    ))}
-  </Tabs>
-  {managers.map(({ id, cmd }, i) => (
-    <pre class={styles.panel} data-value={id} hidden={i !== 0}><code>{cmd}</code></pre>
-  ))}
+<x-install-package class={codePanelsStyles.wrapper}>
+  <CodePanels items={managers} defaultValue="pnpm" lang="shellscript" />
 </x-install-package>
 <script>
-  import { define } from "nano-wc";
-  import { type PkgManager, $pkgManager } from "~/stores/pkgManager";
+  import { defineCodePanels } from "~/utils/defineCodePanels";
+  import { $pkgManager } from "~/stores/pkgManager";
 
-  define("x-install-package")
-    .withRefs((r) => ({
-      tabs: r.one("x-tabs"),
-      panels: r.many<HTMLPreElement>("pre[data-value]"),
-    }))
-    .setup((ctx) => {
-      ctx.on(ctx.refs.tabs, "change", (e) => {
-        $pkgManager.set(e.currentTarget.value as PkgManager);
-      });
-
-      ctx.effect($pkgManager, (value) => {
-        ctx.refs.tabs.setAttribute("value", value);
-        ctx.refs.panels.forEach((panel) => {
-          panel.hidden = panel.dataset.value !== value;
-        });
-      });
-    });
+  defineCodePanels("x-install-package", $pkgManager);
 </script>
