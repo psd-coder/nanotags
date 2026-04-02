@@ -1,12 +1,28 @@
-import * as v from "valibot";
-
 import type { StandardSchemaV1 } from "@standard-schema/spec";
 
 import type { PropDef, ListRefMarker, SingleRefMarker } from "./types";
 import { camelToKebab } from "./utils";
 
-function getBaseSchema<V>(fallback?: V) {
-  return fallback !== undefined ? v.nullish(v.unknown(), fallback) : v.unknown();
+function schema<O>(
+  validate: (value: unknown) => StandardSchemaV1.Result<O>,
+): StandardSchemaV1<unknown, O> {
+  return { "~standard": { version: 1, vendor: "nanotags", validate } };
+}
+
+function propSchema<O>(
+  fallback: unknown,
+  coerce: (value: unknown) => StandardSchemaV1.Result<O>,
+): StandardSchemaV1<unknown, O> {
+  const nullable = fallback === null;
+  return schema<O>((value) => {
+    const v = fallback !== undefined && value === null ? fallback : value;
+    if (nullable && v === null) return { value: null } as StandardSchemaV1.Result<O>;
+    return coerce(v);
+  });
+}
+
+function fail(message: string) {
+  return { issues: [{ message }] } as const;
 }
 
 export const propBuilders: {
@@ -45,34 +61,28 @@ export const propBuilders: {
   };
 } = {
   string(fallback?: string | null) {
-    const n = fallback === null;
-    return v.pipe(
-      getBaseSchema(fallback),
-      v.transform((val) => (val == null ? (n ? null : "") : String(val))),
-    );
+    return propSchema(fallback, (v) => ({ value: v == null ? "" : String(v) }));
   },
   number(fallback?: number | null) {
-    const parser =
-      fallback === null ? v.transform((val) => (val == null ? null : Number(val))) : v.toNumber();
-    return v.pipe(getBaseSchema(fallback), parser);
+    return propSchema(fallback, (v) => {
+      const num = Number(v);
+      return Number.isNaN(num) ? fail("Invalid number") : { value: num };
+    });
   },
   boolean(fallback?: boolean | null) {
-    const n = fallback === null;
-    return v.pipe(
-      getBaseSchema(fallback),
-      v.transform((s) => {
-        if (n && s === null) return null;
-        if (s === "false") return false;
-        return s === "" || !!s;
-      }),
-    );
+    return propSchema(fallback, (v) => ({
+      value: v === "false" ? false : v === "" || !!v,
+    }));
   },
   oneOf(
     options: readonly (string | number | bigint)[],
     fallback?: string | number | bigint | null,
   ) {
-    const parser = fallback === null ? v.nullable(v.picklist(options)) : v.picklist(options);
-    return v.pipe(getBaseSchema(fallback), parser);
+    return propSchema(fallback, (v) =>
+      options.includes(v as string | number | bigint)
+        ? { value: v }
+        : fail(`Invalid value: ${JSON.stringify(v)}`),
+    );
   },
   json(schema: StandardSchemaV1, fallback?: unknown): PropDef {
     const fb = fallback ?? null;
@@ -90,15 +100,6 @@ export const propBuilders: {
   },
 } as never;
 
-function buildRefSchema(tag: string | undefined) {
-  return tag
-    ? v.pipe(
-        v.instance(Element),
-        v.check((el) => el.tagName.toLowerCase() === tag, `Expected <${tag}>`),
-      )
-    : v.instance(Element);
-}
-
 const TAG_RE = /^[a-z][a-z0-9-]*$/;
 
 function parseRefArgs(tagOrSelector?: string) {
@@ -108,7 +109,11 @@ function parseRefArgs(tagOrSelector?: string) {
   return {
     ...(tag && { __tag: tag }),
     ...(sel && { __selector: sel }),
-    schema: buildRefSchema(tag),
+    schema: schema((value) => {
+      if (!(value instanceof Element)) return fail("Expected Element");
+      if (tag && value.tagName.toLowerCase() !== tag) return fail(`Expected <${tag}>`);
+      return { value };
+    }),
   };
 }
 
@@ -127,7 +132,10 @@ function many<El extends Element>(): ListRefMarker & { readonly __el: El };
 function many<El extends Element>(selector: string): ListRefMarker & { readonly __el: El };
 function many(selector: string): ListRefMarker;
 function many(tagOrSelector?: string): ListRefMarker {
-  return { __list: true as const, ...parseRefArgs(tagOrSelector) } as ListRefMarker;
+  return {
+    __list: true as const,
+    ...parseRefArgs(tagOrSelector),
+  } as ListRefMarker;
 }
 
 export const refBuilders: { one: typeof one; many: typeof many } = {
