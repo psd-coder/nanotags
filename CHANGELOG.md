@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.14.0
+
+### Refactoring
+
+- Replace valibot with minimal inline StandardSchemaV1 schemas, move valibot to devDependencies
+
+## 0.13.1
+
+- Fix publish script to include README.md to the published files
+
+## 0.13.0
+
+- Rename package to "nanotags"
+
 ## 0.12.0
 
 ### Breaking Changes

@@ -1,6 +1,6 @@
 {
   "name": "nanotags",
-  "version": "0.13.1",
+  "version": "0.14.0",
   "description": "Tiny Custom Elements wrapper with nanostores reactivity. No Shadow DOM, typesafe builder, props/refs, automatic cleanup, all under 3 KB.",
   "keywords": [
     "astro",
