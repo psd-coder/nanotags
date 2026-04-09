@@ -286,6 +286,25 @@ describe("getElement / getElements", () => {
     );
     expect(found).toHaveLength(2);
   });
+
+  it("accepts custom element type via generic", () => {
+    type CustomEl = HTMLElement & { custom: true };
+    const tag = uniqueTag("ge");
+    define(tag, (ctx) => {
+      const single = ctx.getElement<CustomEl>(".item");
+      expectTypeOf(single).toEqualTypeOf<CustomEl>();
+
+      const list = ctx.getElements<CustomEl>(".item");
+      expectTypeOf(list).toEqualTypeOf<CustomEl[]>();
+
+      const container = ctx.getElement(".container");
+      const scoped = ctx.getElement<CustomEl>(container, ".item");
+      expectTypeOf(scoped).toEqualTypeOf<CustomEl>();
+
+      const scopedList = ctx.getElements<CustomEl>(container, ".item");
+      expectTypeOf(scopedList).toEqualTypeOf<CustomEl[]>();
+    });
+  });
 });
 
 describe("effect", () => {
@@ -552,7 +571,7 @@ describe("bind", () => {
     const parentTag = uniqueTag("bind-parent");
     const $val = atom("from-parent");
     define(parentTag, (ctx) => {
-      const child = ctx.getElement(childTag);
+      const child = ctx.getElement<HTMLElement>(childTag);
       ctx.bind($val, child, { prop: "value", event: "change" });
     });
     const el = mount(`<${parentTag}><${childTag}></${childTag}></${parentTag}>`);
@@ -595,7 +614,7 @@ describe("bind", () => {
     const tag = uniqueTag("bind");
     const $theme = atom("dark");
     define(tag, (ctx) => {
-      const ctrl = ctx.getElement(controlTag);
+      const ctrl = ctx.getElement<HTMLElement>(controlTag);
       ctx.bind($theme, ctrl, { prop: "theme", event: "change" });
     });
     const el = mount(`<${tag}><${controlTag}></${controlTag}></${tag}>`);
