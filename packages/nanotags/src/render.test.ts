@@ -220,6 +220,54 @@ describe("render", () => {
     expect(container.children[0]).toBe(firstEl);
   });
 
+  it("re-runs update callback without data on subsequent calls", () => {
+    const container = createHostWith("");
+    const tpl = makeTpl("<span></span>");
+    let callCount = 0;
+
+    const update = (el: Element) => {
+      callCount++;
+      el.textContent = `call-${callCount}`;
+    };
+
+    render(container, tpl, { update });
+    expect(callCount).toBe(1);
+    expect(container.children[0]?.textContent).toBe("call-1");
+
+    render(container, tpl, { update });
+    expect(callCount).toBe(2);
+    expect(container.children[0]?.textContent).toBe("call-2");
+
+    render(container, tpl, { update });
+    expect(callCount).toBe(3);
+    expect(container.children[0]?.textContent).toBe("call-3");
+  });
+
+  it("skips update when explicit data has not changed", () => {
+    const container = createHostWith("");
+    const tpl = makeTpl("<span></span>");
+    let callCount = 0;
+    const data = { name: "Alice" };
+
+    render(container, tpl, {
+      data,
+      update: (el, d) => {
+        callCount++;
+        el.textContent = d.name;
+      },
+    });
+    expect(callCount).toBe(1);
+
+    render(container, tpl, {
+      data,
+      update: (el, d) => {
+        callCount++;
+        el.textContent = d.name;
+      },
+    });
+    expect(callCount).toBe(1);
+  });
+
   it("switches between different templates", () => {
     const container = createHostWith("");
     const loadingTpl = makeTpl('<div class="loading">Loading...</div>');
