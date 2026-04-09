@@ -87,8 +87,11 @@ export function render<T, E extends Element = Element>(
   template: HTMLTemplateElement,
   options?: RenderOptions<T, E>,
 ): void {
+  // When no explicit data is provided, use a fresh object each call
+  // so renderList's identity check always passes and update always runs
+  const data = [options !== undefined && "data" in options ? options.data : {}] as T[];
   renderList(container, template, {
-    data: [options?.data ?? (null as T)],
+    data,
     key: () => {
       let id = tplIds.get(template);
       if (id === undefined) {

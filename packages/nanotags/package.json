@@ -82,7 +82,7 @@
     },
     {
       "path": ".size-check/render.mjs",
-      "limit": "410 B"
+      "limit": "417 B"
     },
     {
       "path": ".size-check/context.mjs",
