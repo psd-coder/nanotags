@@ -147,34 +147,41 @@ export class Context<
   }
 
   /** Queries a single required element by CSS selector. Throws if not found. */
-  getElement<E extends keyof HTMLElementTagNameMap>(selector: E | string): HTMLElementTagNameMap[E];
-  getElement<E extends keyof HTMLElementTagNameMap>(
+  getElement<const Tag extends keyof HTMLElementTagNameMap>(
+    selector: Tag,
+  ): HTMLElementTagNameMap[Tag];
+  getElement<const Tag extends keyof HTMLElementTagNameMap>(
     root: DocumentFragment | Element,
-    selector: E | string,
-  ): HTMLElementTagNameMap[E];
-  getElement<E extends keyof HTMLElementTagNameMap>(
-    selectorOrRoot: E | string | DocumentFragment | Element,
-    maybeSelector?: E | string,
-  ): HTMLElementTagNameMap[E] {
-    return this.getElements<E>(selectorOrRoot as any, maybeSelector as any)[0]!;
+    selector: Tag,
+  ): HTMLElementTagNameMap[Tag];
+  getElement<E extends Element>(selector: string): E;
+  getElement<E extends Element>(root: DocumentFragment | Element, selector: string): E;
+  getElement(selector: string): Element;
+  getElement(root: DocumentFragment | Element, selector: string): Element;
+  getElement(selectorOrRoot: string | DocumentFragment | Element, maybeSelector?: string): Element {
+    return this.getElements(selectorOrRoot as any, maybeSelector as any)[0]!;
   }
 
   /** Queries all matching elements by CSS selector. Throws if none found. */
-  getElements<E extends keyof HTMLElementTagNameMap>(
-    selector: E | string,
-  ): HTMLElementTagNameMap[E][];
-  getElements<E extends keyof HTMLElementTagNameMap>(
+  getElements<const Tag extends keyof HTMLElementTagNameMap>(
+    selector: Tag,
+  ): HTMLElementTagNameMap[Tag][];
+  getElements<const Tag extends keyof HTMLElementTagNameMap>(
     root: DocumentFragment | Element,
-    selector: E | string,
-  ): HTMLElementTagNameMap[E][];
-  getElements<E extends keyof HTMLElementTagNameMap>(
-    selectorOrRoot: E | string | DocumentFragment | Element,
-    maybeSelector?: E | string,
-  ): HTMLElementTagNameMap[E][] {
+    selector: Tag,
+  ): HTMLElementTagNameMap[Tag][];
+  getElements<E extends Element>(selector: string): E[];
+  getElements<E extends Element>(root: DocumentFragment | Element, selector: string): E[];
+  getElements(selector: string): Element[];
+  getElements(root: DocumentFragment | Element, selector: string): Element[];
+  getElements(
+    selectorOrRoot: string | DocumentFragment | Element,
+    maybeSelector?: string,
+  ): Element[] {
     const hasRoot = maybeSelector !== undefined;
     const root = hasRoot ? (selectorOrRoot as DocumentFragment | Element) : this.host;
     const selector = (hasRoot ? maybeSelector : selectorOrRoot) as string;
-    const elements = Array.from(root.querySelectorAll<HTMLElementTagNameMap[E]>(selector));
+    const elements = Array.from(root.querySelectorAll(selector));
     invariant(elements.length > 0, `${this.host.localName}: missing ${selector}`);
     return elements;
   }
