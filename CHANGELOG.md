@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.15.1
+
+### Fixed
+
+- Allow store with narrower type than control value in `bind()`.
+
 ## 0.15.0
 
 ### Bug Fixes
