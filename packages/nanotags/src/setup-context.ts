@@ -211,9 +211,9 @@ export class Context<
     control: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement,
     opts?: BindOptions,
   ): void;
-  bind<V>(
-    store: WritableAtom<V>,
-    control: HTMLElement & { value: NoInfer<V> },
+  bind<CV, SV extends CV>(
+    store: WritableAtom<SV>,
+    control: HTMLElement & { value: CV },
     opts?: BindOptions,
   ): void;
   bind(store: WritableAtom<unknown>, control: HTMLElement, opts: BindOptions): void;

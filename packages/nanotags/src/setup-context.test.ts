@@ -1,4 +1,4 @@
-import { atom } from "nanostores";
+import { atom, type WritableAtom } from "nanostores";
 import { afterEach, describe, expect, expectTypeOf, it, vi } from "vitest";
 
 import { define } from "./define";
@@ -657,5 +657,22 @@ describe("bind", () => {
     const ctx = {} as SetupContext<{}, {}>;
     const el = {} as HTMLElement;
     ctx.bind(atom("x"), el, { prop: "theme" });
+  });
+
+  it.skipIf(true)("accepts store with narrower type than control value", () => {
+    // oxlint-disable-next-line typescript-eslint/no-empty-object-type
+    const ctx = {} as SetupContext<{}, {}>;
+    const $narrow = atom("light") as WritableAtom<"light" | "dark">;
+    const ctrl = {} as HTMLElement & { value: string };
+    ctx.bind($narrow, ctrl);
+  });
+
+  it.skipIf(true)("rejects store with wider type than control value", () => {
+    // oxlint-disable-next-line typescript-eslint/no-empty-object-type
+    const ctx = {} as SetupContext<{}, {}>;
+    const $wide = atom("") as WritableAtom<string>;
+    const ctrl = {} as HTMLElement & { value: "light" | "dark" };
+    // @ts-expect-error - string does not extend "light" | "dark"
+    ctx.bind($wide, ctrl);
   });
 });
