@@ -1,9 +1,11 @@
 ---
 import { getCollection, getEntry } from "astro:content";
-import { CodeExample } from "~/components/CodeExample";
-import { Icon } from "~/components/Icon";
-import MainLayout from "~/layouts/MainLayout.astro";
-import { getHref } from "~/utils/urls";
+import { CodeExample } from "astro-pigment/components/playground";
+import { Layout, PageHeading } from "astro-pigment/components";
+import { getHref } from "astro-pigment/utils/urls";
+import nanoTagsRaw from "nanotags:dist/index.mjs?raw";
+import nanoTagsRenderRaw from "nanotags:dist/render.mjs?raw";
+import nanoTagsContextRaw from "nanotags:dist/context.mjs?raw";
 import styles from './styles.module.css';
 
 export async function getStaticPaths() {
@@ -11,25 +13,31 @@ export async function getStaticPaths() {
   return examples.map((example) => ({ params: { slug: example.id } }));
 }
 
+const toDataUri = (raw: string) =>
+  `data:text/javascript;charset=utf-8,${encodeURIComponent(raw)}`;
+
+const importOverrides = {
+  imports: {
+    "nanotags": toDataUri(nanoTagsRaw),
+    "nanotags/render": toDataUri(nanoTagsRenderRaw),
+    "nanotags/context": toDataUri(nanoTagsContextRaw),
+  },
+};
+
 const example = await getEntry("examples", Astro.params.slug);
 if (!example) throw new Error(`Example '${Astro.params.slug}' not found`);
-const { title, description, files } = example.data;
+const data = example.data
 ---
 
-<MainLayout title={title}>
+<Layout title={data.title}>
   <div class="prose">
-    <h1 class={styles.title}>
-      <a class={styles.backLink} href={getHref('examples')} aria-label="All Examples">
-        <Icon name="chevron-left" size={28} />
-      </a>
-      {title}
-    </h1>
-    <p class={styles.subtitle} set:html={description} />
-    <CodeExample files={files} />
+    <PageHeading title={data.title} href={getHref(`examples/${example.id}.md`)} back={{ href: getHref('examples'), label: 'All Examples' }} />
+    {data.descriptionHtml && <p class={styles.subtitle} set:html={data.descriptionHtml} />}
+    <CodeExample files={data.files} importOverrides={importOverrides} />
     <p class={styles.footerNote}>
       Btw, this playground is written using nanotags 😉.
       You can get familiar with the code and approaches
-      <a href="https://github.com/psd-coder/nanotags/tree/main/apps/docs/src/components/CodeExample/CodeExample.astro">here</a>.
+      <a href="https://github.com/psd-coder/astro-pigment/tree/main/src/components/CodeExample/CodeExample.astro">here</a>.
     </p>
   </div>
-</MainLayout>
+</Layout>

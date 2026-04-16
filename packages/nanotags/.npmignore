@@ -1,6 +1,0 @@
-src
-tsconfig.json
-tsdown.config.ts
-vitest.config.ts
-.oxlintrc.json
-.oxfmtrc.json

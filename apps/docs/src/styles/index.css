@@ -1,6 +1,0 @@
-@layer reset, theme, globals, utilities;
-
-@import url("reset.css") layer(reset);
-@import url("theme.css") layer(theme);
-@import url("globals.css") layer(globals);
-@import url("utilities.css") layer(utilities);

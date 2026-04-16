@@ -4,7 +4,7 @@ description: Introduction, installation and first component
 order: 1
 ---
 
-import { InstallPackage } from "~/components/InstallPackage";
+import { InstallPackage } from "astro-pigment/components";
 import { CdnImport } from "~/components/CdnImport";
 
 A thin Web Components wrapper powered by [Nano Stores](https://github.com/nanostores/nanostores) reactivity. It leans on the platform—Custom Elements, standard DOM, regular CSS—instead of reinventing them. The result is a typed, reactive component model with automatic cleanup in under **2.5 KB**.
@@ -17,8 +17,8 @@ define("copy-btn")
   .setup((ctx) => {
     ctx.on(ctx.host, "click", async () => {
       await navigator.clipboard.writeText(ctx.refs.code.textContent);
-      ctx.host.classList.add('active');
-      setTimeout(() => ctx.host.classList.remove('active'), 1000);
+      ctx.host.classList.add("active");
+      setTimeout(() => ctx.host.classList.remove("active"), 1000);
     });
   });
 ```
@@ -127,6 +127,7 @@ All registered cleanups run: event listeners are removed, store subscriptions ar
 Re-connecting a previously disconnected component runs [`setup()`](api#setup) again with a fresh cleanup scope. Props that were set programmatically (via the property setter) retain their values; attribute-backed props that were never set programmatically re-read from the DOM.
 
 This means:
+
 - All props are re-hydrated
 - Effects and listeners are re-registered
 - Refs are re-resolved from the current DOM
@@ -135,6 +136,7 @@ This means:
 **Cleanup guarantees**
 
 All of these are auto-cleaned on disconnect:
+
 - Event listeners registered via [`ctx.on()`](api#on)
 - Store subscriptions from [`ctx.effect()`](api#effect)
 - Bindings from [`ctx.bind()`](api#bind)

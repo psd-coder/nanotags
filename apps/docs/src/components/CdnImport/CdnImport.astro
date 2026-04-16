@@ -1,5 +1,5 @@
 ---
-import { CodePanels, codePanelsStyles } from "~/components/CodePanels";
+import { CodePanels, codePanelsStyles } from "astro-pigment/components/playground";
 import { version } from "../../../../../packages/nanotags/package.json";
 
 const cdns = [
@@ -36,8 +36,11 @@ const cdns = [
   <CodePanels items={cdns} defaultValue="esm.sh" lang="html" />
 </x-cdn-import>
 <script>
-  import { defineCodePanels } from "~/utils/defineCodePanels";
-  import { $cdn } from "~/stores/cdn";
+  import { persistentAtom } from "@nanostores/persistent";
+  import { defineCodePanels } from "astro-pigment/utils/defineCodePanels";
+
+  type Cdn = "esm.sh" | "jsdelivr";
+  const $cdn = persistentAtom<Cdn>("cdn", "esm.sh");
 
   defineCodePanels("x-cdn-import", $cdn);
 </script>
