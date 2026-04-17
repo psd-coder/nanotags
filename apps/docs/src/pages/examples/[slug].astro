@@ -1,11 +1,11 @@
 ---
-import { getCollection, getEntry } from "astro:content";
-import { CodeExample } from "astro-pigment/components/playground";
 import { Layout, PageHeading } from "astro-pigment/components";
-import { getHref } from "astro-pigment/utils/urls";
+import { CodeExample } from "astro-pigment/components/playground";
+import { getHref, getMarkdownAlternate } from "astro-pigment/utils/urls";
+import { getCollection, getEntry } from "astro:content";
+import nanoTagsContextRaw from "nanotags:dist/context.mjs?raw";
 import nanoTagsRaw from "nanotags:dist/index.mjs?raw";
 import nanoTagsRenderRaw from "nanotags:dist/render.mjs?raw";
-import nanoTagsContextRaw from "nanotags:dist/context.mjs?raw";
 import styles from './styles.module.css';
 
 export async function getStaticPaths() {
@@ -27,11 +27,12 @@ const importOverrides = {
 const example = await getEntry("examples", Astro.params.slug);
 if (!example) throw new Error(`Example '${Astro.params.slug}' not found`);
 const data = example.data
+const alt = getMarkdownAlternate(`examples/${Astro.params.slug}`);
 ---
 
-<Layout title={data.title}>
+<Layout title={data.title} alternate={[alt]}>
   <div class="prose">
-    <PageHeading title={data.title} href={getHref(`examples/${example.id}.md`)} back={{ href: getHref('examples'), label: 'All Examples' }} />
+    <PageHeading title={data.title} href={alt.href} back={{ href: getHref('examples'), label: 'All Examples' }} />
     {data.descriptionHtml && <p class={styles.subtitle} set:html={data.descriptionHtml} />}
     <CodeExample files={data.files} importOverrides={importOverrides} />
     <p class={styles.footerNote}>

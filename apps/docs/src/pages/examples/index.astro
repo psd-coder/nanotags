@@ -1,15 +1,16 @@
 ---
 import { Layout, PageHeading } from "astro-pigment/components";
-import { getHref } from "astro-pigment/utils/urls";
+import { getHref, getMarkdownAlternate } from "astro-pigment/utils/urls";
 import { getCollection } from "astro:content";
 import { EXAMPLES_DESCRIPTION } from "../../extra-entries";
 import styles from './styles.module.css';
 
 const examples = await getCollection("examples");
+const alt = getMarkdownAlternate("examples");
 ---
 
-<Layout title="Examples">
-  <PageHeading title="Examples" href={getHref(`examples.md`)} />
+<Layout title="Examples" alternate={[alt]}>
+  <PageHeading title="Examples" href={alt.href} />
   <p class={styles.subtitle}>{EXAMPLES_DESCRIPTION}</p>
   <div class={styles.grid}>
     {examples.map((example) => (
