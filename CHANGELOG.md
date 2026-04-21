@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.15.2
+
+### Added
+
+- Add SVG element support in ref builders and setup context.
+
 ## 0.15.1
 
 ### Fixed
