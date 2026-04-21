@@ -676,3 +676,77 @@ describe("bind", () => {
     ctx.bind($wide, ctrl);
   });
 });
+
+describe("SVG support", () => {
+  it("on() fires on SVG element target", () => {
+    const tag = uniqueTag("svg-on");
+    const handler = vi.fn();
+    define(tag, (ctx) => {
+      const circle = ctx.getElement("circle");
+      ctx.on(circle, "click", handler);
+    });
+    const el = mount(`<${tag}><svg><circle r="5"/></svg></${tag}>`);
+    const circle = el.querySelector("circle")!;
+    circle.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    expect(handler).toHaveBeenCalledOnce();
+  });
+
+  it("on() accepts array of SVG elements", () => {
+    const tag = uniqueTag("svg-on");
+    const handler = vi.fn();
+    define(tag)
+      .withRefs((r) => ({ circles: r.many("circle") }))
+      .setup((ctx) => {
+        ctx.on(ctx.refs.circles, "click", handler);
+      });
+    mount(
+      `<${tag}><svg><circle data-ref="circles" r="1"/><circle data-ref="circles" r="2"/></svg></${tag}>`,
+    );
+    const circles = document.querySelectorAll("circle");
+    circles[0]?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    circles[1]?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    expect(handler).toHaveBeenCalledTimes(2);
+  });
+
+  it("getElement infers SVG element type from tag-name selector", () => {
+    const tag = uniqueTag("svg-ge");
+    let circle: SVGCircleElement | undefined;
+    define(tag, (ctx) => {
+      circle = ctx.getElement("circle");
+      expectTypeOf(circle).toEqualTypeOf<SVGCircleElement>();
+    });
+    mount(`<${tag}><svg><circle r="5"/></svg></${tag}>`);
+    expect(circle).toBeInstanceOf(SVGCircleElement);
+  });
+
+  it("getElement infers SVG element for camelCase tag name", () => {
+    const tag = uniqueTag("svg-ge");
+    let blur: SVGFEGaussianBlurElement | undefined;
+    define(tag, (ctx) => {
+      blur = ctx.getElement("feGaussianBlur");
+      expectTypeOf(blur).toEqualTypeOf<SVGFEGaussianBlurElement>();
+    });
+    mount(`<${tag}><svg><filter><feGaussianBlur stdDeviation="3"/></filter></svg></${tag}>`);
+    expect(blur).toBeInstanceOf(SVGFEGaussianBlurElement);
+  });
+
+  it("getElements infers SVG element list", () => {
+    const tag = uniqueTag("svg-ge");
+    let circles: SVGCircleElement[] | undefined;
+    define(tag, (ctx) => {
+      circles = ctx.getElements("circle");
+      expectTypeOf(circles).toEqualTypeOf<SVGCircleElement[]>();
+    });
+    mount(`<${tag}><svg><circle r="1"/><circle r="2"/></svg></${tag}>`);
+    expect(circles).toHaveLength(2);
+  });
+
+  it("getElement('a') still resolves to HTMLAnchorElement (HTML wins on shared tags)", () => {
+    const tag = uniqueTag("svg-ge");
+    define(tag, (ctx) => {
+      const a = ctx.getElement("a");
+      expectTypeOf(a).toEqualTypeOf<HTMLAnchorElement>();
+    });
+    mount(`<${tag}><a href="#">link</a></${tag}>`);
+  });
+});

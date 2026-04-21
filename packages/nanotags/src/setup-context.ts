@@ -88,13 +88,13 @@ export class Context<
   /**
    * Adds an event listener to one or more elements, Document, or Window and registers automatic cleanup on disconnect.
    */
-  on<T extends HTMLElement, K extends keyof HTMLElementEventMap>(
+  on<T extends Element, K extends keyof HTMLElementEventMap>(
     target: T,
     type: K,
     listener: (this: T, ev: HTMLElementEventMap[K] & { currentTarget: T }) => any,
     options?: boolean | AddEventListenerOptions,
   ): void;
-  on<T extends HTMLElement, K extends keyof HTMLElementEventMap>(
+  on<T extends Element, K extends keyof HTMLElementEventMap>(
     target: T[],
     type: K,
     listener: (this: T, ev: HTMLElementEventMap[K] & { currentTarget: T }) => any,
@@ -113,15 +113,15 @@ export class Context<
     options?: boolean | AddEventListenerOptions,
   ): void;
   on(
-    target: HTMLElement | HTMLElement[] | Document | Window,
+    target: Element | Element[] | Document | Window,
     type: string,
-    listener: (this: HTMLElement | Document | Window, ev: Event) => any,
+    listener: (this: Element | Document | Window, ev: Event) => any,
     options?: boolean | AddEventListenerOptions,
   ): void;
   on(
-    target: HTMLElement | HTMLElement[] | Document | Window,
+    target: Element | Element[] | Document | Window,
     type: string,
-    listener: (this: HTMLElement | Document | Window, ev: Event) => any,
+    listener: (this: Element | Document | Window, ev: Event) => any,
     options?: boolean | AddEventListenerOptions,
   ): void {
     const targets = Array.isArray(target) ? target : [target];
@@ -154,6 +154,13 @@ export class Context<
     root: DocumentFragment | Element,
     selector: Tag,
   ): HTMLElementTagNameMap[Tag];
+  getElement<const Tag extends Exclude<keyof SVGElementTagNameMap, keyof HTMLElementTagNameMap>>(
+    selector: Tag,
+  ): SVGElementTagNameMap[Tag];
+  getElement<const Tag extends Exclude<keyof SVGElementTagNameMap, keyof HTMLElementTagNameMap>>(
+    root: DocumentFragment | Element,
+    selector: Tag,
+  ): SVGElementTagNameMap[Tag];
   getElement<E extends Element>(selector: string): E;
   getElement<E extends Element>(root: DocumentFragment | Element, selector: string): E;
   getElement(selector: string): Element;
@@ -170,6 +177,13 @@ export class Context<
     root: DocumentFragment | Element,
     selector: Tag,
   ): HTMLElementTagNameMap[Tag][];
+  getElements<const Tag extends Exclude<keyof SVGElementTagNameMap, keyof HTMLElementTagNameMap>>(
+    selector: Tag,
+  ): SVGElementTagNameMap[Tag][];
+  getElements<const Tag extends Exclude<keyof SVGElementTagNameMap, keyof HTMLElementTagNameMap>>(
+    root: DocumentFragment | Element,
+    selector: Tag,
+  ): SVGElementTagNameMap[Tag][];
   getElements<E extends Element>(selector: string): E[];
   getElements<E extends Element>(root: DocumentFragment | Element, selector: string): E[];
   getElements(selector: string): Element[];
@@ -213,11 +227,11 @@ export class Context<
   ): void;
   bind<CV, SV extends CV>(
     store: WritableAtom<SV>,
-    control: HTMLElement & { value: CV },
+    control: Element & { value: CV },
     opts?: BindOptions,
   ): void;
-  bind(store: WritableAtom<unknown>, control: HTMLElement, opts: BindOptions): void;
-  bind(store: WritableAtom<unknown>, control: HTMLElement, opts?: BindOptions): void {
+  bind(store: WritableAtom<unknown>, control: Element, opts: BindOptions): void;
+  bind(store: WritableAtom<unknown>, control: Element, opts?: BindOptions): void {
     const input = control instanceof HTMLInputElement ? control : undefined;
     let propEvent: [string, string] = ["value", "change"];
 

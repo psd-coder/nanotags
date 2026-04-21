@@ -383,6 +383,48 @@ describe("refBuilders", () => {
     expectTypeOf<Result["generic"]>().toEqualTypeOf<Element>();
     expectTypeOf<Result["custom"]>().toEqualTypeOf<CustomEl>();
   });
+
+  describe("SVG tags", () => {
+    it("one('circle') infers SVGCircleElement", () => {
+      const marker = refBuilders.one("circle");
+      expectTypeOf(marker).toExtend<{ __tag: "circle" }>();
+      expectTypeOf<InferRef<typeof marker>>().toEqualTypeOf<SVGCircleElement>();
+    });
+
+    it("one('feGaussianBlur') recognized as tag, infers SVGFEGaussianBlurElement", () => {
+      const marker = refBuilders.one("feGaussianBlur");
+      expect(marker.__selector).toBeUndefined();
+      expectTypeOf<InferRef<typeof marker>>().toEqualTypeOf<SVGFEGaussianBlurElement>();
+    });
+
+    it("many('circle') infers SVGCircleElement[]", () => {
+      const marker = refBuilders.many("circle");
+      expectTypeOf<InferRef<typeof marker>>().toEqualTypeOf<SVGCircleElement[]>();
+    });
+
+    it("validates matching SVG element", () => {
+      const marker = refBuilders.one("circle");
+      const el = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      expect(parseWithSchema(marker.schema, el, "test")).toBe(el);
+    });
+
+    it("rejects non-matching SVG element", () => {
+      const marker = refBuilders.one("circle");
+      const el = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+      expect(() => parseWithSchema(marker.schema, el, "test")).toThrow(TypeError);
+    });
+
+    it("validates camelCase SVG tag case-insensitively", () => {
+      const marker = refBuilders.one("feGaussianBlur");
+      const el = document.createElementNS("http://www.w3.org/2000/svg", "feGaussianBlur");
+      expect(parseWithSchema(marker.schema, el, "test")).toBe(el);
+    });
+
+    it("one('a') stays HTMLAnchorElement (HTML wins on shared tags)", () => {
+      const marker = refBuilders.one("a");
+      expectTypeOf<InferRef<typeof marker>>().toEqualTypeOf<HTMLAnchorElement>();
+    });
+  });
 });
 
 describe("TypedEvent", () => {

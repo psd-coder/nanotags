@@ -100,18 +100,22 @@ export const propBuilders: {
   },
 } as never;
 
-const TAG_RE = /^[a-z][a-z0-9-]*$/;
+// Matches lowercase HTML tag names plus camelCase SVG tag names (feGaussianBlur, linearGradient).
+const TAG_RE = /^[a-z][a-zA-Z0-9-]*$/;
+
+type SvgOnlyTag = Exclude<keyof SVGElementTagNameMap, keyof HTMLElementTagNameMap>;
 
 function parseRefArgs(tagOrSelector?: string) {
   const tag =
     typeof tagOrSelector === "string" && TAG_RE.test(tagOrSelector) ? tagOrSelector : undefined;
   const sel = typeof tagOrSelector === "string" && !tag ? tagOrSelector : undefined;
+  const tagLower = tag?.toLowerCase();
   return {
     ...(tag && { __tag: tag }),
     ...(sel && { __selector: sel }),
     schema: schema((value) => {
       if (!(value instanceof Element)) return fail("Expected Element");
-      if (tag && value.tagName.toLowerCase() !== tag) return fail(`Expected <${tag}>`);
+      if (tagLower && value.tagName.toLowerCase() !== tagLower) return fail(`Expected <${tag}>`);
       return { value };
     }),
   };
@@ -119,6 +123,7 @@ function parseRefArgs(tagOrSelector?: string) {
 
 function one(): SingleRefMarker;
 function one<const Tag extends keyof HTMLElementTagNameMap>(tag: Tag): SingleRefMarker<Tag>;
+function one<const Tag extends SvgOnlyTag>(tag: Tag): SingleRefMarker<Tag>;
 function one<El extends Element>(): SingleRefMarker & { readonly __el: El };
 function one<El extends Element>(selector: string): SingleRefMarker & { readonly __el: El };
 function one(selector: string): SingleRefMarker;
@@ -128,6 +133,7 @@ function one(tagOrSelector?: string): SingleRefMarker {
 
 function many(): ListRefMarker;
 function many<const Tag extends keyof HTMLElementTagNameMap>(tag: Tag): ListRefMarker<Tag>;
+function many<const Tag extends SvgOnlyTag>(tag: Tag): ListRefMarker<Tag>;
 function many<El extends Element>(): ListRefMarker & { readonly __el: El };
 function many<El extends Element>(selector: string): ListRefMarker & { readonly __el: El };
 function many(selector: string): ListRefMarker;

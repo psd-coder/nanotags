@@ -201,8 +201,11 @@ Declare typed element references via `withRefs`. Refs query the component's own 
 .withRefs((r) => ({
   trigger: r.one("button"),   // HTMLButtonElement, validated
   items:   r.many("li"),      // HTMLLIElement[], validated
+  circle:  r.one("circle"),   // SVGCircleElement, validated
 }))
 ```
+
+SVG tag names work the same way, including camelCase tags like `feGaussianBlur`. When a tag exists in both namespaces (`a`, `script`, `title`, `style`), the HTML variant wins; cast via the element generic (`r.one<SVGAElement>("a")`) if you need the SVG one.
 
 By default, refs match `[data-ref="name"]`. Non-tag strings (containing `.`, `#`, `[`, etc.) are treated as CSS selectors:
 
@@ -327,6 +330,7 @@ Typed wrappers around `querySelector`/`querySelectorAll` that **throw when nothi
 
 ```typescript
 ctx.getElement("input");              // HTMLInputElement (throws if missing)
+ctx.getElement("circle");             // SVGCircleElement
 // Custom parent, especially useful for rendering templates
 ctx.getElement(customParent, ".item");    // Element
 ctx.getElements("button");           // HTMLButtonElement[]

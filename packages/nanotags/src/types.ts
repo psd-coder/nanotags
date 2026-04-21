@@ -44,40 +44,47 @@ export type ComponentProps<Schema extends PropsSchema> = {
   [Key in keyof Schema]: Infer<Schema[Key]>;
 };
 
+export type TagName = keyof HTMLElementTagNameMap | keyof SVGElementTagNameMap;
+
 // Store __tag (tag name literal) instead of _type (element type).
 // Using HTMLElementTagNameMap[Tag] directly in the marker would force TypeScript to eagerly
 // evaluate the whole map, causing circular references when the component itself is registered
 // in HTMLElementTagNameMap via a global declaration.
 // __tag is conditionally present: omitted when Tag is undefined (untyped ref → Element fallback).
-export type SingleRefMarker<Tag extends keyof HTMLElementTagNameMap | undefined = undefined> = {
+export type SingleRefMarker<Tag extends TagName | undefined = undefined> = {
   readonly __list?: false;
   readonly __selector?: string;
   readonly schema: AnySchema;
   // oxlint-disable-next-line typescript-eslint/ban-types, typescript-eslint/no-empty-object-type
-} & ([Tag] extends [undefined] ? {} : { readonly __tag: Tag & keyof HTMLElementTagNameMap });
+} & ([Tag] extends [undefined] ? {} : { readonly __tag: Tag & TagName });
 
-export type ListRefMarker<Tag extends keyof HTMLElementTagNameMap | undefined = undefined> = {
+export type ListRefMarker<Tag extends TagName | undefined = undefined> = {
   readonly __list: true;
   readonly __selector?: string;
   readonly schema: AnySchema;
   // oxlint-disable-next-line typescript-eslint/ban-types, typescript-eslint/no-empty-object-type
-} & ([Tag] extends [undefined] ? {} : { readonly __tag: Tag & keyof HTMLElementTagNameMap });
+} & ([Tag] extends [undefined] ? {} : { readonly __tag: Tag & TagName });
 
 export type RefsSchema = Record<string, SingleRefMarker | ListRefMarker>;
 
 // HTMLElementTagNameMap[Tag] is resolved lazily here at usage time, not in the marker types.
 // When __tag is absent (untyped ref), falls back to Element / Element[].
+// HTML map is checked before SVG so shared tag names (a, script, title, style) keep their HTML types.
 export type InferRef<M> = M extends { __el: infer El; __list: true }
   ? El[]
   : M extends { __el: infer El }
     ? El
     : M extends { __tag: infer Tag extends keyof HTMLElementTagNameMap; __list: true }
       ? HTMLElementTagNameMap[Tag][]
-      : M extends { __list: true }
-        ? Element[]
-        : M extends { __tag: infer Tag extends keyof HTMLElementTagNameMap }
-          ? HTMLElementTagNameMap[Tag]
-          : Element;
+      : M extends { __tag: infer Tag extends keyof SVGElementTagNameMap; __list: true }
+        ? SVGElementTagNameMap[Tag][]
+        : M extends { __list: true }
+          ? Element[]
+          : M extends { __tag: infer Tag extends keyof HTMLElementTagNameMap }
+            ? HTMLElementTagNameMap[Tag]
+            : M extends { __tag: infer Tag extends keyof SVGElementTagNameMap }
+              ? SVGElementTagNameMap[Tag]
+              : Element;
 
 export type InferRefs<Schema extends RefsSchema> = {
   [Key in keyof Schema]: InferRef<Schema[Key]>;

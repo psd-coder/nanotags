@@ -142,8 +142,11 @@ Declare typed element references. Refs query the component's own DOM, skipping e
 .withRefs((r) => ({
   trigger: r.one("button"), // HTMLButtonElement, validated
   items:   r.many("li"), // HTMLLIElement[], validated
+  circle:  r.one("circle"), // SVGCircleElement, validated
 }))
 ```
+
+SVG tag names work the same way, including camelCase tags like `feGaussianBlur`. For tags shared with HTML (`a`, `script`, `title`, `style`) the HTML variant wins; use the element generic (`r.one<SVGAElement>("a")`) for the SVG one.
 
 By default, refs match `[data-ref="name"]`. Non-tag strings (containing `.`, `#`, `[`, etc.) are treated as CSS selectors:
 
@@ -339,6 +342,7 @@ Asserts that the element exists and returns it with the correct type, no null ch
 
 ```typescript
 ctx.getElement("input"); // HTMLInputElement (throws if missing)
+ctx.getElement("circle"); // SVGCircleElement
 ctx.getElement(customParent, ".item"); // Element
 // type-only, no runtime tag check
 ctx.getElement<"input">(customRoot, ".my-input"); // HTMLInputElement
