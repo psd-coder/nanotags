@@ -11,7 +11,7 @@ export default defineConfig({
       project: {
         name: "nanotags",
         description:
-          "Tiny Web Components wrapper powered by Nano Stores reactivity. No Shadow DOM, typed builder API, reactive props and refs via nanostores, automatic cleanup on disconnect.",
+          "Tiny Web Components wrapper powered by Nano Stores reactivity. No Shadow DOM, typed builder API, reactive props and refs",
         license: {
           name: "MIT",
           url: "https://github.com/psd-coder/nanotags/blob/main/LICENSE",
@@ -20,9 +20,19 @@ export default defineConfig({
       },
       author: { name: "Pavel Grinchenko", url: "https://x.com/psd_coder" },
       credits: [{ name: "Evil Martians", url: "https://evilmartians.com/" }],
-      customCss: ["./src/assets/custom.css"],
       logo: "./src/assets/logo.svg",
-      icon: "./src/assets/favicon.svg",
+      meta: {
+        icon: "./src/assets/favicon.svg",
+        og: {
+          image: {
+            logo: "./src/assets/og-logo.svg",
+          },
+        },
+      },
+      theme: {
+        hue: 135,
+        customCss: ["./src/assets/custom.css"],
+      },
       docs: {
         navLinks: [
           { href: "/", label: "Getting Started" },
@@ -30,8 +40,8 @@ export default defineConfig({
           { href: "/cookbook", label: "Cookbook" },
           { href: "/examples", label: "Examples" },
         ],
+        extraEntries: "./src/extra-entries.ts",
       },
-      extraEntries: "./src/extra-entries.ts",
     }),
   ],
   vite: {
