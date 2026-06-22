@@ -16,7 +16,7 @@
 
 <body>
   <div data-type="html">
-    <x-counter initial="1" step="5">
+    <x-counter value="1" step="5">
       <div>
         <input data-ref="stepInput" type="range" min="1" max="50" value="5">
         <span>Step: <span data-ref="step">5</span></span>
@@ -31,7 +31,6 @@
 
   <script type="module" data-type="javascript">
     import { define } from 'nanotags';
-    import { atom } from 'nanostores';
 
     define('x-counter')
       .withRefs(({ one }) => ({
@@ -41,14 +40,12 @@
         increment: one('button'),
         count: one('span')
       }))
-      .withProps((p) => ({ initial: p.number(), step: p.number(5) }))
+      .withProps((p) => ({ value: p.number(), step: p.number(5) }))
       .setup((ctx) => {
-        const $count = atom(ctx.props.$initial.get());
-
         ctx.bind(ctx.props.$step, ctx.refs.stepInput);
-        ctx.on(ctx.refs.increment, 'click', () => $count.set($count.get() + ctx.props.$step.get()));
-        ctx.on(ctx.refs.decrement, 'click', () => $count.set($count.get() - ctx.props.$step.get()));
-        ctx.effect($count, (val) => {
+        ctx.on(ctx.refs.increment, 'click', () => ctx.props.$value.set(ctx.props.$value.get() + ctx.props.$step.get()));
+        ctx.on(ctx.refs.decrement, 'click', () => ctx.props.$value.set(ctx.props.$value.get() - ctx.props.$step.get()));
+        ctx.effect(ctx.props.$value, (val) => {
           ctx.refs.count.textContent = String(val);
           console.log('Count changed:', val);
         });
