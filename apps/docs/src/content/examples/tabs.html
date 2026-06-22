@@ -48,7 +48,6 @@
   <script type="module" data-type="javascript">
     import { define } from "nanotags";
     import { createContext } from "nanotags/context";
-    import { atom } from "nanostores";
     import { attachRovingFocus } from "attachRovingFocus.js";
 
     const tabsContext = createContext("tabs");
@@ -60,14 +59,13 @@
         tabs: r.many("[role=tab]")
       }))
       .setup((ctx) => {
-        const $active = atom(ctx.props.$active.get());
-
+        // ctx.props.$active is already a WritableAtom, so use it directly as state.
         attachRovingFocus(ctx, ctx.refs.tablist, ctx.refs.tabs, {
-          onFocus: (el) => $active.set(el.dataset.value),
+          onFocus: (el) => ctx.props.$active.set(el.dataset.value),
         });
 
-        ctx.on(ctx.refs.tabs, "click", (e) => $active.set(e.target.dataset.value));
-        ctx.effect($active, (active) => {
+        ctx.on(ctx.refs.tabs, "click", (e) => ctx.props.$active.set(e.target.dataset.value));
+        ctx.effect(ctx.props.$active, (active) => {
           ctx.refs.tabs.forEach((tab) => {
             const selected = tab.dataset.value === active;
             tab.setAttribute("aria-selected", String(selected));
@@ -75,7 +73,7 @@
           });
         });
 
-        tabsContext.provide(ctx, { $active });
+        tabsContext.provide(ctx, { $active: ctx.props.$active });
       });
 
     define("x-tab-panel")
