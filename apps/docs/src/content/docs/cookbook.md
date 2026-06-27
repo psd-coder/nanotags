@@ -149,7 +149,7 @@ When components form a logical group (Tabs/Tab, Accordion/Panel), the parent pro
 ```typescript
 import { createContext } from "nanotags/context";
 
-type TabsAPI = { register: (el: Element) => void; $active: WritableAtom<string> };
+type TabsAPI = { $active: WritableAtom<string> };
 const tabsContext = createContext<TabsAPI>("tabs");
 
 const XTabs = define("x-tabs").setup((ctx) => {
@@ -165,7 +165,7 @@ define("x-tab-panel")
   .withContexts({ tabs: tabsContext })
   .setup((ctx) => {
     ctx.effect(ctx.contexts.tabs.$active, (active) => {
-      ctx.host.setAttribute('aria-)
+      ctx.host.hidden = active !== ctx.props.$value.get();
     })
   });
 ```
