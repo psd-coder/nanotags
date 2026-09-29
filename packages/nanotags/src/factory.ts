@@ -131,6 +131,7 @@ export function createReactiveProps<Schema extends PropsSchema>(
     stores[`$${key}`] = store;
     updaters[key] = updateFromAttr;
     Object.defineProperty(host, key, {
+      configurable: true,
       enumerable: true,
       get: () => store.get(),
       set: updateFromProp,
@@ -304,7 +305,7 @@ export function createComponent<
         const proto = Object.getPrototypeOf(this);
         const descriptors = Object.getOwnPropertyDescriptors(mixin);
         for (const key of Object.keys(descriptors)) {
-          invariant(!(key in proto), `reserved mixin: ${key}`);
+          invariant(!(key in proto || key in propsSchema), `reserved mixin: ${key}`);
         }
         Object.defineProperties(this, descriptors);
       }
