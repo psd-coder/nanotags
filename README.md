@@ -21,7 +21,7 @@ A thin Web Components wrapper powered by [Nano Stores](https://github.com/nanost
 ```
 
 ```typescript
-import { define } from 'nanotags';
+import { define } from "nanotags";
 
 define("x-hello", () => alert("Hello, world!"));
 ```
@@ -57,10 +57,9 @@ const Counter = define("x-counter")
   });
 ```
 
-
 ---
 
-<img src="https://cdn.evilmartians.com/badges/logo-no-label.svg" alt="" width="22" height="16" />  Made at <b><a href="https://evilmartians.com/devtools?utm_source=nanostores&utm_campaign=devtools-button&utm_medium=github">Evil Martians</a></b>, product consulting for <b>developer tools</b>.
+<img src="https://cdn.evilmartians.com/badges/logo-no-label.svg" alt="" width="22" height="16" /> Made at <b><a href="https://evilmartians.com/devtools?utm_source=nanostores&utm_campaign=devtools-button&utm_medium=github">Evil Martians</a></b>, product consulting for <b>developer tools</b>.
 
 ---
 
@@ -80,6 +79,7 @@ const Counter = define("x-counter")
   - [Context](#context)
   - [Render](#render)
 - [Component Communication](#component-communication)
+- [Testing](#testing)
 - [Tips & Tricks](#tips--tricks)
   - [Attachments](#attachments)
   - [Typed Events](#typed-events)
@@ -126,12 +126,12 @@ Declare reactive attributes via `withProps`. Each prop becomes:
 
 Four built-in validators coerce raw attribute strings to typed values:
 
-| Validator | Coercion | `null` attr |
-|-----------|----------|-------------|
-| `p.string()` | `String(val)` | `""` |
-| `p.number()` | `Number(val)` | `0` |
-| `p.boolean()` | `"true"` / `""` &rarr; `true`, `"false"` &rarr; `false` | `false` |
-| `p.oneOf(opts)` | Picklist enum, throws on invalid | throws |
+| Validator       | Coercion                                                | `null` attr |
+| --------------- | ------------------------------------------------------- | ----------- |
+| `p.string()`    | `String(val)`                                           | `""`        |
+| `p.number()`    | `Number(val)`                                           | `0`         |
+| `p.boolean()`   | `"true"` / `""` &rarr; `true`, `"false"` &rarr; `false` | `false`     |
+| `p.oneOf(opts)` | Picklist enum, throws on invalid                        | throws      |
 
 ```typescript
 .withProps((p) => ({
@@ -171,7 +171,10 @@ JSON props are **not** observed attributes. They hydrate once on connect from a 
 ```html
 <x-list>
   <script type="application/json" data-prop="items">
-    [{ "id": 1, "name": "Alice" }, { "id": 2, "name": "Bob" }]
+    [
+      { "id": 1, "name": "Alice" },
+      { "id": 2, "name": "Bob" }
+    ]
   </script>
 </x-list>
 ```
@@ -241,8 +244,12 @@ Returning an object from `setup` assigns its members to the element instance, fu
 const Timer = define("x-timer").setup((ctx) => {
   let id: number;
   return {
-    start() { id = setInterval(() => ctx.emit("tick"), 1000); },
-    stop()  { clearInterval(id); },
+    start() {
+      id = setInterval(() => ctx.emit("tick"), 1000);
+    },
+    stop() {
+      clearInterval(id);
+    },
   };
 });
 
@@ -272,7 +279,9 @@ ctx.effect(ctx.props.$count, (count) => {
   ctx.refs.display.textContent = String(count);
 });
 
-ctx.effect([storeA, storeB], (a, b) => { /* ... */ });
+ctx.effect([storeA, storeB], (a, b) => {
+  /* ... */
+});
 ```
 
 #### `bind(store, element, options?)`
@@ -281,13 +290,13 @@ Two-way binds a DOM control to a Nano Stores atom. The store is the source of tr
 
 **No options**. Auto-detects control type:
 
-| Control | Property | Listens to |
-|---------|----------|------------|
-| `input[type=checkbox]` | `.checked` | `change` |
-| `input[type=number\|range]` | `.valueAsNumber` | `input` |
-| `input` / `textarea` | `.value` | `input` |
-| `select` | `.value` | `change` |
-| Custom element with `.value` | `.value` | `change` |
+| Control                      | Property         | Listens to |
+| ---------------------------- | ---------------- | ---------- |
+| `input[type=checkbox]`       | `.checked`       | `change`   |
+| `input[type=number\|range]`  | `.valueAsNumber` | `input`    |
+| `input` / `textarea`         | `.value`         | `input`    |
+| `select`                     | `.value`         | `change`   |
+| Custom element with `.value` | `.value`         | `change`   |
 
 ```typescript
 ctx.bind($name, ctx.refs.nameInput);
@@ -297,8 +306,8 @@ ctx.bind($agreed, ctx.refs.checkbox);
 **With options**. Bind to any element property. Omit `event` for one-way (store &rarr; element):
 
 ```typescript
-ctx.bind($theme, el, { prop: "theme" });                  // one-way
-ctx.bind($val, el, { prop: "value", event: "change" });   // two-way
+ctx.bind($theme, el, { prop: "theme" }); // one-way
+ctx.bind($val, el, { prop: "value", event: "change" }); // two-way
 ```
 
 > **Note:** When binding to a custom element, `.value` (or the target property) must be defined via `withProps`, not as a mixin return value. Props are available from the constructor, while mixin members only exist after `connectedCallback`. `bind` needs the property to be there immediately.
@@ -310,9 +319,15 @@ ctx.bind($val, el, { prop: "value", event: "change" });   // two-way
 Attach event listeners with automatic cleanup. Accepts a single element, an array, `document`, or `window`. Event types are fully inferred for each target (`HTMLElementEventMap`, `DocumentEventMap`, `WindowEventMap`):
 
 ```typescript
-ctx.on(ctx.refs.trigger, "click", (e) => { /* ... */ });
-ctx.on([...ctx.refs.items], "mouseenter", (e) => { /* ... */ });
-ctx.on(document, "keydown", (e) => { /* ... */ });
+ctx.on(ctx.refs.trigger, "click", (e) => {
+  /* ... */
+});
+ctx.on([...ctx.refs.items], "mouseenter", (e) => {
+  /* ... */
+});
+ctx.on(document, "keydown", (e) => {
+  /* ... */
+});
 ```
 
 #### `emit(event)` / `emit(name, detail?, options?)`
@@ -329,11 +344,11 @@ ctx.emit("change", { value: 42 });
 Typed wrappers around `querySelector`/`querySelectorAll` that **throw when nothing matches**. Since nanotags targets static markup, a missing element is usually a bug.
 
 ```typescript
-ctx.getElement("input");              // HTMLInputElement (throws if missing)
-ctx.getElement("circle");             // SVGCircleElement
+ctx.getElement("input"); // HTMLInputElement (throws if missing)
+ctx.getElement("circle"); // SVGCircleElement
 // Custom parent, especially useful for rendering templates
-ctx.getElement(customParent, ".item");    // Element
-ctx.getElements("button");           // HTMLButtonElement[]
+ctx.getElement(customParent, ".item"); // Element
+ctx.getElements("button"); // HTMLButtonElement[]
 ```
 
 For nullable results, use `ctx.host.querySelector()` directly.
@@ -366,7 +381,9 @@ define("x-tabs").setup((ctx) => {
   const $active = atom(0);
   tabsCtx.provide(ctx, {
     $active,
-    register(tab: HTMLElement) { /* ... */ },
+    register(tab: HTMLElement) {
+      /* ... */
+    },
   });
 });
 ```
@@ -378,14 +395,18 @@ define("x-tab")
   .withContexts({ tabs: tabsCtx })
   .setup((ctx) => {
     ctx.contexts.tabs.register(ctx.host);
-    ctx.effect(ctx.contexts.tabs.$active, (index) => { /* ... */ });
+    ctx.effect(ctx.contexts.tabs.$active, (index) => {
+      /* ... */
+    });
   });
 ```
 
 If a context never resolves (no provider ancestor), setup never runs. For dynamic/conditional access, use `consume()` directly:
 
 ```typescript
-tabsCtx.consume(ctx, (value) => { /* ... */ });
+tabsCtx.consume(ctx, (value) => {
+  /* ... */
+});
 ```
 
 **How it works:** `provide()` listens for `context-request` events on the host. `consume()` dispatches a `context-request` event that bubbles up. If the provider isn't upgraded yet, a document-level handler stores the pending request and resolves it when the provider calls `provide()`.
@@ -431,10 +452,13 @@ Single-item rendering. Options are optional. Omit for static templates:
 ```typescript
 import { render } from "nanotags/render";
 
-render(container, loadingTpl);                          // static
-render(container, profileTpl, {                         // data-driven
+render(container, loadingTpl); // static
+render(container, profileTpl, {
+  // data-driven
   data: user,
-  update: (el, u) => { el.setAttribute("name", u.name); },
+  update: (el, u) => {
+    el.setAttribute("name", u.name);
+  },
 });
 ```
 
@@ -508,7 +532,7 @@ define("x-filter-panel").setup((ctx) => {
 
 // child A writes to the store
 define("x-search-input")
-  .withRefs((r) => ({ input: r.one('input') }))
+  .withRefs((r) => ({ input: r.one("input") }))
   .withContexts({ filter: filterCtx })
   .setup((ctx) => {
     ctx.on(ctx.refs.input, "input", (e) => {
@@ -526,6 +550,161 @@ define("x-results-list")
   });
 ```
 
+## Testing
+
+`nanotags/testing` helps you test components in jsdom or happy-dom, with any test runner. It builds the markup a page would have, connects the component, and gives you typed access to its refs. Nothing imports it at runtime, so it never ends up in a browser bundle.
+
+```typescript
+import { afterEach, expect, it } from "vitest";
+import { cleanup, h, mount, ref } from "nanotags/testing";
+
+// Registers x-tabs.
+import "./components";
+
+afterEach(cleanup);
+
+it("shows the active panel", () => {
+  const markup = h(
+    "x-tabs",
+    { value: "a" },
+    h("div", { "data-ref": "strip" }),
+    h("div", { "data-tab-panel": "a" }),
+  );
+  const host = mount(markup);
+
+  expect(host.querySelector("[data-tab-panel='a']")).toHaveProperty(
+    "hidden",
+    false,
+  );
+});
+```
+
+`h` builds the HTML, `mount` puts it on the page and returns the component element (the **host**), and `cleanup` removes everything after each test. When the component is in `HTMLElementTagNameMap` ([how](#augmenting-htmlelementtagnamemap)), all of it is typed: `h` checks prop names and values, `mount` returns the component's element type, and `ref` only accepts the component's ref names.
+
+The [Testing guide](https://nanotags.psdcoder.dev/cookbook#testing) walks through stubs, contexts, DOM differences and more.
+
+### `h(target, props?, ...children)`
+
+Builds the HTML a server would render for an element, in the shape of React's `createElement`. `target` is a tag name or a component class. Children are more `h` calls, or raw HTML strings for markup copied as is.
+
+```typescript
+h(
+  "x-chart",
+  {
+    size: "lg",
+    disabled: false,
+    label: undefined,
+    bars: [{ label: "a", value: 1 }],
+  },
+  h("ul", { "data-ref": "list" }),
+  h("template", { "data-ref": "tpl" }, h("li")),
+);
+```
+
+- Attribute props become attributes with kebab-cased names: `storageTb` writes `storage-tb`.
+- JSON props (`p.json()`) become the `<script type="application/json" data-prop>` seed the component reads.
+- Anything else (`id`, `class`, `data-*`, `aria-*`, props on plain elements) is written as an attribute, name as given.
+- `undefined` is skipped, `null` and `false` leave the attribute out, and `true` writes an empty attribute. So optional values can be passed straight through.
+
+### `mount(target, parent?)`
+
+Puts markup on the page and connects it. `target` is markup from `h`, a tag name or component class, or a raw HTML string for the page around the component. Returns the first element, typed when it comes from `h`, a tag name or a class.
+
+```typescript
+const containerMarkup = h("div", { "data-scroll-container": true });
+const markup = h("x-chart", { bars }, CHILDREN);
+
+const container = mount(containerMarkup);
+const host = mount(markup, container);
+
+host.bars = []; // typed, because "x-chart" is in HTMLElementTagNameMap
+```
+
+The markup is fully built before anything connects, so a component finds its children, attributes and seeds in place. (Building the element by hand and setting `innerHTML` after appending is a common mistake: the component looks for its refs too early and throws.) `parent` defaults to `document.body` and must be on the page.
+
+`mount` throws if a tag name or class is not defined (usually a missing import), and rethrows errors from a component's setup. Raw HTML goes in as is. jsdom would otherwise swallow them as a window `error` event and leave a broken element behind.
+
+### `create(target)`, `connect(host, parent?)`
+
+`create` builds one element like `mount`, but does not put it on the page. `connect` puts it there, which runs its setup. Use the pair when the test must do something first, like stubbing a neighbouring element:
+
+```typescript
+const markup = h("x-share-button", null, CHILDREN);
+const host = create(markup);
+const tooltip = stubElement(ref(host, "tooltip"), { open: false });
+connect(host);
+
+// The write setup made is recorded, not missed.
+expect(tooltip.writes("open")).toEqual([false]);
+```
+
+### `disconnect(host)`
+
+Takes the host off the page, which runs its cleanup, and rethrows errors from that cleanup. `connect(host)` puts it back where it was and runs setup again:
+
+```typescript
+disconnect(host);
+host.bars = []; // nothing reacts while disconnected
+connect(host);
+
+expect(ref(host, "list").children).toHaveLength(0);
+```
+
+### `cleanup()`
+
+Removes everything the helpers added and undoes every `provideContext`. Call it after each test. If a component's cleanup throws, it still removes everything else first, then rethrows.
+
+### `ref(host, name)`, `refs(host, name)`
+
+Find refs the same way the component does, and throw if they are missing. `refs` is for `r.many` refs and skips refs inside nested components, unlike `querySelectorAll`. On a typed host the name must be one of the component's refs, and the result has the declared element type.
+
+```typescript
+ref(host, "list"); // HTMLUListElement, from r.one("ul")
+ref<HTMLInputElement>(host, "fixture"); // markup only the test adds
+```
+
+### `provideContext(host, key, value)`
+
+Provides a context on `host`, so a component that uses `withContexts` can be tested without its real provider. The order does not matter, and `cleanup` removes it.
+
+```typescript
+const menubarMarkup = h("ul", { role: "menubar" });
+const markup = h("x-menu-item", null, CHILDREN);
+
+const menubar = mount(menubarMarkup);
+provideContext(menubar, menuContext, { moveFocus: vi.fn() });
+const host = mount(markup, menubar);
+```
+
+### `stubElement(el, shape)`
+
+Replaces the members of an element the component talks to, like a tooltip or a modal, and records how the component uses them. Values become properties that record writes; functions become methods that record calls and still run.
+
+```typescript
+const modal = stubElement(ref(host, "detailsModal"), {
+  isOpen: false,
+  open() {
+    modal.el.isOpen = true;
+  },
+});
+
+ref(host, "trigger").click();
+
+expect(modal.calls("open")).toEqual([[]]);
+expect(modal.get("isOpen")).toBe(true);
+```
+
+### `uniqueTag(prefix?)`
+
+Returns a new custom element name, `x-<prefix>-<n>`, for a component defined inside a test. A tag can only be defined once per page, so tests that reuse a fixed name would share one component.
+
+### What to assert
+
+Check what the DOM shows: text, attributes, `hidden`, focus. Two cases are worth a test for every component:
+
+- **Disconnect.** Mount, act, `disconnect(host)`, act again, and check nothing changed. This catches something that is never cleaned up.
+- **Reconnect.** `disconnect(host)`, then `connect(host)`, and check it still works. Setup runs again, so this catches state left over from the first run.
+
 ## Tips & Tricks
 
 ### Attachments
@@ -539,14 +718,18 @@ export function attachRovingFocus(
   items: HTMLElement[],
 ) {
   let active = 0;
-  items.forEach((item, i) => item.setAttribute("tabindex", i === 0 ? "0" : "-1"));
+  items.forEach((item, i) =>
+    item.setAttribute("tabindex", i === 0 ? "0" : "-1"),
+  );
 
   ctx.on(container, "keydown", (e) => {
     const dir = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0;
     if (!dir) return;
     e.preventDefault();
     active = (active + dir + items.length) % items.length;
-    items.forEach((item, i) => item.setAttribute("tabindex", i === active ? "0" : "-1"));
+    items.forEach((item, i) =>
+      item.setAttribute("tabindex", i === active ? "0" : "-1"),
+    );
     items[active].focus();
   });
 }
@@ -569,7 +752,10 @@ Since attachments receive `ctx`, listeners and effects are automatically cleaned
 ```typescript
 import type { TypedEvent } from "nanotags";
 
-type TabsChangedEvent = TypedEvent<InstanceType<typeof XTabs>, { index: number }>;
+type TabsChangedEvent = TypedEvent<
+  InstanceType<typeof XTabs>,
+  { index: number }
+>;
 
 declare global {
   interface HTMLElementEventMap {
@@ -582,8 +768,8 @@ ctx.emit("tabs:changed", { index: 2 });
 
 // Listening:
 ctx.on(tabsEl, "tabs:changed", (e) => {
-  e.target;  // XTabs instance
-  e.detail;  // { index: number }
+  e.target; // XTabs instance
+  e.detail; // { index: number }
 });
 ```
 
@@ -598,9 +784,7 @@ declare global {
   }
 }
 
-const MyEl = define("x-my-el")
-  .withProps(/* ... */)
-  .setup(/* ... */);
+const MyEl = define("x-my-el").withProps(/* ... */).setup(/* ... */);
 ```
 
 ## FAQ

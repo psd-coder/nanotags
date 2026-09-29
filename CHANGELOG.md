@@ -1,5 +1,27 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Add `nanotags/testing` entry point for testing components in a DOM environment (jsdom or happy-dom, neither bundled) with any test runner. Dev-only: it imports nothing from the runtime entries, so it never reaches a browser bundle and stays outside the size budget.
+- `h(tag, props, ...children)` builds the markup a server renders for an element, in the shape of React's `createElement`: on a component, attribute props become attributes and `p.json()` props become `data-prop` seed scripts. String children are raw HTML; nested `h` calls seed nested components.
+- `mount` parses `h` markup, a bare tag or constructor, or raw HTML while it is detached, then connects it into `document.body` or a given parent in one insertion, so children and seeds exist before `connectedCallback` runs and a component sees its later siblings, as on a parsed page (happy-dom still connects root by root). `create` builds a single element and leaves it detached for `connect`.
+- On a component typed through `HTMLElementTagNameMap`, or passed as a constructor, the helpers read its own definition: `h` checks props and seeds against its props, `mount` and `create` return the element type, and `ref`/`refs` accept only its `r.one`/`r.many` names and return the element each declares. Once the host has set up, `ref`/`refs` return what the component resolved at connect, selector-declared refs included. A misspelt name fails to compile; an explicit type argument opts a lookup out.
+- `mount`, `connect`, `disconnect` and `cleanup` rethrow what a component's setup or teardown throws, which jsdom would otherwise report as a window `error` event and lose. `cleanup` removes everything the helpers inserted, finishes first and rethrows several failures as an `AggregateError`. `disconnect` followed by `connect` puts a host back where it was, for reconnect tests.
+- The helpers throw instead of dropping input: `h` on a string that is not a tag name, `h`, `mount` and `create` on an undefined dashed tag or an unregistered class, `mount` on a parent that is not in the document. Raw HTML goes in as is. `h` rethrows when it cannot construct a component to learn its props, and `stubElement` throws when a component's pending setup would replace a stubbed method.
+- `provideContext` stands in for a context provider, `stubElement` stands in for a peer element's props and methods and records writes and calls, and `uniqueTag` names fixture components.
+- Add a Testing section to the Cookbook, covering both testing strategies, peer stubs, the jsdom and happy-dom capability gaps with ready-made shims, and the upgrade-order caveat.
+
+### Changed
+
+- `p.json()` is typed as the new `JsonPropDef`, whose `get` is required, so `h` can tell a prop that reads a seed from a property-only prop.
+- The per-instance setup context key is now the registered `Symbol.for("nanotags:ctx")`, so `nanotags/testing` can tell whether setup ran without importing the runtime.
+
+### Fixed
+
+- Define component props as `configurable`. Redefining one threw `Cannot redefine property`, so nothing could stand in for the props of a registered component. A setup return key that reuses a prop name throws `reserved mixin: <key>` instead of replacing the prop.
+
 ## 0.15.2
 
 ### Added

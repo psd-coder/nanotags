@@ -7,6 +7,7 @@ export type {
   AnySchema,
   PropEntry,
   PropDef,
+  JsonPropDef,
   PropsSchema,
   Infer,
   AttrPropKeys,

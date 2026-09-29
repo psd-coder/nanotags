@@ -498,6 +498,193 @@ ctx.effect($users, (users) => {
 | `key` | `(item: T, index: number) => string \| number` | Unique key per item |
 | `update` | `(el: Element, item: T) => void` | Called on create and when the item reference changes |
 
+## Testing API
+
+Helpers from `nanotags/testing` for testing components in jsdom or happy-dom. They work with any test runner. They never end up in a browser bundle, because nothing imports them at runtime. For a guided walkthrough, see [Testing](cookbook#testing) in the Cookbook.
+
+When a component is in `HTMLElementTagNameMap`, or you pass its class, the helpers are typed from its definition: `h` checks prop names and values, `mount` and `create` return the component's element type, and `ref`/`refs` only accept its ref names.
+
+### h
+
+`h(target, props?, ...children): Markup`
+
+Builds the HTML a server would render for an element, in the shape of React's `createElement`. `target` is a tag name or a component class. Children are more `h` calls, or raw HTML strings for markup copied as is.
+
+```typescript
+import { h, mount } from "nanotags/testing";
+
+const markup = h(
+  "x-chart",
+  { size: "lg", disabled: false, bars: [{ label: "a", value: 1 }] },
+  h("ul", { "data-ref": "list" }),
+  h("template", { "data-ref": "tpl" }, h("li")),
+);
+const host = mount(markup);
+```
+
+| Prop | Written as |
+|------|------------|
+| Attribute prop (`size`) | an attribute with the kebab-cased name |
+| JSON prop from `p.json()` (`bars`) | a `<script type="application/json" data-prop="bars">` seed |
+| Anything else (`id`, `class`, `data-*`, `aria-*`, `viewBox`, props on plain elements) | an attribute, name as given |
+
+- `undefined` is skipped. `null` and `false` leave the attribute out. `true` writes an empty attribute. Numbers become strings.
+- Property-only props (`{ schema, attribute: false }`) cannot be written as markup, and on a typed component `h` rejects them. Set them on a host built with `create`, before `connect`.
+- The result is a `Markup`. It remembers the element type, so `mount` returns it typed, and inside a template literal it turns into its HTML.
+- Throws for a string that is not a tag name, and for a custom element tag that is not defined yet (usually a missing import).
+- To tell a component's props from plain attributes, `h` constructs one instance of it with the attribute props set. If that throws, so does `h`.
+
+### mount
+
+`mount(target, parent?): HTMLElement`
+
+Puts markup on the page and connects it. `target` can be:
+
+- markup from `h`,
+- a tag name or component class, the same as `h(target)`,
+- a raw HTML string, for the page around the component.
+
+Returns the first element, typed when it comes from `h`, a tag name or a class. Everything it adds is removed by `cleanup`.
+
+```typescript
+const containerMarkup = h("div", { "data-scroll-container": true });
+const markup = h("x-scroll-controls", null, CHILDREN);
+
+const container = mount(containerMarkup);
+const host = mount(markup, container);
+```
+
+The markup is fully built before anything connects, so a component finds its children, attributes and JSON seeds in place. It is inserted in one go, so a component also sees the siblings after it. (happy-dom connects elements one by one, so there a component only sees the siblings before it.)
+
+`parent` defaults to `document.body` and must be on the page. `mount` throws if the markup has no element, if a tag name or class is not defined, or if the parent is not on the page. Raw HTML goes in as is, undefined tags included, so a test can define a component after mounting it. An error thrown in a component's setup is rethrown from `mount`, in both jsdom and happy-dom.
+
+### create
+
+`create(target): HTMLElement`
+
+Builds one element like `mount`, but does not put it on the page. Call `connect` when the test is ready. Use it to set things up before the component's setup runs: stub a neighbouring element, fake layout sizes, or set a property the way a parent would. Throws unless the markup has exactly one root element.
+
+```typescript
+const markup = h("x-share-button", null, CHILDREN);
+const host = create(markup);
+const tooltip = stubElement(ref(host, "tooltip"), { open: false });
+connect(host);
+
+expect(tooltip.writes("open")).toEqual([false]);
+```
+
+### connect
+
+`connect(host, parent?): host`
+
+Puts a host on the page, which runs its setup. Without `parent`, a host from `disconnect` goes back where it was, and any other host goes into `document.body`. Throws if the parent is not on the page, and rethrows errors from setup.
+
+### disconnect
+
+`disconnect(host): host`
+
+Takes the host off the page, which runs its cleanup, and rethrows errors from that cleanup. Call `connect(host)` afterwards to put it back and run setup again.
+
+```typescript
+disconnect(host);
+host.bars = []; // nothing reacts while disconnected
+connect(host);
+
+expect(ref(host, "list").children).toHaveLength(0);
+```
+
+### cleanup
+
+`cleanup(): void`
+
+Removes everything the helpers added since the last call and undoes every `provideContext`. Call it after each test: `afterEach(cleanup)`. It leaves other DOM alone. If a component's cleanup throws, `cleanup` still removes everything else first, then rethrows the error, or an `AggregateError` when several failed.
+
+### ref
+
+`ref(host, name): Element`
+
+Finds a ref the same way the component does, and throws if it is missing.
+
+- After setup, it returns the element the component found, including refs declared with a selector.
+- Before setup, it looks for `data-ref="name"` (or `data-ref="host-tag:name"`), skipping refs that belong to a nested component.
+- On a connected host whose setup never ran (usually a missing context provider), it throws an error that says so.
+
+On a typed host, `name` must be one of its `r.one` refs, and the result has the type the ref declares. Pass a type argument for markup the test added itself.
+
+```typescript
+ref(host, "list"); // HTMLUListElement, from r.one("ul")
+ref<HTMLDialogElement>(host, "fixture").open;
+```
+
+### refs
+
+`refs(host, name): Element[]`
+
+Like `ref`, for `r.many` refs. Returns all matches in document order and throws if there are none. Unlike `querySelectorAll`, it skips refs inside nested components.
+
+```typescript
+const items = refs(host, "items");
+const firstButton = ref<HTMLButtonElement>(items[0]!, "button");
+```
+
+### provideContext
+
+`provideContext(host, key, value): void`
+
+Provides a context on `host`, so a component that uses `withContexts` can be tested without its real provider. The order does not matter: a component mounted first waits for the provider. `cleanup` removes the provider. The context key must be exported from the module that creates it.
+
+```typescript
+const menubarMarkup = h("ul", { role: "menubar" });
+const markup = h("x-menu-item", null, CHILDREN);
+
+const menubar = mount(menubarMarkup);
+provideContext(menubar, menuContext, { moveFocus: vi.fn() });
+const host = mount(markup, menubar);
+```
+
+### stubElement
+
+`stubElement(el, shape): StubbedElement`
+
+Replaces the members of an element the component talks to, such as a tooltip or a modal, and records how the component uses them. This way the test does not need the real element. It also works when `el` is a registered component, but its methods come from its setup: stub them once it has connected. `stubElement` throws if the setup has not run yet, and a reconnect brings the real methods back.
+
+- A value in `shape` becomes a property that records every write.
+- A function becomes a method that records every call. It also runs, with the element as `this`, and its return value goes back to the caller.
+
+```typescript
+const modal = stubElement(ref(host, "detailsModal"), {
+  isOpen: false,
+  open() {
+    modal.el.isOpen = true;
+  },
+});
+
+ref(host, "trigger").click();
+
+expect(modal.calls("open")).toEqual([[]]);
+expect(modal.get("isOpen")).toBe(true);
+```
+
+| Member | Description |
+|--------|-------------|
+| `el` | The same element, typed as if it had the stubbed members |
+| `get(key)` | The current value of a stubbed property |
+| `writes(key)` | Every value written to a stubbed property, in order |
+| `calls(key)` | The arguments of every call to a stubbed method, in order |
+| `reset()` | Forgets recorded writes and calls, keeps current values |
+
+To record what the component writes during setup, stub a host built with `create` before calling `connect`.
+
+### uniqueTag
+
+`uniqueTag(prefix = "test"): string`
+
+Returns a new custom element name, `x-<prefix>-<n>`, for a component defined inside a test. A tag name can only be defined once per page, so tests that reuse a fixed name would share one component.
+
+### DOM differences
+
+jsdom and happy-dom are not browsers. The helpers smooth over one difference: jsdom does not throw errors from a component's setup or cleanup, but `mount`, `connect`, `disconnect` and `cleanup` rethrow them in both. For the other gaps and ready-made shims, see [DOM differences](cookbook#dom-differences).
+
 ## TypeScript
 
 ### TypedEvent

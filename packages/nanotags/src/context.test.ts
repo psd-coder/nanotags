@@ -4,7 +4,7 @@ import { atom } from "nanostores";
 import { createContext } from "./context";
 import { define } from "./define";
 import { createComponent } from "./factory";
-import { cleanup, mount, uniqueTag } from "../tests/utils";
+import { cleanup, disconnect, h, mount, uniqueTag } from "./testing";
 
 afterEach(cleanup);
 
@@ -35,7 +35,7 @@ describe("provide + consume", () => {
       });
     });
 
-    mount(`<${parentTag}><${childTag}></${childTag}></${parentTag}>`);
+    mount(h(parentTag, null, h(childTag)));
     expect(received).toBeDefined();
     expect(received!.greet()).toBe("hello");
   });
@@ -59,7 +59,7 @@ describe("provide + consume", () => {
       });
     });
 
-    mount(`<${parentTag}><${childTag}></${childTag}></${parentTag}>`);
+    mount(h(parentTag, null, h(childTag)));
     expect(store).toBeDefined();
     expect(store!.get()).toBe(0);
     $count.set(42);
@@ -87,7 +87,7 @@ describe("provide + consume", () => {
       });
     });
 
-    mount(`<${outerTag}><${innerTag}><${childTag}></${childTag}></${innerTag}></${outerTag}>`);
+    mount(h(outerTag, null, h(innerTag, null, h(childTag))));
     expect(received).toBe("inner");
   });
 
@@ -109,7 +109,7 @@ describe("provide + consume", () => {
       });
     });
 
-    mount(`<${parentTag}><${childTag}></${childTag}></${parentTag}>`);
+    mount(h(parentTag, null, h(childTag)));
     expect(received).toBeUndefined();
   });
 
@@ -137,9 +137,7 @@ describe("provide + consume", () => {
       });
     });
 
-    mount(
-      `<${parentTag}><${child1Tag}></${child1Tag}><${child2Tag}></${child2Tag}></${parentTag}>`,
-    );
+    mount(h(parentTag, null, h(child1Tag), h(child2Tag)));
     expect(r1).toBe("shared-value");
     expect(r2).toBe("shared-value");
   });
@@ -160,14 +158,15 @@ describe("late provider", () => {
     });
 
     // Mount with parent undefined, child connects, parent stays as unknown element
-    document.body.innerHTML = `<${parentTag}><${childTag}></${childTag}></${parentTag}>`;
+    // A raw string, since the provider is defined only later in the test.
+    const parent = mount(`<${parentTag}><${childTag}></${childTag}></${parentTag}>`);
     expect(received).toBeUndefined();
 
     // Now define parent, triggers upgrade + provide
     createComponent(parentTag, {}, {}, (setupCtx) => {
       ctx.provide(setupCtx, "late-value");
     });
-    customElements.upgrade(document.body.querySelector(parentTag)!);
+    customElements.upgrade(parent);
 
     expect(received).toBe("late-value");
   });
@@ -184,17 +183,18 @@ describe("late provider", () => {
     });
 
     // Mount with parent undefined
-    document.body.innerHTML = `<${parentTag}><${childTag}></${childTag}></${parentTag}>`;
+    // A raw string, since the provider is defined only later in the test.
+    const parent = mount(`<${parentTag}><${childTag}></${childTag}></${parentTag}>`);
     expect(callback).not.toHaveBeenCalled();
 
     // Remove child before provider connects
-    document.body.querySelector(childTag)!.remove();
+    disconnect(parent.querySelector(childTag)!);
 
     // Now define parent, child is disconnected, callback should not fire
     createComponent(parentTag, {}, {}, (setupCtx) => {
       ctx.provide(setupCtx, "too-late");
     });
-    customElements.upgrade(document.body.querySelector(parentTag)!);
+    customElements.upgrade(parent);
 
     expect(callback).not.toHaveBeenCalled();
   });
@@ -217,14 +217,14 @@ describe("late provider", () => {
     });
 
     // Mount, disconnect, re-mount
-    const html = `<${parentTag}><${childTag}></${childTag}></${parentTag}>`;
-    mount(html);
+    const child = h(childTag);
+    const host = mount(h(parentTag, null, child));
     expect(received).toBe("reconnected");
 
     // Remove and re-add
     received = undefined;
-    document.body.innerHTML = "";
-    document.body.innerHTML = html;
+    disconnect(host);
+    mount(h(parentTag, null, child));
     expect(received).toBe("reconnected");
   });
 });
@@ -248,7 +248,7 @@ describe("withContexts", () => {
         received = setupCtx.contexts.api;
       });
 
-    mount(`<${parentTag}><${childTag}></${childTag}></${parentTag}>`);
+    mount(h(parentTag, null, h(childTag)));
     expect(received).toBeDefined();
     expect(received!.greet()).toBe("hello");
   });
@@ -267,14 +267,15 @@ describe("withContexts", () => {
       });
 
     // Mount child before parent is defined
-    document.body.innerHTML = `<${parentTag}><${childTag}></${childTag}></${parentTag}>`;
+    // A raw string, since the provider is defined only later in the test.
+    const parent = mount(`<${parentTag}><${childTag}></${childTag}></${parentTag}>`);
     expect(setup).not.toHaveBeenCalled();
 
     // Define and upgrade parent
     createComponent(parentTag, {}, {}, (setupCtx) => {
       ctx.provide(setupCtx, "late-value");
     });
-    customElements.upgrade(document.body.querySelector(parentTag)!);
+    customElements.upgrade(parent);
 
     expect(setup).toHaveBeenCalledOnce();
     expect(setup).toHaveBeenCalledWith("late-value");
@@ -301,7 +302,7 @@ describe("withContexts", () => {
         r2 = setupCtx.contexts.num;
       });
 
-    mount(`<${parentTag}><${childTag}></${childTag}></${parentTag}>`);
+    mount(h(parentTag, null, h(childTag)));
     expect(r1).toBe("hello");
     expect(r2).toBe(42);
   });
@@ -316,16 +317,17 @@ describe("withContexts", () => {
     define(childTag).withContexts({ val: ctx }).setup(setup);
 
     // Mount child, parent not defined
-    document.body.innerHTML = `<${parentTag}><${childTag}></${childTag}></${parentTag}>`;
+    // A raw string, since the provider is defined only later in the test.
+    const parent = mount(`<${parentTag}><${childTag}></${childTag}></${parentTag}>`);
     expect(setup).not.toHaveBeenCalled();
 
     // Remove child before defining parent
-    document.body.querySelector(childTag)!.remove();
+    disconnect(parent.querySelector(childTag)!);
 
     createComponent(parentTag, {}, {}, (setupCtx) => {
       ctx.provide(setupCtx, "too-late");
     });
-    customElements.upgrade(document.body.querySelector(parentTag)!);
+    customElements.upgrade(parent);
 
     expect(setup).not.toHaveBeenCalled();
   });
@@ -347,12 +349,12 @@ describe("withContexts", () => {
         calls.push(setupCtx.contexts.val);
       });
 
-    const html = `<${parentTag}><${childTag}></${childTag}></${parentTag}>`;
-    mount(html);
+    const child = h(childTag);
+    const host = mount(h(parentTag, null, child));
     expect(calls).toEqual(["value"]);
 
-    document.body.innerHTML = "";
-    document.body.innerHTML = html;
+    disconnect(host);
+    mount(h(parentTag, null, child));
     expect(calls).toEqual(["value", "value"]);
   });
 
@@ -362,7 +364,7 @@ describe("withContexts", () => {
 
     define(tag).withContexts({}).setup(setup);
 
-    mount(`<${tag}></${tag}>`);
+    mount(tag);
     expect(setup).toHaveBeenCalledOnce();
   });
 });
