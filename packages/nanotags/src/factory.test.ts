@@ -601,6 +601,14 @@ describe("createComponent", () => {
       const el = mount(`<${tag}></${tag}>`);
       expect((el as any).emit()).toBe("fired");
     });
+
+    it("rejects a mixin key that reuses a prop name", () => {
+      const tag = uniqueTag("mixin-prop");
+      const Component = createComponent(tag, { open: propBuilders.boolean() }, {}, () => ({
+        open: "mixin",
+      }));
+      expect(() => mount(Component)).toThrow("reserved mixin: open");
+    });
   });
 
   describe("prop reflection round-trip", () => {

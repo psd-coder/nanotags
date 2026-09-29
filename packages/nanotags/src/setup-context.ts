@@ -12,7 +12,7 @@ import type {
   RefsSchema,
 } from "./types";
 
-export const __ctx: unique symbol = Symbol("ctx");
+export const __ctx: unique symbol = Symbol.for("nanotags:ctx");
 
 export type ReservedKeys = keyof HTMLElement;
 
