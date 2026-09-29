@@ -4,7 +4,8 @@ import * as v from "valibot";
 import { propBuilders, refBuilders } from "./builders";
 import { __ctx } from "./setup-context";
 import { collectRefs, createComponent, createReactiveProps, parseWithSchema } from "./factory";
-import { cleanup, createHostWith, mount, uniqueTag } from "../tests/utils";
+import { cleanup, h, mount, uniqueTag } from "./testing";
+import { createHostWith } from "../tests/utils";
 
 afterEach(() => cleanup());
 
@@ -303,9 +304,7 @@ describe("createComponent: json props", () => {
       {},
       () => {},
     );
-    const el = mount<InstanceType<typeof Component>>(
-      `<${tag}><script type="application/json" data-prop="data">{"x":5}</script></${tag}>`,
-    );
+    const el = mount(h(Component, { data: { x: 5 } }));
     expect(el[__ctx].props.$data.get()).toEqual({ x: 5 });
   });
 
@@ -584,21 +583,21 @@ describe("createComponent", () => {
       const tag = uniqueTag("setup");
       const setupFn = vi.fn();
       createComponent(tag, {}, {}, setupFn);
-      mount(`<${tag}></${tag}>`);
+      mount(tag);
       expect(setupFn).toHaveBeenCalledOnce();
     });
 
     it("assigns mixin from setup return value", () => {
       const tag = uniqueTag("mixin");
       createComponent(tag, {}, {}, () => ({ greet: () => "hi" }));
-      const el = mount(`<${tag}></${tag}>`);
+      const el = mount(tag);
       expect((el as any).greet()).toBe("hi");
     });
 
     it("allows mixin key 'emit' (not on prototype)", () => {
       const tag = uniqueTag("mixin-emit");
       createComponent(tag, {}, {}, () => ({ emit: () => "fired" }));
-      const el = mount(`<${tag}></${tag}>`);
+      const el = mount(tag);
       expect((el as any).emit()).toBe("fired");
     });
 

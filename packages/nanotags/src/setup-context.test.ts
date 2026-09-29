@@ -3,7 +3,7 @@ import { afterEach, describe, expect, expectTypeOf, it, vi } from "vitest";
 
 import { define } from "./define";
 import type { SetupContext } from "./setup-context";
-import { cleanup, mount, uniqueTag } from "../tests/utils";
+import { cleanup, connect, disconnect, h, mount, uniqueTag } from "./testing";
 
 afterEach(() => cleanup());
 
@@ -14,8 +14,8 @@ describe("lifecycle cleanup", () => {
     define(tag, (ctx) => {
       ctx.onCleanup(cb);
     });
-    const el = mount(`<${tag}></${tag}>`);
-    el.remove();
+    const el = mount(tag);
+    disconnect(el);
     expect(cb).toHaveBeenCalledOnce();
   });
 
@@ -25,10 +25,10 @@ describe("lifecycle cleanup", () => {
     define(tag, (ctx) => {
       ctx.on(ctx.host, "click", handler);
     });
-    const el = mount(`<${tag}></${tag}>`);
+    const el = mount(tag);
     el.click();
     expect(handler).toHaveBeenCalledOnce();
-    el.remove();
+    disconnect(el);
     el.click();
     expect(handler).toHaveBeenCalledOnce();
   });
@@ -40,9 +40,9 @@ describe("lifecycle cleanup", () => {
     define(tag, (ctx) => {
       ctx.effect($store, spy);
     });
-    const el = mount(`<${tag}></${tag}>`);
+    const el = mount(tag);
     expect(spy).toHaveBeenCalledWith(0);
-    el.remove();
+    disconnect(el);
     $store.set(1);
     expect(spy).toHaveBeenCalledTimes(1);
   });
@@ -53,9 +53,9 @@ describe("lifecycle cleanup", () => {
     define(tag, (ctx) => {
       ctx.onCleanup(cb);
     });
-    const el = mount(`<${tag}></${tag}>`);
-    el.remove();
-    el.remove();
+    const el = mount(tag);
+    disconnect(el);
+    disconnect(el);
     expect(cb).toHaveBeenCalledOnce();
   });
 
@@ -71,8 +71,8 @@ describe("lifecycle cleanup", () => {
       ctx.onCleanup(cb2);
       ctx.onCleanup(cb3);
     });
-    const el = mount(`<${tag}></${tag}>`);
-    expect(() => el.remove()).toThrow("boom");
+    const el = mount(tag);
+    expect(() => disconnect(el)).toThrow("boom");
     expect(cb1).toHaveBeenCalledOnce();
     expect(cb2).toHaveBeenCalledOnce();
     expect(cb3).toHaveBeenCalledOnce();
@@ -88,8 +88,8 @@ describe("lifecycle cleanup", () => {
         throw new Error("second");
       });
     });
-    const el = mount(`<${tag}></${tag}>`);
-    expect(() => el.remove()).toThrow("first");
+    const el = mount(tag);
+    expect(() => disconnect(el)).toThrow("first");
   });
 
   it("reconnect: previous listeners gone, new ones from fresh setup", () => {
@@ -99,11 +99,11 @@ describe("lifecycle cleanup", () => {
       const id = String(calls.length);
       ctx.onCleanup(() => calls.push(`cleanup-${id}`));
     });
-    const el = mount(`<${tag}></${tag}>`);
-    el.remove();
+    const el = mount(tag);
+    disconnect(el);
     expect(calls).toEqual(["cleanup-0"]);
-    document.body.append(el);
-    el.remove();
+    connect(el);
+    disconnect(el);
     expect(calls).toEqual(["cleanup-0", "cleanup-1"]);
   });
 
@@ -133,7 +133,7 @@ describe("on", () => {
     define(tag, (ctx) => {
       ctx.on(ctx.host, "click", handler);
     });
-    const el = mount(`<${tag}></${tag}>`);
+    const el = mount(tag);
     el.click();
     expect(handler).toHaveBeenCalledOnce();
   });
@@ -146,7 +146,14 @@ describe("on", () => {
       .setup((ctx) => {
         ctx.on(ctx.refs.btns, "click", handler);
       });
-    mount(`<${tag}><button data-ref="btns">A</button><button data-ref="btns">B</button></${tag}>`);
+    mount(
+      h(
+        tag,
+        null,
+        h("button", { "data-ref": "btns" }, "A"),
+        h("button", { "data-ref": "btns" }, "B"),
+      ),
+    );
     const btns = document.querySelectorAll<HTMLElement>("button");
     btns[0]?.click();
     btns[1]?.click();
@@ -159,7 +166,7 @@ describe("on", () => {
     define(tag, (ctx) => {
       ctx.on(document, "keydown", handler);
     });
-    mount(`<${tag}></${tag}>`);
+    mount(tag);
     document.dispatchEvent(new Event("keydown"));
     expect(handler).toHaveBeenCalledOnce();
   });
@@ -170,7 +177,7 @@ describe("on", () => {
     define(tag, (ctx) => {
       ctx.on(window, "resize", handler);
     });
-    mount(`<${tag}></${tag}>`);
+    mount(tag);
     window.dispatchEvent(new Event("resize"));
     expect(handler).toHaveBeenCalledOnce();
   });
@@ -184,7 +191,7 @@ describe("emit", () => {
       ctx.host.addEventListener("my-event", spy);
       ctx.emit(new Event("my-event"));
     });
-    mount(`<${tag}></${tag}>`);
+    mount(tag);
     expect(spy).toHaveBeenCalledOnce();
   });
 
@@ -195,7 +202,7 @@ describe("emit", () => {
       ctx.host.addEventListener("notify", (e) => (captured = e as CustomEvent));
       ctx.emit("notify", { msg: "hi" });
     });
-    mount(`<${tag}></${tag}>`);
+    mount(tag);
     expect(captured).toBeDefined();
     expect(captured?.detail).toEqual({ msg: "hi" });
     expect(captured?.bubbles).toBe(true);
@@ -208,7 +215,7 @@ describe("emit", () => {
       ctx.host.addEventListener("evt", (e) => (captured = e as CustomEvent));
       ctx.emit("evt", null, { bubbles: false });
     });
-    mount(`<${tag}></${tag}>`);
+    mount(tag);
     expect(captured?.bubbles).toBe(false);
   });
 });
@@ -220,7 +227,7 @@ describe("getElement / getElements", () => {
     define(tag, (ctx) => {
       found = ctx.getElement(".item");
     });
-    mount(`<${tag}><span class="item">ok</span></${tag}>`);
+    mount(h(tag, null, h("span", { class: "item" }, "ok")));
     expect(found).toBeDefined();
     expectTypeOf(found!).toEqualTypeOf<Element>();
   });
@@ -231,7 +238,7 @@ describe("getElement / getElements", () => {
     define(tag, (ctx) => {
       found = ctx.getElement("button");
     });
-    mount(`<${tag}><button>Click</button></${tag}>`);
+    mount(h(tag, null, h("button", null, "Click")));
     expect(found).toBeDefined();
     expectTypeOf(found!).toEqualTypeOf<HTMLButtonElement>();
   });
@@ -241,7 +248,7 @@ describe("getElement / getElements", () => {
     define(tag, (ctx) => {
       ctx.getElement(".missing");
     });
-    expect(() => mount(`<${tag}></${tag}>`)).toThrow(/missing/);
+    expect(() => mount(tag)).toThrow(/missing/);
   });
 
   it("returns matching elements", () => {
@@ -250,7 +257,7 @@ describe("getElement / getElements", () => {
     define(tag, (ctx) => {
       found = ctx.getElements(".item");
     });
-    mount(`<${tag}><span class="item">1</span><span class="item">2</span></${tag}>`);
+    mount(h(tag, null, h("span", { class: "item" }, "1"), h("span", { class: "item" }, "2")));
     expect(found).toHaveLength(2);
   });
 
@@ -259,7 +266,7 @@ describe("getElement / getElements", () => {
     define(tag, (ctx) => {
       ctx.getElements(".missing");
     });
-    expect(() => mount(`<${tag}></${tag}>`)).toThrow(/missing/);
+    expect(() => mount(tag)).toThrow(/missing/);
   });
 
   it("works with custom root", () => {
@@ -269,7 +276,7 @@ describe("getElement / getElements", () => {
       const container = ctx.getElement(".container");
       found = ctx.getElement(container, ".nested");
     });
-    mount(`<${tag}><div class="container"><span class="nested">ok</span></div></${tag}>`);
+    mount(h(tag, null, h("div", { class: "container" }, h("span", { class: "nested" }, "ok"))));
     expect(found).toBeDefined();
     expect((found as Element).tagName).toBe("SPAN");
   });
@@ -282,7 +289,16 @@ describe("getElement / getElements", () => {
       found = ctx.getElements(container, ".item");
     });
     mount(
-      `<${tag}><div class="container"><span class="item">1</span><span class="item">2</span></div></${tag}>`,
+      h(
+        tag,
+        null,
+        h(
+          "div",
+          { class: "container" },
+          h("span", { class: "item" }, "1"),
+          h("span", { class: "item" }, "2"),
+        ),
+      ),
     );
     expect(found).toHaveLength(2);
   });
@@ -315,7 +331,7 @@ describe("effect", () => {
     define(tag, (ctx) => {
       ctx.effect($store, spy);
     });
-    mount(`<${tag}></${tag}>`);
+    mount(tag);
     expect(spy).toHaveBeenCalledWith(10);
     $store.set(20);
     expect(spy).toHaveBeenCalledWith(20);
@@ -330,7 +346,7 @@ describe("effect", () => {
     define(tag, (ctx) => {
       ctx.effect([$a, $b], spy);
     });
-    mount(`<${tag}></${tag}>`);
+    mount(tag);
     expect(spy).toHaveBeenCalledWith(1, "x");
     $a.set(2);
     expect(spy).toHaveBeenCalledWith(2, "x");
@@ -343,8 +359,8 @@ describe("effect", () => {
     define(tag, (ctx) => {
       ctx.effect($store, spy);
     });
-    const el = mount(`<${tag}></${tag}>`);
-    el.remove();
+    const el = mount(tag);
+    disconnect(el);
     $store.set(99);
     expect(spy).toHaveBeenCalledTimes(1);
   });
@@ -358,7 +374,7 @@ describe("bind", () => {
       const input = ctx.getElement("input");
       ctx.bind($val, input);
     });
-    const el = mount(`<${tag}><input type="text" /></${tag}>`);
+    const el = mount(h(tag, null, h("input", { type: "text" })));
     const input = el.querySelector("input")!;
     input.value = "hello";
     input.dispatchEvent(new Event("input", { bubbles: true }));
@@ -372,7 +388,7 @@ describe("bind", () => {
       const input = ctx.getElement("input");
       ctx.bind($val, input);
     });
-    const el = mount(`<${tag}><input type="text" /></${tag}>`);
+    const el = mount(h(tag, null, h("input", { type: "text" })));
     const input = el.querySelector("input")!;
     expect(input.value).toBe("initial");
     $val.set("updated");
@@ -386,7 +402,7 @@ describe("bind", () => {
       const input = ctx.getElement("input");
       ctx.bind($val, input);
     });
-    const el = mount(`<${tag}><input type="number" /></${tag}>`);
+    const el = mount(h(tag, null, h("input", { type: "number" })));
     const input = el.querySelector("input")!;
     input.value = "42";
     input.dispatchEvent(new Event("input", { bubbles: true }));
@@ -400,7 +416,7 @@ describe("bind", () => {
       const input = ctx.getElement("input");
       ctx.bind($val, input);
     });
-    const el = mount(`<${tag}><input type="number" /></${tag}>`);
+    const el = mount(h(tag, null, h("input", { type: "number" })));
     const input = el.querySelector("input")!;
     expect(input.valueAsNumber).toBe(7);
     $val.set(99);
@@ -414,7 +430,7 @@ describe("bind", () => {
       const input = ctx.getElement("input");
       ctx.bind($val, input);
     });
-    const el = mount(`<${tag}><input type="range" min="1" max="50" /></${tag}>`);
+    const el = mount(h(tag, null, h("input", { type: "range", min: "1", max: "50" })));
     const input = el.querySelector("input")!;
     input.value = "25";
     input.dispatchEvent(new Event("input", { bubbles: true }));
@@ -428,7 +444,7 @@ describe("bind", () => {
       const input = ctx.getElement("input");
       ctx.bind($val, input);
     });
-    const el = mount(`<${tag}><input type="range" min="1" max="50" /></${tag}>`);
+    const el = mount(h(tag, null, h("input", { type: "range", min: "1", max: "50" })));
     const input = el.querySelector("input")!;
     expect(input.valueAsNumber).toBe(10);
     $val.set(30);
@@ -442,7 +458,7 @@ describe("bind", () => {
       const input = ctx.getElement("input");
       ctx.bind($checked, input);
     });
-    const el = mount(`<${tag}><input type="checkbox" /></${tag}>`);
+    const el = mount(h(tag, null, h("input", { type: "checkbox" })));
     const input = el.querySelector("input")!;
     input.checked = true;
     input.dispatchEvent(new Event("change", { bubbles: true }));
@@ -456,7 +472,7 @@ describe("bind", () => {
       const input = ctx.getElement("input");
       ctx.bind($checked, input);
     });
-    const el = mount(`<${tag}><input type="checkbox" /></${tag}>`);
+    const el = mount(h(tag, null, h("input", { type: "checkbox" })));
     const input = el.querySelector("input")!;
     expect(input.checked).toBe(true);
     $checked.set(false);
@@ -471,7 +487,11 @@ describe("bind", () => {
       ctx.bind($val, select);
     });
     const el = mount(
-      `<${tag}><select><option value="a">A</option><option value="b">B</option></select></${tag}>`,
+      h(
+        tag,
+        null,
+        h("select", null, h("option", { value: "a" }, "A"), h("option", { value: "b" }, "B")),
+      ),
     );
     const select = el.querySelector("select")!;
     select.value = "b";
@@ -487,7 +507,11 @@ describe("bind", () => {
       ctx.bind($val, select);
     });
     const el = mount(
-      `<${tag}><select><option value="a">A</option><option value="b">B</option></select></${tag}>`,
+      h(
+        tag,
+        null,
+        h("select", null, h("option", { value: "a" }, "A"), h("option", { value: "b" }, "B")),
+      ),
     );
     const select = el.querySelector("select")!;
     expect(select.value).toBe("b");
@@ -500,7 +524,7 @@ describe("bind", () => {
       const textarea = ctx.getElement("textarea");
       ctx.bind($val, textarea);
     });
-    const el = mount(`<${tag}><textarea></textarea></${tag}>`);
+    const el = mount(h(tag, null, h("textarea")));
     const textarea = el.querySelector("textarea")!;
     textarea.value = "hello";
     textarea.dispatchEvent(new Event("input", { bubbles: true }));
@@ -514,7 +538,7 @@ describe("bind", () => {
       const textarea = ctx.getElement("textarea");
       ctx.bind($val, textarea);
     });
-    const el = mount(`<${tag}><textarea></textarea></${tag}>`);
+    const el = mount(h(tag, null, h("textarea")));
     const textarea = el.querySelector("textarea")!;
     expect(textarea.value).toBe("prefilled");
   });
@@ -526,7 +550,7 @@ describe("bind", () => {
       const input = ctx.getElement("input");
       ctx.bind($val, input);
     });
-    const el = mount(`<${tag}><input type="text" value="from-html" /></${tag}>`);
+    const el = mount(h(tag, null, h("input", { type: "text", value: "from-html" })));
     const input = el.querySelector("input")!;
     expect(input.value).toBe("from-store");
   });
@@ -539,7 +563,7 @@ describe("bind", () => {
       const input = ctx.getElement("input");
       ctx.bind($val, input);
     });
-    mount(`<${tag}><input type="text" /></${tag}>`);
+    mount(h(tag, null, h("input", { type: "text" })));
     $val.listen(spy);
     $val.set("same");
     expect(spy).not.toHaveBeenCalled();
@@ -556,7 +580,7 @@ describe("bind", () => {
       const ctrl = ctx.getElement(controlTag) as HTMLElement & { value: string };
       ctx.bind($val, ctrl);
     });
-    const el = mount(`<${tag}><${controlTag}></${controlTag}></${tag}>`);
+    const el = mount(h(tag, null, h(controlTag)));
     const ctrl = el.querySelector(controlTag)! as HTMLElement & { value: string };
     expect(ctrl.value).toBe("from-store");
     ctrl.value = "user-input";
@@ -574,7 +598,8 @@ describe("bind", () => {
       const child = ctx.getElement<HTMLElement>(childTag);
       ctx.bind($val, child, { prop: "value", event: "change" });
     });
-    const el = mount(`<${parentTag}><${childTag}></${childTag}></${parentTag}>`);
+    // A string child, since h refuses a tag nothing has defined yet.
+    const el = mount(h(parentTag, null, `<${childTag}></${childTag}>`));
     const child = el.querySelector(childTag)! as HTMLElement & { value: string };
     // Before child upgrade, value is set as plain property
     expect(child.value).toBe("from-parent");
@@ -594,7 +619,7 @@ describe("bind", () => {
     define(tag, (ctx) => {
       ctx.bind($theme, ctx.host, { prop: "title" });
     });
-    const el = mount(`<${tag}></${tag}>`);
+    const el = mount(tag);
     expect(el.title).toBe("dark");
     $theme.set("light");
     expect(el.title).toBe("light");
@@ -617,7 +642,7 @@ describe("bind", () => {
       const ctrl = ctx.getElement<HTMLElement>(controlTag);
       ctx.bind($theme, ctrl, { prop: "theme", event: "change" });
     });
-    const el = mount(`<${tag}><${controlTag}></${controlTag}></${tag}>`);
+    const el = mount(h(tag, null, h(controlTag)));
     const ctrl = el.querySelector(controlTag)! as any;
     expect(ctrl.theme).toBe("dark");
     ctrl.theme = "light";
@@ -634,7 +659,7 @@ describe("bind", () => {
       const input = ctx.getElement("input");
       ctx.bind($val, input, { prop: "value", event: "change" });
     });
-    const el = mount(`<${tag}><input type="text" /></${tag}>`);
+    const el = mount(h(tag, null, h("input", { type: "text" })));
     const input = el.querySelector("input")!;
     expect(input.value).toBe("test");
     input.value = "changed";
@@ -685,7 +710,7 @@ describe("SVG support", () => {
       const circle = ctx.getElement("circle");
       ctx.on(circle, "click", handler);
     });
-    const el = mount(`<${tag}><svg><circle r="5"/></svg></${tag}>`);
+    const el = mount(h(tag, null, h("svg", null, h("circle", { r: "5" }))));
     const circle = el.querySelector("circle")!;
     circle.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     expect(handler).toHaveBeenCalledOnce();
@@ -700,7 +725,16 @@ describe("SVG support", () => {
         ctx.on(ctx.refs.circles, "click", handler);
       });
     mount(
-      `<${tag}><svg><circle data-ref="circles" r="1"/><circle data-ref="circles" r="2"/></svg></${tag}>`,
+      h(
+        tag,
+        null,
+        h(
+          "svg",
+          null,
+          h("circle", { "data-ref": "circles", r: "1" }),
+          h("circle", { "data-ref": "circles", r: "2" }),
+        ),
+      ),
     );
     const circles = document.querySelectorAll("circle");
     circles[0]?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
@@ -715,7 +749,7 @@ describe("SVG support", () => {
       circle = ctx.getElement("circle");
       expectTypeOf(circle).toEqualTypeOf<SVGCircleElement>();
     });
-    mount(`<${tag}><svg><circle r="5"/></svg></${tag}>`);
+    mount(h(tag, null, h("svg", null, h("circle", { r: "5" }))));
     expect(circle).toBeInstanceOf(SVGCircleElement);
   });
 
@@ -726,8 +760,11 @@ describe("SVG support", () => {
       blur = ctx.getElement("feGaussianBlur");
       expectTypeOf(blur).toEqualTypeOf<SVGFEGaussianBlurElement>();
     });
-    mount(`<${tag}><svg><filter><feGaussianBlur stdDeviation="3"/></filter></svg></${tag}>`);
+    mount(
+      h(tag, null, h("svg", null, h("filter", null, h("feGaussianBlur", { stdDeviation: "3" })))),
+    );
     expect(blur).toBeInstanceOf(SVGFEGaussianBlurElement);
+    expect(blur!.getAttribute("stdDeviation")).toBe("3");
   });
 
   it("getElements infers SVG element list", () => {
@@ -737,7 +774,7 @@ describe("SVG support", () => {
       circles = ctx.getElements("circle");
       expectTypeOf(circles).toEqualTypeOf<SVGCircleElement[]>();
     });
-    mount(`<${tag}><svg><circle r="1"/><circle r="2"/></svg></${tag}>`);
+    mount(h(tag, null, h("svg", null, h("circle", { r: "1" }), h("circle", { r: "2" }))));
     expect(circles).toHaveLength(2);
   });
 
@@ -747,6 +784,6 @@ describe("SVG support", () => {
       const a = ctx.getElement("a");
       expectTypeOf(a).toEqualTypeOf<HTMLAnchorElement>();
     });
-    mount(`<${tag}><a href="#">link</a></${tag}>`);
+    mount(h(tag, null, h("a", { href: "#" }, "link")));
   });
 });

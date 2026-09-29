@@ -1,5 +1,11 @@
 {
   "extends": "./tsconfig.json",
+  "compilerOptions": {
+    // Tests emit no declarations, and a test that registers its fixtures in
+    // HTMLElementTagNameMap would otherwise have to annotate every one of them.
+    "declaration": false,
+    "isolatedDeclarations": false
+  },
   "include": ["src/**/*.test.ts", "tests/**/*.ts"],
   "exclude": ["docs", "dist", "coverage"]
 }

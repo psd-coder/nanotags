@@ -4,7 +4,7 @@ import { afterEach, describe, expect, expectTypeOf, it } from "vitest";
 import { ComponentBuilder, define } from "./define";
 import { __ctx } from "./setup-context";
 import type { ReservedKeys } from "./setup-context";
-import { cleanup, mount, uniqueTag } from "../tests/utils";
+import { cleanup, mount, uniqueTag } from "./testing";
 import type { ReactiveProps } from "./types";
 
 afterEach(() => cleanup());

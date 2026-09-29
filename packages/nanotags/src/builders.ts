@@ -1,6 +1,6 @@
 import type { StandardSchemaV1 } from "@standard-schema/spec";
 
-import type { PropDef, ListRefMarker, SingleRefMarker } from "./types";
+import type { JsonPropDef, ListRefMarker, SingleRefMarker } from "./types";
 import { camelToKebab } from "./utils";
 
 function schema<O>(
@@ -52,12 +52,12 @@ export const propBuilders: {
     <S extends StandardSchemaV1>(
       schema: S,
       fallback: null,
-    ): PropDef<StandardSchemaV1.InferOutput<S> | null>;
+    ): JsonPropDef<StandardSchemaV1.InferOutput<S> | null>;
     <S extends StandardSchemaV1>(
       schema: S,
       fallback: StandardSchemaV1.InferOutput<S>,
-    ): PropDef<StandardSchemaV1.InferOutput<S>>;
-    <S extends StandardSchemaV1>(schema: S): PropDef<StandardSchemaV1.InferOutput<S> | null>;
+    ): JsonPropDef<StandardSchemaV1.InferOutput<S>>;
+    <S extends StandardSchemaV1>(schema: S): JsonPropDef<StandardSchemaV1.InferOutput<S> | null>;
   };
 } = {
   string(fallback?: string | null) {
@@ -84,7 +84,7 @@ export const propBuilders: {
         : fail(`Invalid value: ${JSON.stringify(v)}`),
     );
   },
-  json(schema: StandardSchemaV1, fallback?: unknown): PropDef {
+  json(schema: StandardSchemaV1, fallback?: unknown): JsonPropDef {
     const fb = fallback ?? null;
     return {
       schema,

@@ -12,6 +12,7 @@ export type PropDef<T = unknown> = {
   attribute?: boolean;
   "~standard"?: never;
 };
+export type JsonPropDef<T = unknown> = PropDef<T> & Required<Pick<PropDef<T>, "get">>;
 export type FullPropDef<T = unknown> = Required<Pick<PropDef<T>, "schema" | "get" | "attribute">>;
 export type PropEntry = AnySchema | PropDef;
 export type PropsSchema = Record<string, PropEntry>;
