@@ -77,7 +77,7 @@ import * as v from "valibot";
 
 .withProps((p) => ({
   items: p.json(v.array(v.object({ id: v.number(), name: v.string() })), []),
-  config: p.json(v.object({ theme: v.string() })), // defaults to null
+  config: p.json(v.nullable(v.object({ theme: v.string() }))), // no seed -> null
 }))
 ```
 
@@ -86,9 +86,10 @@ JSON props differ from attribute-backed props:
 - **Not observed**: not in `observedAttributes`, no `attributeChangedCallback`
 - **Setter writes to atom directly**: no attribute created in the DOM
 - **Hydrated once on connect**: reads from a `<script type="application/json">` tag, falls back to a kebab-case attribute
+- **No seed, no fallback**: the value is `null`, and it goes through the schema, so a schema that rejects `null` throws on connect
 
 ```html
-<!-- preferred: script tag (no escaping needed) -->
+<!-- preferred: script tag (no attribute quoting; escape `<` as \u003c if the data can contain </script>) -->
 <x-list>
   <script type="application/json" data-prop="items">
     [{ "id": 1, "name": "Alice" }, { "id": 2, "name": "Bob" }]
@@ -107,7 +108,7 @@ el.items = [{ id: 3, name: "Charlie" }]; // updates atom, no DOM attribute
 
 #### Property-only props
 
-Set `attribute: false` to create a prop that exists only as a JS property and a Nano Stores atom, not an HTML attribute. Defined in the **constructor**, available immediately after `document.createElement()`:
+Set `attribute: false` to create a prop that exists only as a JS property and a Nano Stores atom, not an HTML attribute. The accessor is defined in the **constructor**, so it exists right after `document.createElement()`; the value stays `undefined` until the element connects or the property is assigned:
 
 ```typescript
 .withProps((p) => ({
@@ -319,7 +320,7 @@ Attach event listeners with automatic cleanup. Accepts a single element, an arra
 
 ```typescript
 ctx.on(ctx.refs.trigger, "click", (e) => { /* ... */ });
-ctx.on([...ctx.refs.items], "mouseenter", (e) => { /* ... */ });
+ctx.on(ctx.refs.items, "mouseenter", (e) => { /* ... */ });
 ctx.on(document, "keydown", (e) => { /* ... */ });
 ```
 
@@ -345,7 +346,7 @@ ctx.getElement("input"); // HTMLInputElement (throws if missing)
 ctx.getElement("circle"); // SVGCircleElement
 ctx.getElement(customParent, ".item"); // Element
 // type-only, no runtime tag check
-ctx.getElement<"input">(customRoot, ".my-input"); // HTMLInputElement
+ctx.getElement<HTMLInputElement>(customRoot, ".my-input"); // HTMLInputElement
 ```
 
 ### getElements
@@ -683,7 +684,7 @@ Returns a new custom element name, `x-<prefix>-<n>`, for a component defined ins
 
 ### DOM differences
 
-jsdom and happy-dom are not browsers. The helpers smooth over one difference: jsdom does not throw errors from a component's setup or cleanup, but `mount`, `connect`, `disconnect` and `cleanup` rethrow them in both. For the other gaps and ready-made shims, see [DOM differences](cookbook#dom-differences).
+jsdom and happy-dom are not browsers. The helpers smooth over one difference: jsdom does not throw errors from a component's constructor, setup or cleanup, but `mount`, `create`, `connect`, `disconnect`, `cleanup` and `provideContext` rethrow them in both. For the other gaps and ready-made shims, see [DOM differences](cookbook#dom-differences).
 
 ## TypeScript
 

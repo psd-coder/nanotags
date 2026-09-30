@@ -162,7 +162,7 @@ import * as v from "valibot";
 
 .withProps((p) => ({
   items: p.json(v.array(v.object({ id: v.number(), name: v.string() })), []),
-  config: p.json(v.object({ theme: v.string() })),  // defaults to null → T | null
+  config: p.json(v.nullable(v.object({ theme: v.string() }))),  // no seed → null
 }))
 ```
 
@@ -185,7 +185,7 @@ el.items = [{ id: 3, name: "Charlie" }]; // updates atom, no DOM attribute
 
 #### Property-only Props
 
-Set `attribute: false` to create a prop that lives only as a JS property and a Nano Stores atom, not an HTML attribute. Defined on the element in the **constructor**, available immediately after `document.createElement()`:
+Set `attribute: false` to create a prop that lives only as a JS property and a Nano Stores atom, not an HTML attribute. The accessor is defined in the **constructor**, so it exists right after `document.createElement()`; the value stays `undefined` until the element connects or the property is assigned:
 
 ```typescript
 .withProps((p) => ({
@@ -322,7 +322,7 @@ Attach event listeners with automatic cleanup. Accepts a single element, an arra
 ctx.on(ctx.refs.trigger, "click", (e) => {
   /* ... */
 });
-ctx.on([...ctx.refs.items], "mouseenter", (e) => {
+ctx.on(ctx.refs.items, "mouseenter", (e) => {
   /* ... */
 });
 ctx.on(document, "keydown", (e) => {
@@ -713,7 +713,7 @@ Reusable functions that receive `ctx` and wire up behavior—effects, listeners,
 
 ```typescript
 export function attachRovingFocus(
-  ctx: SetupContext,
+  ctx: SetupContext<{}, {}>,
   container: HTMLElement,
   items: HTMLElement[],
 ) {
@@ -737,7 +737,7 @@ export function attachRovingFocus(
 
 ```typescript
 define("x-tabs")
-  .withRefs((r) => ({ tablist: r.one("div"), tabs: r.many("[role=tab]") }))
+  .withRefs((r) => ({ tablist: r.one("div"), tabs: r.many<HTMLElement>("[role=tab]") }))
   .setup((ctx) => {
     attachRovingFocus(ctx, ctx.refs.tablist, ctx.refs.tabs);
   });
