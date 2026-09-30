@@ -41,11 +41,11 @@ it("counts characters as the user types", () => {
 - **`afterEach(cleanup)` is the whole teardown.** Mount surrounding markup (the nav a scroll spy tracks, the link that opens a modal) with `mount` too, so `cleanup` removes it. Never reset `document.body` by hand.
 - **Read refs with `ref`/`refs`, not `querySelector`.** They follow the ownership rule (a `data-ref` inside a nested custom element belongs to that element) and return typed elements. `querySelectorAll` also picks up refs that belong to child components.
 - **Copy the real markup and note which template it came from.** If the test's markup drifts from the real one, the test passes while the component is broken.
-- **Pass optional values through as they are.** `h` skips `undefined` and leaves `null`/`false` attributes out, so a missing value tests the schema fallback with no `if`. `p.json()` props are the exception: `null` and `false` go into the seed, and the schema gets them instead of the fallback.
+- **Pass optional values through as they are.** `h` skips `undefined` and leaves `null`/`false` attributes out, so a missing value tests the schema fallback with no `if`. `p.json` props are the exception: `null` and `false` go into the seed, and the schema gets them instead of the fallback.
 - **Stub a peer element instead of importing its component.** `stubElement` records property writes and method calls, and the test doesn't depend on registration order. The peer's setup replaces stubbed methods, so stub methods only after it has set up. To record writes made during setup, `create` the host, stub, then `connect`.
 - **Provide a context with `provideContext` instead of mounting the real provider.** Export the context key from the module that creates it; the key is part of the component's contract with its children. A consumer with no provider does nothing and looks broken; `ref` throws on such a host and names the missing provider.
 - **Only assert what the DOM shows.** Never read the `__ctx` symbol.
-- **For a keyed list, check that nodes are reused, not just that the text matches.** A bad `key` makes `renderList` rebuild every node, which loses focus, input state and running transitions, yet the text still matches. Compare the container's children before and after an update: `expect(list.children[0]).toBe(first)`.
+- **For a keyed list, check that each node stays with its item, not just that the text matches.** A key that changes every render rebuilds nodes, losing focus, input state and running transitions. An index key keeps nodes but hands them to other items on a reorder, so that state moves to the wrong item. Reorder the data and assert that the node showing an item is the one that showed it before: `expect(list.querySelector('[data-id="b"]')).toBe(before)`.
 - **Listen for events with the runner's spy.** Remove listeners on `document` or `window` in teardown. To check state at the moment an event fired, read it inside the listener.
 - **A component defined inside a test gets `uniqueTag()`.** A tag can't be redefined, and a second `define()` with a taken name keeps the first setup.
 - **With `vi.mock`, create what the factory needs with `vi.hoisted`.** Vitest moves `vi.mock` above all imports, so the factory can't use the file's variables.
@@ -62,7 +62,7 @@ it("counts characters as the user types", () => {
 
 ## Upgrade order is a design problem
 
-In the browser, import order decides setup order: the module that is imported first defines its component first. A parent whose setup calls a child's mixin only works when the child happens to be defined first. If a test needs special steps to get that order right, fix the component, not the test: have the parent provide the state through a context and the child react to it. Contexts resolve in either order, so a plain `mount` covers it.
+On a real page the markup is parsed before module scripts run, so definition order (import order) decides setup order. In a test, `mount` inserts markup after the components are defined, so nested setup follows the DOM implementation instead: outer first in browsers and jsdom, inner first in happy-dom. A parent whose setup calls a child's mixin depends on one of these orders. If a test needs special steps to get that order right, fix the component, not the test: have the parent provide the state through a context and the child react to it. Contexts resolve in either order, so a plain `mount` covers it.
 
 ```typescript
 // Coupled: the outlet's first effect calls into the modal.

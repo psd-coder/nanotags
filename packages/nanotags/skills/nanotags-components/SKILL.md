@@ -116,7 +116,7 @@ Other rules:
 
 ### JSON props
 
-`p.json()` is not an observed attribute: it reads its seed on connect, and again on every reconnect unless the property has been written since.
+A `p.json(schema, fallback?)` prop is not an observed attribute: it reads its seed on connect, and again on every reconnect unless the property has been written since.
 
 ```html
 <x-chart>
@@ -332,7 +332,7 @@ A move also undoes `$prop.set()`, because the prop is re-read from its attribute
 
 ## Rendering lists
 
-`render` and `renderList` **own their container** and delete any child they do not manage. Never render into a container that also holds static markup.
+`render` and `renderList` **own their container** and delete any element child they do not manage. Never render into a container that also holds static markup.
 
 ```typescript
 import { renderList } from "nanotags/render";
