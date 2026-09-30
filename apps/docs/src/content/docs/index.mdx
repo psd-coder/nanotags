@@ -4,7 +4,7 @@ description: Introduction, installation and first component
 order: 1
 ---
 
-import { InstallPackage } from "astro-pigment/components";
+import { AgentSkillsInstall, InstallPackage } from "astro-pigment/components";
 import { CdnImport } from "~/components/CdnImport";
 
 A thin Web Components wrapper powered by [Nano Stores](https://github.com/nanostores/nanostores) reactivity. It leans on the platform—Custom Elements, standard DOM, regular CSS—instead of reinventing them. The result is a typed, reactive component model with automatic cleanup in under **2.5 KB**.
@@ -55,6 +55,12 @@ Then use bare specifiers as usual:
 ```
 
 Sub-entry points (`nanotags/render`, `nanotags/context`) follow the same URL pattern.
+
+## Agent skill
+
+The repo ships an [agent skill](https://github.com/psd-coder/nanotags/tree/HEAD/packages/nanotags/skills/nanotags-components) with the rules for idiomatic components and references for the exact API, Astro integration and testing. Install it so your coding agent writes idiomatic nanotags:
+
+<AgentSkillsInstall />
 
 ## Quick Start
 
