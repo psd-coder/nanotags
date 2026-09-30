@@ -84,6 +84,7 @@ const Counter = define("x-counter")
   - [Attachments](#attachments)
   - [Typed Events](#typed-events)
   - [Augmenting HTMLElementTagNameMap](#augmenting-htmlelementtagnamemap)
+- [Agent Skill](#agent-skill)
 - [FAQ](#faq)
 - [License](#license)
 
@@ -786,6 +787,17 @@ declare global {
 
 const MyEl = define("x-my-el").withProps(/* ... */).setup(/* ... */);
 ```
+
+## Agent Skill
+
+The package ships a Claude Code skill documenting how to write idiomatic nanotags components: the declarative core loop, prop/ref/state/event rules, cleanup, and an anti-pattern table. Link it into your project so coding agents pick it up:
+
+```bash
+mkdir -p .claude/skills
+ln -s ../../node_modules/nanotags/skills/nanotags-components .claude/skills/nanotags-components
+```
+
+It contains framework-agnostic rules plus references for the exact API semantics, Astro integration, and testing.
 
 ## FAQ
 

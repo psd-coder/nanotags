@@ -16,6 +16,7 @@
   "repository": "psd-coder/nanotags",
   "files": [
     "dist/*",
+    "skills/**",
     "package.json",
     "README.md",
     "LICENSE.md"
