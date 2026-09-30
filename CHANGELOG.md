@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Ship the `nanotags-components` agent skill in the package (`skills/nanotags-components`): rules for idiomatic components plus references for the exact API, Astro integration and testing.
+
 ## 0.16.0
 
 ### Added
