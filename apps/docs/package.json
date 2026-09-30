@@ -15,8 +15,8 @@
   },
   "dependencies": {
     "@nanostores/persistent": "^1.3.3",
-    "astro": "^7.1.3",
-    "astro-pigment": "^0.20.1",
+    "astro": "^7.3.5",
+    "astro-pigment": "^0.21.1",
     "es-toolkit": "^1.45.1",
     "linkedom": "^0.18.12",
     "nanoid": "^5.1.7",

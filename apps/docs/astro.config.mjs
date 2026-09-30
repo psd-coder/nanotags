@@ -19,6 +19,9 @@ export default defineConfig({
         },
         github: { user: "psd-coder", repository: "nanotags" },
       },
+      agentSkills: {
+        directory: "../../packages/nanotags/skills",
+      },
       author: { name: "Pavel Grinchenko", url: "https://x.com/psd_coder" },
       credits: [{ name: "Evil Martians", url: "https://evilmartians.com/" }],
       logo: "./src/assets/logo.svg",
