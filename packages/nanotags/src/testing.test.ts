@@ -227,6 +227,17 @@ describe("mount", () => {
     expect(svg.namespaceURI).toBe("http://www.w3.org/2000/svg");
   });
 
+  it("types an svg root built by h", () => {
+    const svg = mount(h("svg", { viewBox: "0 0 10 10" }, h("circle")));
+
+    expectTypeOf(svg).toEqualTypeOf<SVGSVGElement>();
+    expect(svg.firstElementChild?.namespaceURI).toBe("http://www.w3.org/2000/svg");
+  });
+
+  it("rethrows a constructor error from raw markup", () => {
+    expect(() => mount(`<t-strict></t-strict>`)).toThrow(/Prop "label": invalid value null/);
+  });
+
   it("throws a useful error for markup with no root element", () => {
     expect(() => mount("<!-- nothing here -->")).toThrow(/no root element/);
   });
@@ -316,6 +327,10 @@ describe("create", () => {
     connect(create(h(Widget, null, MARKUP)), section);
 
     expect(section.querySelector("t-widget")).not.toBeNull();
+  });
+
+  it("rethrows a constructor error from raw markup", () => {
+    expect(() => create(`<t-strict></t-strict>`)).toThrow(/Prop "label": invalid value null/);
   });
 
   it("requires exactly one root element", () => {
@@ -469,6 +484,18 @@ describe("provideContext", () => {
     provideContext(wrapper, themeKey, { theme: "dark" });
 
     expect(ref(host, "label").tagName).toBe("SPAN");
+  });
+
+  it("rethrows a setup error from a consumer it resolves", () => {
+    const Failing = define(uniqueTag("failing"))
+      .withContexts({ theme: themeKey })
+      .setup(() => {
+        throw new Error("boom");
+      });
+    const wrapper = mount(h("div"));
+    mount(Failing, wrapper);
+
+    expect(() => provideContext(wrapper, themeKey, { theme: "dark" })).toThrow("boom");
   });
 
   it("stops providing after cleanup", () => {

@@ -102,6 +102,12 @@ export function h<E extends HTMLElement>(
   props?: MarkupProps<E> | null,
   ...children: Child[]
 ): Markup<E>;
+// Only an `svg` root parses in the SVG namespace; any other SVG tag needs one around it.
+export function h(
+  tag: "svg",
+  props?: Record<string, unknown> | null,
+  ...children: Child[]
+): Markup<SVGSVGElement>;
 export function h<S extends string>(
   tag: S & UnknownTag<S>,
   props?: Record<string, unknown> | null,
@@ -111,7 +117,7 @@ export function h(
   target: string | (new () => HTMLElement),
   props?: Record<string, unknown> | null,
   ...children: Child[]
-): Markup {
+): Markup<Element> {
   return new Markup(build(target, props ?? {}, children, "h"));
 }
 
@@ -167,8 +173,7 @@ function observedAttributes(tag: string): string[] {
 // keys are props. It gets its attribute props first, since their schemas may reject a missing one.
 function construct(tag: string, attrProps: [string, unknown][]): Element {
   const attrs = attrProps.map(([key, value]) => attribute(camelToKebab(key), value)).join("");
-  let el: Element | null = null;
-  throwFirst(trap(() => (el = parseHtml(`<${tag}${attrs}></${tag}>`).firstElementChild)));
+  const el = parseHtml(`<${tag}${attrs}></${tag}>`).firstElementChild;
   if (!el) throw new Error(`h: <${tag}> could not be constructed`);
 
   return el;
@@ -190,10 +195,7 @@ export function mount<K extends keyof HTMLElementTagNameMap>(
   tag: K,
   parent?: Element,
 ): HTMLElementTagNameMap[K];
-export function mount<E extends HTMLElement>(
-  target: (new () => E) | Markup<E>,
-  parent?: Element,
-): E;
+export function mount<E extends Element>(target: (new () => E) | Markup<E>, parent?: Element): E;
 export function mount<E extends Element = HTMLElement>(html: string, parent?: Element): E;
 export function mount(target: Target, parent: Element = document.body): Element {
   const nodes = [...parseHtml(toHtml(target, "mount")).childNodes];
@@ -216,7 +218,7 @@ export function mount(target: Target, parent: Element = document.body): Element 
  * stubbing a peer element, faking layout geometry, connecting a child before its parent.
  */
 export function create<K extends keyof HTMLElementTagNameMap>(tag: K): HTMLElementTagNameMap[K];
-export function create<E extends HTMLElement>(target: (new () => E) | Markup<E>): E;
+export function create<E extends Element>(target: (new () => E) | Markup<E>): E;
 export function create<E extends Element = HTMLElement>(html: string): E;
 export function create(target: Target): Element {
   const roots = [...parseHtml(toHtml(target, "create")).children];
@@ -320,10 +322,11 @@ function tagOf(target: string | (new () => HTMLElement), caller: string): string
 }
 
 // Parse detached, in the main document, so custom elements pick up their definition but stay
-// unconnected until the test appends them.
+// unconnected until the test appends them. Parsing constructs them, and a constructor throws on a
+// prop that fails its schema.
 function parseHtml(html: string): HTMLElement {
   const wrapper = document.createElement("div");
-  wrapper.innerHTML = html;
+  throwFirst(trap(() => (wrapper.innerHTML = html)));
 
   return wrapper;
 }
@@ -389,10 +392,12 @@ type ContextKeyLike<T> = {
  */
 export function provideContext<T>(host: HTMLElement, key: ContextKeyLike<T>, value: T): void {
   const disposers: VoidFunction[] = [];
-  key.provide({ host, onCleanup: (cb) => disposers.push(cb) }, value);
+  // Providing resolves any consumer parked on this key, running its setup from an event listener.
+  const failures = trap(() => key.provide({ host, onCleanup: (cb) => disposers.push(cb) }, value));
   provided.add(() => {
     for (const dispose of disposers) dispose();
   });
+  throwFirst(failures);
 }
 
 // The `<script data-prop>` a server renders for a `p.json()` seed. `data-prop` takes the camelCase
