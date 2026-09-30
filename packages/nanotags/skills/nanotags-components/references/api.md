@@ -73,7 +73,7 @@ Coercion when the attribute is absent and no fallback is given:
 
   This is by design: the attribute is the **input** channel (server markup, or a parent writing the property); `$prop.set` is the component's own write. So never drive one prop from both channels: once the component has called `.set()`, a parent assigning the attribute's current value is silently ignored, as shown above.
 
-  `setAttribute` and the property setter are equivalent entry points into the attribute channel. For `p.json()` and `attribute: false` props the setter writes the store directly and no attribute is involved.
+  `setAttribute` and the property setter are equivalent entry points into the attribute channel. For `p.json` and `attribute: false` props the setter writes the store directly and no attribute is involved.
 - camelCase key -> kebab-case attribute for `observedAttributes`, the initial read, the setter, and the JSON attribute fallback.
 - Pre-upgrade plain property assignments are captured and seeded into the store.
 - Reserved prop names: any name whose prototype-chain descriptor is a function or non-configurable (`getAttribute`, `click`, ...) throws `Error: reserved prop`. Configurable accessors like `title` or `lang` are allowed.
@@ -91,8 +91,8 @@ Read order: inline `<script type="application/json" data-prop="KEY">`, then the 
 
 ### Property-only props (`{ schema, attribute: false }`)
 
-- The accessor exists from construction; the **value is `undefined` until connect**.
-- With the default `get`, the kebab-case attribute is still read on connect, and an absent attribute passes `null` through the schema, so a non-nullable schema throws. Use a schema with a fallback (`p.string("")`). `attribute: false` means "not observed, setter does not reflect", not "attribute ignored".
+- The accessor exists from construction; the **value is `undefined` until connect**, unless the property was assigned before the element upgraded (that value is captured and kept).
+- With the default `get`, the kebab-case attribute is still read on connect, and an absent attribute passes `null` through the schema. `p.string()`, `p.number()` and `p.boolean()` coerce it (`""`, `0`, `false`); `p.oneOf` without a fallback and custom schemas that reject `null` throw. `attribute: false` means "not observed, setter does not reflect", not "attribute ignored".
 - Use for large values, imperative resources, and any property a parent will `ctx.bind` to.
 
 ## Ref builders
@@ -205,7 +205,7 @@ renderList(container, template, { data, key, update });
 ```
 
 - Both return `void`. The template must be an `HTMLTemplateElement` with **exactly one root element**.
-- **Both own the whole container**: any child without a tracked key is removed, including a `<template>` that lives inside it.
+- **Both own the whole container**: any element child without a tracked key is removed (text and comment nodes are left alone), including a `<template>` that lives inside it.
 - `update` runs on create and whenever the item **reference** changes. Mutating an item in place will not re-render.
 - Reordering skips elements already in place and moves the rest one by one, so it is not minimal: rotating `[A,B,C,D,E]` to `[B,C,D,E,A]` does four moves where one would do.
 - `render` without `data` re-runs `update` every call; with `data`, an unchanged reference skips it. A fully static `render(container, tpl)` is idempotent.

@@ -713,6 +713,8 @@ Check what the DOM shows: text, attributes, `hidden`, focus. Two cases are worth
 Reusable functions that receive `ctx` and wire up behavior—effects, listeners, cleanup—without creating a new component. Think composable mixins:
 
 ```typescript
+import type { SetupContext } from "nanotags";
+
 export function attachRovingFocus(
   ctx: SetupContext<{}, {}>,
   container: HTMLElement,
