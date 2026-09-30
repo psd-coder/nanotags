@@ -195,7 +195,8 @@ export function mount<K extends keyof HTMLElementTagNameMap>(
   tag: K,
   parent?: Element,
 ): HTMLElementTagNameMap[K];
-export function mount<E extends Element>(target: (new () => E) | Markup<E>, parent?: Element): E;
+export function mount<E extends HTMLElement>(ctor: new () => E, parent?: Element): E;
+export function mount<E extends Element>(markup: Markup<E>, parent?: Element): E;
 export function mount<E extends Element = HTMLElement>(html: string, parent?: Element): E;
 export function mount(target: Target, parent: Element = document.body): Element {
   const nodes = [...parseHtml(toHtml(target, "mount")).childNodes];
@@ -218,7 +219,8 @@ export function mount(target: Target, parent: Element = document.body): Element 
  * stubbing a peer element, faking layout geometry, connecting a child before its parent.
  */
 export function create<K extends keyof HTMLElementTagNameMap>(tag: K): HTMLElementTagNameMap[K];
-export function create<E extends Element>(target: (new () => E) | Markup<E>): E;
+export function create<E extends HTMLElement>(ctor: new () => E): E;
+export function create<E extends Element>(markup: Markup<E>): E;
 export function create<E extends Element = HTMLElement>(html: string): E;
 export function create(target: Target): Element {
   const roots = [...parseHtml(toHtml(target, "create")).children];
