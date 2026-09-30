@@ -463,10 +463,12 @@ ui/Chart/
 
 ### Setup
 
-The helpers need a DOM but do not ship one, so install jsdom or happy-dom and tell your runner to use it. Nothing imports `nanotags/testing` at runtime, so it never ends up in a browser bundle.
+The helpers need a DOM but do not ship one, so install jsdom or happy-dom and tell your runner to use it. Only test files import `nanotags/testing`, and no runtime entry does, so it stays out of your browser bundle.
 
 ```typescript
 // vitest.config.ts
+import { defineConfig } from "vitest/config";
+
 export default defineConfig({
   test: { environment: "jsdom" },
 });
@@ -702,7 +704,7 @@ const tag = uniqueTag("roving");
 define(tag)
   .withRefs((r) => ({ tabs: r.many<HTMLElement>("[role=tab]") }))
   .setup((ctx) => {
-    attachRovingFocus(ctx, () => ctx.refs.tabs);
+    attachRovingFocus(ctx, ctx.host, ctx.refs.tabs);
   });
 
 const markup = h(tag, null, TABS_CHILDREN);
@@ -813,6 +815,8 @@ An observer shim wants a handle back, so the test can decide what the callback s
 
 ```typescript
 // test/stubs/intersectionObserver.ts
+import { vi } from "vitest";
+
 export function installIntersectionObserver() {
   const created: FakeIntersectionObserver[] = [];
 

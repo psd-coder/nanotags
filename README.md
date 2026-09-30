@@ -579,7 +579,7 @@ it("shows the active panel", () => {
 });
 ```
 
-`h` builds the HTML, `mount` puts it on the page and returns the component element (the **host**), and `cleanup` removes everything after each test. When the component is in `HTMLElementTagNameMap` ([how](#augmenting-htmlelementtagnamemap)), all of it is typed: `h` checks prop names and values, `mount` returns the component's element type, and `ref` only accepts the component's ref names.
+`h` builds the HTML, `mount` puts it on the page and returns the component element (the **host**), and `cleanup` removes everything after each test. When the component is in `HTMLElementTagNameMap` ([how](#augmenting-htmlelementtagnamemap)), all of it is typed: `h` checks prop names, types JSON prop values from their schema and takes any string, number or boolean for an attribute prop, `mount` returns the component's element type, and `ref` only accepts the component's ref names.
 
 The [Testing guide](https://nanotags.psdcoder.dev/cookbook#testing) walks through stubs, contexts, DOM differences and more.
 
@@ -604,7 +604,7 @@ h(
 - Attribute props become attributes with kebab-cased names: `storageTb` writes `storage-tb`.
 - JSON props (`p.json()`) become the `<script type="application/json" data-prop>` seed the component reads.
 - Anything else (`id`, `class`, `data-*`, `aria-*`, props on plain elements) is written as an attribute, name as given.
-- `undefined` is skipped, `null` and `false` leave the attribute out, and `true` writes an empty attribute. So optional values can be passed straight through.
+- `undefined` is skipped. On an attribute, `null` and `false` leave it out and `true` writes it empty, so optional values can be passed straight through. A JSON prop writes `null` and `false` into its seed like any other value.
 
 ### `mount(target, parent?)`
 

@@ -528,11 +528,11 @@ const host = mount(markup);
 | JSON prop from `p.json()` (`bars`) | a `<script type="application/json" data-prop="bars">` seed |
 | Anything else (`id`, `class`, `data-*`, `aria-*`, `viewBox`, props on plain elements) | an attribute, name as given |
 
-- `undefined` is skipped. `null` and `false` leave the attribute out. `true` writes an empty attribute. Numbers become strings.
+- `undefined` is skipped. `null` and `false` leave an attribute out, `true` writes it empty, and numbers become strings. A JSON prop writes `null` and `false` into its seed.
 - Property-only props (`{ schema, attribute: false }`) cannot be written as markup, and on a typed component `h` rejects them. Set them on a host built with `create`, before `connect`.
 - The result is a `Markup`. It remembers the element type, so `mount` returns it typed, and inside a template literal it turns into its HTML.
 - Throws for a string that is not a tag name, and for a custom element tag that is not defined yet (usually a missing import).
-- To tell a component's props from plain attributes, `h` constructs one instance of it with the attribute props set. If that throws, so does `h`.
+- When a key is not one of the component's attribute props, `h` constructs one instance with the attribute props set, to tell a JSON prop from a plain attribute. If that throws, so does `h`. Otherwise a constructor error surfaces from `mount` or `create`.
 
 ### mount
 
@@ -577,7 +577,7 @@ expect(tooltip.writes("open")).toEqual([false]);
 
 `connect(host, parent?): host`
 
-Puts a host on the page, which runs its setup. Without `parent`, a host from `disconnect` goes back where it was, and any other host goes into `document.body`. Throws if the parent is not on the page, and rethrows errors from setup.
+Puts a host on the page, which runs its setup, or parks it until every context it declares has a provider. Without `parent`, a host from `disconnect` goes back where it was, and any other host goes into `document.body`. Throws if the parent is not on the page, and rethrows errors from setup.
 
 ### disconnect
 
@@ -631,7 +631,7 @@ const firstButton = ref<HTMLButtonElement>(items[0]!, "button");
 
 `provideContext(host, key, value): void`
 
-Provides a context on `host`, so a component that uses `withContexts` can be tested without its real provider. The order does not matter: a component mounted first waits for the provider. `cleanup` removes the provider. The context key must be exported from the module that creates it.
+Provides a context on `host`, so a component that uses `withContexts` can be tested without its real provider. The order does not matter: a component mounted first waits for the provider, sets up when `provideContext` runs, and any error from that setup is rethrown here. `cleanup` removes the provider. The context key must be exported from the module that creates it.
 
 ```typescript
 const menubarMarkup = h("ul", { role: "menubar" });
