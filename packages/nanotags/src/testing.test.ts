@@ -231,6 +231,8 @@ describe("mount", () => {
     const svg = mount(h("svg", { viewBox: "0 0 10 10" }, h("circle")));
 
     expectTypeOf(svg).toEqualTypeOf<SVGSVGElement>();
+    // @ts-expect-error: only a registered HTMLElement class can be mounted by constructor
+    void (() => mount(SVGSVGElement));
     expect(svg.firstElementChild?.namespaceURI).toBe("http://www.w3.org/2000/svg");
   });
 
