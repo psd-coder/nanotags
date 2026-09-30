@@ -10,6 +10,7 @@ lerna-debug.log*
 node_modules
 dist
 *.local
+docs/.wip
 
 # Editor directories and files
 .idea
