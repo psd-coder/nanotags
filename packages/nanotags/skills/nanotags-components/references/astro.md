@@ -78,7 +78,7 @@ Never use `define:vars` to hand data to a component. It inlines a non-module scr
 // utils/toJsonSeed.ts: one shared helper in your project's utils, used by every JSON seed.
 // `set:html` writes the string as is, so a "</script>" inside the data would end the tag early
 // and inject markup. `\u003c` is still valid JSON and parses back to "<".
-export function toJsonSeed(value: unknown): string {
+export function toJsonSeed(value: {} | null): string {
   return JSON.stringify(value).replaceAll("<", "\\u003c");
 }
 ```
@@ -90,17 +90,20 @@ import { toJsonSeed } from "../../utils/toJsonSeed";
 const { bars } = Astro.props;
 ---
 <x-chart style="display: contents">
-  <script
-    is:inline
-    type="application/json"
-    data-prop="bars"
-    set:html={toJsonSeed(bars)}
-  />
+  {bars !== undefined && (
+    <script
+      is:inline
+      type="application/json"
+      data-prop="bars"
+      set:html={toJsonSeed(bars)}
+    />
+  )}
   <div data-ref="list"></div>
 </x-chart>
 ```
 
 - **Never pass raw `JSON.stringify` to `set:html`.** Always go through the shared helper.
+- **Skip the seed when the value is `undefined`.** `JSON.stringify(undefined)` is not a string, so the helper's type rejects it, and a missing seed lets the prop use its schema fallback.
 - `data-prop` is the **camelCase prop key verbatim**.
 - `is:inline` keeps Astro from processing it as a module.
 - Reduce CMS/API data to a plain serializable value in frontmatter before it becomes a prop.
