@@ -84,7 +84,7 @@
           renderList(ctx.refs.list, ctx.refs.itemTpl, {
             data: todos,
             key: (t) => t.id,
-            update: (el, todo) => el.setAttribute("data", JSON.stringify(todo)),
+            update: (el, todo) => (el.data = todo),
           });
         });
         ctx.effect([$total, $completed], (total, completed) => {

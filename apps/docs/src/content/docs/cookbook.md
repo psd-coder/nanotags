@@ -378,13 +378,13 @@ Attachments also compose naturally with the [context protocol](cookbook#context-
 
 An attachment is just a function, no special API needed. Follow these conventions:
 
-1. Accept `ctx: SetupContext` as the first parameter
+1. Accept `ctx: SetupContext<{}, {}>` as the first parameter, so it composes with any component
 2. Use [`ctx.on()`](api#on), [`ctx.effect()`](api#effect), [`ctx.onCleanup()`](api#oncleanup) for auto-cleanup
 3. Accept configuration via additional parameters or an options object
 4. Optionally return state or methods for the calling component
 
 ```typescript
-export function attachClickOutside(ctx: SetupContext, callback: () => void) {
+export function attachClickOutside(ctx: SetupContext<{}, {}>, callback: () => void) {
   ctx.on(document, "click", (e) => {
     if (!ctx.host.contains(e.target as Node)) callback();
   });
@@ -397,7 +397,7 @@ Arrow-key navigation through a group of focusable elements:
 
 ```typescript
 export function attachRovingFocus(
-  ctx: SetupContext,
+  ctx: SetupContext<{}, {}>,
   container: HTMLElement,
   items: HTMLElement[],
   options: { onFocus?: (el: HTMLElement) => void } = {},
@@ -435,7 +435,7 @@ Usage:
 
 ```typescript
 define("x-tabs")
-  .withRefs((r) => ({ tablist: r.one("div"), tabs: r.many("[role=tab]") }))
+  .withRefs((r) => ({ tablist: r.one("div"), tabs: r.many<HTMLElement>("[role=tab]") }))
   .setup((ctx) => {
     attachRovingFocus(ctx, ctx.refs.tablist, ctx.refs.tabs, {
       onFocus: (el) => activate(el.dataset.value),
@@ -729,7 +729,7 @@ expect(ref(host, "list").children).toHaveLength(1);
 
 ### Errors surface where they happen
 
-jsdom does not throw errors from a component's setup or cleanup. It reports them as a window `error` event instead, and the test carries on with a broken element and fails somewhere else much later. The helpers fix this: `mount` and `connect` rethrow setup errors, and `disconnect` and `cleanup` rethrow cleanup errors, right at the call.
+jsdom does not throw errors from a component's setup or cleanup. It reports them as a window `error` event instead, and the test carries on with a broken element and fails somewhere else much later. The helpers fix this, right at the call: `mount` and `create` rethrow constructor errors, `mount`, `connect` and `provideContext` rethrow setup errors, and `disconnect` and `cleanup` rethrow cleanup errors.
 
 `cleanup` always removes everything before it throws, so one broken component cannot leak into the next test. If several fail, it throws them together as an `AggregateError`.
 
