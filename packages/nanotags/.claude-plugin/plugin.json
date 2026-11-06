@@ -1,0 +1,13 @@
+{
+  "name": "nanotags-components",
+  "version": "0.17.0",
+  "description": "Skill for writing idiomatic nanotags components (Custom Elements + nanostores): props, refs, effects, events, cleanup and the anti-patterns to avoid, plus references for the exact API, Astro integration and testing.",
+  "author": {
+    "name": "Pavel Grinchenko",
+    "email": "psdcoder@gmail.com"
+  },
+  "homepage": "https://github.com/psd-coder/nanotags",
+  "repository": "https://github.com/psd-coder/nanotags",
+  "license": "MIT",
+  "keywords": ["nanotags", "nanostores", "custom-elements", "web-components"]
+}

@@ -21,6 +21,7 @@ export default defineConfig({
       },
       agentSkills: {
         directory: "../../packages/nanotags/skills",
+        plugin: { name: "nanotags", marketplace: "nanotags" },
       },
       author: { name: "Pavel Grinchenko", url: "https://x.com/psd_coder" },
       credits: [{ name: "Evil Martians", url: "https://evilmartians.com/" }],

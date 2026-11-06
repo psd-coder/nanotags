@@ -1,0 +1,17 @@
+{
+  "name": "nanotags",
+  "owner": {
+    "name": "Pavel Grinchenko",
+    "email": "psdcoder@gmail.com"
+  },
+  "metadata": {
+    "description": "Claude Code plugin for nanotags, the tiny Custom Elements wrapper with nanostores reactivity."
+  },
+  "plugins": [
+    {
+      "name": "nanotags-components",
+      "source": "./packages/nanotags",
+      "description": "Skill for writing idiomatic nanotags components (Custom Elements + nanostores): props, refs, effects, events, cleanup and the anti-patterns to avoid, plus references for the exact API, Astro integration and testing."
+    }
+  ]
+}

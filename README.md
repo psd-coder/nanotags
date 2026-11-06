@@ -792,7 +792,14 @@ const MyEl = define("x-my-el").withProps(/* ... */).setup(/* ... */);
 
 ## Agent Skill
 
-The package ships a Claude Code skill documenting how to write idiomatic nanotags components: the declarative core loop, prop/ref/state/event rules, cleanup, and an anti-pattern table. Link it into your project so coding agents pick it up:
+The package ships a Claude Code skill documenting how to write idiomatic nanotags components: the declarative core loop, prop/ref/state/event rules, cleanup, and an anti-pattern table. In Claude Code, install it as a plugin:
+
+```
+/plugin marketplace add psd-coder/nanotags
+/plugin install nanotags-components@nanotags
+```
+
+Or link it from `node_modules` into your project so any coding agent picks it up:
 
 ```bash
 mkdir -p .claude/skills
